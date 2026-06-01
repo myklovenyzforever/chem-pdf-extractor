@@ -1,0 +1,3 @@
+paper_title,doi,reaction_system,feedstock,catalyst,reactor_type,temperature_c,pressure_mpa,whsv,conversion_percent,selectivity_percent,yield_percent,product,notes
+Synthetic example for methane reforming,,steam reforming,methane,Ni/Al2O3,fixed bed,750,0.1,12000,82,71,58,syngas,Synthetic demo row; not from a real paper.
+Synthetic example for CO2 hydrogenation,,CO2 hydrogenation,CO2 and H2,Cu-ZnO-ZrO2,flow reactor,260,3.0,6000,18,62,11,methanol,Synthetic demo row; values are illustrative only.

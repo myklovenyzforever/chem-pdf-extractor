@@ -1,0 +1,72 @@
+[
+  {
+    "label": "paper_title",
+    "requirement": "required",
+    "description": "Official paper title."
+  },
+  {
+    "label": "doi",
+    "requirement": "recommended",
+    "description": "DOI or publisher URL when available."
+  },
+  {
+    "label": "reaction_system",
+    "requirement": "required",
+    "description": "Reaction, process, or experimental system studied in the paper."
+  },
+  {
+    "label": "feedstock",
+    "requirement": "required",
+    "description": "Main reactant, raw material, or feedstock."
+  },
+  {
+    "label": "catalyst",
+    "requirement": "required",
+    "description": "Catalyst name, composition, or sample code."
+  },
+  {
+    "label": "reactor_type",
+    "requirement": "recommended",
+    "description": "Reactor type such as fixed bed, batch reactor, flow reactor, electrochemical cell, or membrane reactor."
+  },
+  {
+    "label": "temperature_c",
+    "requirement": "required",
+    "description": "Reaction temperature in Celsius. Use numeric values when possible."
+  },
+  {
+    "label": "pressure_mpa",
+    "requirement": "recommended",
+    "description": "Reaction pressure in MPa. Convert units when possible."
+  },
+  {
+    "label": "whsv",
+    "requirement": "optional",
+    "description": "WHSV, GHSV, LHSV, space velocity, or residence-time related condition."
+  },
+  {
+    "label": "conversion_percent",
+    "requirement": "required",
+    "description": "Conversion percentage of the main feedstock."
+  },
+  {
+    "label": "selectivity_percent",
+    "requirement": "recommended",
+    "description": "Selectivity percentage for the target product."
+  },
+  {
+    "label": "yield_percent",
+    "requirement": "recommended",
+    "description": "Yield percentage for the target product."
+  },
+  {
+    "label": "product",
+    "requirement": "required",
+    "description": "Main product or product mixture."
+  },
+  {
+    "label": "notes",
+    "requirement": "optional",
+    "description": "Short notes about uncertainty, table/figure source, or extraction caveats."
+  }
+]

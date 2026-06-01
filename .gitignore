@@ -1,0 +1,44 @@
+# Local runtime and user-only configuration
+YiLaiHuanJing/
+config.local.json
+.env
+*.key
+*.token
+
+# User papers and generated runtime outputs
+*.pdf
+提取结果.xlsx
+提取结果.partial.jsonl
+错误日志.txt
+错误统计.xlsx
+错误统计.jsonl
+坏数据.xlsx
+坏数据.jsonl
+可疑数据.xlsx
+可疑数据.jsonl
+md文件/
+processed_md/
+抽取缓存/
+提取失败源文件/
+.mineru_outputs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

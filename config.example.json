@@ -1,0 +1,7 @@
+{
+  "llm_service_name": "silicon",
+  "api_key": "YOUR_API_KEY_HERE",
+  "base_url": "https://api.siliconflow.cn/v1",
+  "model": "deepseek-ai/DeepSeek-V4-Pro",
+  "cloud_active": true
+}
