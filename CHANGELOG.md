@@ -1,9 +1,9 @@
 # Changelog
 
-## v0.1.0
+## v0.1.0 - Initial open-source preparation
 
-- Initial open-source preparation.
 - Removed hardcoded API keys.
-- Added local config template.
-- Added README, docs, examples, tests, and license.
-- Preserved Windows one-click startup workflow.
+- Added local configuration template.
+- Added bilingual README, quickstart, configuration, and examples documentation.
+- Added examples and basic tests.
+- Preserved the Windows one-click workflow.
