@@ -1,5 +1,9 @@
 ﻿# Chem-PDF-Extractor
 
+**Language / 语言:** [English](#english) | [中文](#chinese)
+
+<a id="english"></a>
+
 ## Overview
 
 Chem-PDF-Extractor is an open-source tool for extracting structured experimental data from scientific PDF papers, with a focus on chemical engineering, catalysis, materials, and environmental research.
@@ -100,6 +104,8 @@ The current web interface screenshot is shown below. An Excel output screenshot 
 
 MIT License. See `LICENSE`.
 
+<a id="chinese"></a>
+
 # 中文说明
 
 ## 项目简介
@@ -167,6 +173,8 @@ python ShuJuTiQuJiaoBen.py
 - 云端 API 可能产生费用。
 - 扫描版 PDF 和复杂双栏论文的解析效果取决于 PDF 转换/OCR 工具。
 - 示例数据是合成数据，不代表真实发表论文结果。
+
+
 
 
 
