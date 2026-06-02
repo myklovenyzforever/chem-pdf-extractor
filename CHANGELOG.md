@@ -14,6 +14,7 @@
 - Updated documentation for Python 3.11 recommendation and `pypdf_text` fallback usage.
 - Updated release metadata and entry script documentation.
 - Cleaned Markdown encoding issues in documentation files.
+- Made Web UI browser opening optional: the server now prints the local URL by default, and automatic browser opening is available with `--open-browser`.
 
 ## v0.1.1 - Bilingual Web UI
 
