@@ -1,0 +1,14 @@
+# Core runtime dependencies without optional layout-heavy PDF backends.
+#
+# Use this file when the full PDF backend stack fails to install or import.
+# In that case, run the tool with:
+#
+#   python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
+
+pypdf>=4.0
+langchain>=0.2
+langchain-core>=0.2
+langchain-ollama>=0.1
+pydantic>=2.0
+pandas>=2.0
+openpyxl>=3.1

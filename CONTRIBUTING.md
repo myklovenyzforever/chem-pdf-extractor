@@ -17,32 +17,40 @@ We welcome:
 
 ## Safety and Privacy
 
-Do not upload copyrighted papers, private documents, unpublished data, API keys, tokens, passwords, or `config.local.json` in issues, pull requests, examples, or screenshots.
+Do not upload copyrighted papers, private documents, unpublished data, API keys, tokens, passwords, local file paths, or `config.local.json` in issues, pull requests, examples, logs, or screenshots.
 
-When reporting a problem, prefer synthetic examples or permission-safe excerpts. Remove personal paths, institution names, private project data, and API credentials from logs.
+When reporting a problem, prefer synthetic PDFs, synthetic examples, or permission-safe excerpts. Remove personal paths, institution names, private project data, and API credentials from logs.
 
 LLM extraction results should be manually reviewed. They should not be treated as final scientific conclusions without human verification.
 
 ## Running Tests
 
-Run the lightweight local test suite:
-
-```powershell
-python -m unittest discover -s tests -v
-```
-
-You can also check syntax:
+Before opening a pull request, run at least:
 
 ```powershell
 python -m py_compile ShuJuTiQuJiaoBen.py
+python -m unittest discover -s tests -v
 ```
 
 The tests should not call real cloud APIs and do not require repository secrets.
 
-# 贡献说明
+## Documentation Encoding
 
-欢迎提交 bug 报告、字段模板建议和文档改进。
+Markdown files should be saved as UTF-8 without BOM. Chinese and English content should display correctly on GitHub.
 
-请不要在 issue、PR、示例文件或截图中上传受版权保护的论文 PDF、真实 API Key、token、密码、`config.local.json` 或私有数据。
+## 中文说明
 
-复现问题时，建议使用合成示例或确认可以公开分享的材料。大模型抽取结果需要人工核验，不能直接作为最终科研结论。
+欢迎提交 bug 报告、字段模板建议、文档改进和安全的复现样例。
+
+提交 issue 或 PR 时，请不要上传真实 API Key、token、私有 PDF、本机绝对路径、`config.local.json`、输出文件、日志中的隐私信息或未授权公开的论文材料。
+
+复现问题时，建议使用合成 PDF、合成数据或确认可以公开分享的样例。大模型抽取结果必须人工核验，不能直接作为最终科研结论。
+
+提交 PR 前至少运行：
+
+```powershell
+python -m py_compile ShuJuTiQuJiaoBen.py
+python -m unittest discover -s tests -v
+```
+
+文档文件请使用 UTF-8 without BOM 保存，并确认中文在 GitHub 页面中正常显示。

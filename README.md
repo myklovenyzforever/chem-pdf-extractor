@@ -1,4 +1,4 @@
-﻿# Chem-PDF-Extractor
+# Chem-PDF-Extractor
 
 **Language / 语言:** [English](#english) | [中文](#chinese)
 
@@ -40,6 +40,13 @@ python ShuJuTiQuJiaoBen.py
 ```
 
 Open the local URL printed in the terminal, select a PDF folder, configure extraction fields, and start processing. Test with 3-5 PDFs before running a large batch.
+
+If `pymupdf4llm` / `pymupdf` fails to install or import on Windows + Python 3.12, use the core dependency fallback:
+
+```powershell
+python -m pip install -r requirements-core.txt
+python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
+```
 
 ## Configuration
 
@@ -99,7 +106,6 @@ The current web interface screenshot is shown below. An Excel output screenshot 
 - Better PDF layout handling.
 - Regression examples.
 - More tests.
-- Optional English UI.
 - Documentation improvements.
 
 ## License
@@ -147,6 +153,13 @@ Chem-PDF-Extractor 面向化工、材料、催化、环境等方向的研究生�
 ```powershell
 python -m pip install -r requirements.txt
 python ShuJuTiQuJiaoBen.py
+```
+
+如果 Windows + Python 3.12 环境下 `pymupdf4llm` / `pymupdf` 安装或导入失败，可以使用核心依赖降级路线：
+
+```powershell
+python -m pip install -r requirements-core.txt
+python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
 ```
 
 ## 配置说明

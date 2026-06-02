@@ -1,21 +1,25 @@
-"""Chem-PDF-Extractor: local web UI for extracting chemical data from PDFs.
+"""Chem-PDF-Extractor: local Web UI and CLI for extracting structured chemical data from PDFs.
 
-Default usage:
+Default Web usage:
   python ShuJuTiQuJiaoBen.py
 
-The script opens a local browser page. From that page you can:
-  - choose the real Ollama model used for processing
-  - define up to 30 extraction fields
-  - switch among three PDF-to-Markdown/text conversion modes
-  - process large PDF batches with a progress bar
+CLI usage example:
+  python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
 
-No cloud API is used. Ollama must be running locally.
+The script starts a local Web UI by default. From the page you can:
+  - choose local Ollama or an OpenAI-compatible cloud API provider
+  - configure custom extraction fields
+  - choose a PDF conversion backend
+  - export extracted data to Excel / CSV with logs for review
+
+AI extraction results must be manually reviewed before scientific use.
 """
 
 from chem_pdf_extractor.app import main
+
 
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except KeyboardInterrupt:
-        print("\n用户中断。")
+        print("\nInterrupted by user.")
