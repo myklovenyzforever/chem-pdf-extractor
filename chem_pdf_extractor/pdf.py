@@ -18,6 +18,8 @@ from .config import (
     MINERU_EXE,
     MINERU_OUTPUT_ROOT,
     RuntimeDeps,
+    load_pymupdf,
+    load_pymupdf4llm,
     short_error,
 )
 
@@ -235,7 +237,7 @@ def read_pdf_as_markdown_with_mode(pdf_path: Path, mode: str, runtime: RuntimeDe
         fast_markdown = ""
         fast_error: BaseException | None = None
         try:
-            fast_markdown = runtime.pymupdf4llm.to_markdown(str(pdf_path))
+            fast_markdown = load_pymupdf4llm(runtime).to_markdown(str(pdf_path))
             if not markdown_needs_mineru(fast_markdown):
                 return fast_markdown, "pymupdf4llm"
         except Exception as exc:
@@ -250,27 +252,35 @@ def read_pdf_as_markdown_with_mode(pdf_path: Path, mode: str, runtime: RuntimeDe
                     f"error: {short_error(exc)} -->\n\n{fast_markdown}",
                     "pymupdf4llm",
                 )
-            fallback = read_pdf_as_markdown_with_mode(pdf_path, "pymupdf_text", runtime)[0]
+            fallback = read_pdf_as_markdown_with_mode(pdf_path, "pypdf_text", runtime)[0]
             return (
-                "<!-- Auto mode fallback to pymupdf_text. "
+                "<!-- Auto mode fallback to pypdf_text. "
                 f"pymupdf4llm_error: {short_error(fast_error) if fast_error else ''}; "
                 f"mineru_error: {short_error(exc)} -->\n\n{fallback}",
-                "pymupdf_text",
+                "pypdf_text",
             )
     if mode == "mineru":
         try:
             return run_mineru_to_markdown(pdf_path), "mineru"
-        except Exception as exc:
-            fallback = runtime.pymupdf4llm.to_markdown(str(pdf_path))
-            return (
-                "<!-- MinerU failed; fallback to pymupdf4llm. "
-                f"error: {short_error(exc)} -->\n\n{fallback}"
-            ), "pymupdf4llm"
+        except Exception as mineru_error:
+            try:
+                fallback = load_pymupdf4llm(runtime).to_markdown(str(pdf_path))
+                return (
+                    "<!-- MinerU failed; fallback to pymupdf4llm. "
+                    f"error: {short_error(mineru_error)} -->\n\n{fallback}"
+                ), "pymupdf4llm"
+            except Exception as pymupdf4llm_error:
+                fallback = read_pdf_as_markdown_with_mode(pdf_path, "pypdf_text", runtime)[0]
+                return (
+                    "<!-- MinerU and pymupdf4llm failed; fallback to pypdf_text. "
+                    f"mineru_error: {short_error(mineru_error)}; "
+                    f"pymupdf4llm_error: {short_error(pymupdf4llm_error)} -->\n\n{fallback}"
+                ), "pypdf_text"
     if mode == "pymupdf4llm":
-        return runtime.pymupdf4llm.to_markdown(str(pdf_path)), "pymupdf4llm"
+        return load_pymupdf4llm(runtime).to_markdown(str(pdf_path)), "pymupdf4llm"
     if mode == "pymupdf_text":
         chunks: list[str] = []
-        with runtime.fitz.open(str(pdf_path)) as doc:
+        with load_pymupdf(runtime).open(str(pdf_path)) as doc:
             for page_index, page in enumerate(doc, start=1):
                 chunks.append(f"\n\n# Page {page_index}\n\n")
                 chunks.append(page.get_text("text") or "")

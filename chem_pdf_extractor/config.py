@@ -150,15 +150,19 @@ MINERU_DEFAULT_METHOD = os.environ.get("MINERU_METHOD", "txt")
 MINERU_DEFAULT_FORMULA = os.environ.get("MINERU_FORMULA", "false")
 MINERU_DEFAULT_TABLE = os.environ.get("MINERU_TABLE", "false")
 
-REQUIRED_PACKAGES = {
-    "pymupdf4llm": "pymupdf4llm",
-    "fitz": "pymupdf",
+CORE_REQUIRED_PACKAGES = {
     "pypdf": "pypdf",
     "langchain": "langchain",
+    "langchain_core": "langchain-core",
     "langchain_ollama": "langchain-ollama",
     "pydantic": "pydantic",
     "pandas": "pandas",
     "openpyxl": "openpyxl",
+}
+
+OPTIONAL_PDF_BACKEND_PACKAGES = {
+    "pymupdf4llm": "pymupdf4llm",
+    "pymupdf": "pymupdf",
 }
 
 DEFAULT_FIELDS = [
@@ -224,13 +228,13 @@ EXPORT_EXCLUDED_COLUMNS = [
 @dataclass
 class RuntimeDeps:
     pd: Any
-    pymupdf4llm: Any
-    fitz: Any
     PdfReader: Any
     ChatPromptTemplate: Any
     ChatOllama: Any
     Field: Any
     create_model: Any
+    pymupdf4llm: Any | None = None
+    pymupdf: Any | None = None
 
 
 def script_dir() -> Path:
@@ -537,7 +541,7 @@ def candidate_pythons() -> list[Path]:
 def python_has_required_packages(python_exe: Path) -> bool:
     if not python_exe.exists():
         return False
-    code = "import " + ", ".join(REQUIRED_PACKAGES.keys())
+    code = "import " + ", ".join(CORE_REQUIRED_PACKAGES.keys())
     result = subprocess.run(
         [str(python_exe), "-c", code],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
@@ -573,7 +577,7 @@ def clean_pip_env() -> dict[str, str]:
 
 def find_missing_imports() -> list[str]:
     missing: list[str] = []
-    for import_name, package_name in REQUIRED_PACKAGES.items():
+    for import_name, package_name in CORE_REQUIRED_PACKAGES.items():
         try:
             importlib.import_module(import_name)
         except ModuleNotFoundError:
@@ -625,15 +629,42 @@ def ensure_dependencies(auto_install: bool = True) -> None:
 
 
 def import_runtime_dependencies() -> RuntimeDeps:
-    import fitz
     import pandas as pd
-    import pymupdf4llm
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_ollama import ChatOllama
     from pydantic import Field, create_model
     from pypdf import PdfReader
     return RuntimeDeps(
-        pd=pd, pymupdf4llm=pymupdf4llm, fitz=fitz, PdfReader=PdfReader,
+        pd=pd, PdfReader=PdfReader,
         ChatPromptTemplate=ChatPromptTemplate, ChatOllama=ChatOllama,
         Field=Field, create_model=create_model,
     )
+
+
+def _optional_backend_error(name: str, exc: BaseException) -> RuntimeError:
+    reason = short_error(exc, limit=300)
+    package = OPTIONAL_PDF_BACKEND_PACKAGES.get(name, name)
+    return RuntimeError(
+        f"{name} PDF 后端当前不可用。该依赖已改为可选懒加载，"
+        f"请切换到 pypdf_text，或安装/修复 {package} 后重试。原因：{reason}"
+    )
+
+
+def load_pymupdf4llm(runtime: RuntimeDeps) -> Any:
+    if runtime.pymupdf4llm is not None:
+        return runtime.pymupdf4llm
+    try:
+        runtime.pymupdf4llm = importlib.import_module("pymupdf4llm")
+        return runtime.pymupdf4llm
+    except Exception as exc:
+        raise _optional_backend_error("pymupdf4llm", exc) from exc
+
+
+def load_pymupdf(runtime: RuntimeDeps) -> Any:
+    if runtime.pymupdf is not None:
+        return runtime.pymupdf
+    try:
+        runtime.pymupdf = importlib.import_module("pymupdf")
+        return runtime.pymupdf
+    except Exception as exc:
+        raise _optional_backend_error("pymupdf", exc) from exc

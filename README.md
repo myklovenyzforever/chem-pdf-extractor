@@ -89,7 +89,9 @@ The current web interface screenshot is shown below. An Excel output screenshot 
 - Complex scanned PDFs may require OCR or MinerU support.
 - The project does not include any built-in commercial API key.
 - Example data is synthetic and does not represent real published papers.
-- The current version keeps the main app as a single Python file to preserve the existing Windows workflow.
+- Python 3.11 is recommended for the broadest PDF-backend compatibility.
+- On Windows + Python 3.12, `pymupdf4llm` / `pymupdf` may fail during import in some environments. These packages are treated as optional PDF backends; if that happens, use `python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text`.
+- `pypdf_text` is more stable as a fallback, but it is weaker for complex tables, two-column layouts, figures, and scanned PDFs.
 
 ## Roadmap
 
@@ -173,6 +175,9 @@ python ShuJuTiQuJiaoBen.py
 - 云端 API 可能产生费用。
 - 扫描版 PDF 和复杂双栏论文的解析效果取决于 PDF 转换/OCR 工具。
 - 示例数据是合成数据，不代表真实发表论文结果。
+- 推荐使用 Python 3.11，以获得更好的 PDF 后端兼容性。
+- Windows + Python 3.12 环境下，`pymupdf4llm` / `pymupdf` 在部分机器上可能导入失败。它们现在作为可选 PDF 后端处理；如遇导入错误，可使用 `python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text`。
+- `pypdf_text` 更稳定，但对复杂表格、双栏排版、图文混排和扫描版 PDF 的解析能力较弱。
 
 
 
