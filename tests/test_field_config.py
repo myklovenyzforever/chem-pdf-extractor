@@ -1,6 +1,7 @@
 import unittest
 
-from ShuJuTiQuJiaoBen import field_weight, normalize_fields, normalize_requirement
+from chem_pdf_extractor.config import normalize_fields, normalize_requirement
+from chem_pdf_extractor.quality import field_weight
 
 
 class FieldConfigTest(unittest.TestCase):
