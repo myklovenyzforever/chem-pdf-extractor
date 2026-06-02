@@ -15,7 +15,13 @@ python -m pip install -r requirements.txt
 python ShuJuTiQuJiaoBen.py
 ```
 
-Open the local URL printed in the terminal, select a PDF folder, configure extraction fields, and start processing.
+By default, the program prints the local Web UI URL in the terminal and does not open the browser automatically. Copy the printed URL into your browser, select a PDF folder, configure extraction fields, and start processing.
+
+If you want the program to open the browser automatically, run:
+
+```powershell
+python ShuJuTiQuJiaoBen.py --open-browser
+```
 
 ### Route B: Windows compatibility fallback
 
@@ -54,7 +60,13 @@ python -m pip install -r requirements.txt
 python ShuJuTiQuJiaoBen.py
 ```
 
-终端会显示本地网页地址。打开该地址后，选择 PDF 文件夹、配置抽取字段，然后开始处理。
+默认情况下，程序只会在终端打印本地网页地址，不会自动打开浏览器。复制终端显示的地址到浏览器打开后，选择 PDF 文件夹、配置抽取字段，然后开始处理。
+
+如果希望自动打开浏览器，可以运行：
+
+```powershell
+python ShuJuTiQuJiaoBen.py --open-browser
+```
 
 ### 路线 B：Windows 兼容降级
 

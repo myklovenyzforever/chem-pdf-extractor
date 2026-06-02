@@ -21,6 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Chem-PDF-Extractor")
     parser.add_argument("--cli", action="store_true", help="不启动网页，直接用命令行参数处理。")
     parser.add_argument("--port", type=int, default=8766, help="网页端口，默认 8766。")
+    parser.add_argument("--open-browser", action="store_true", help="启动 Web UI 后自动打开浏览器。")
     parser.add_argument("--input-dir", default=None)
     parser.add_argument("--output", default=None)
     parser.add_argument("--llm-provider", default="cloud", choices=["ollama", "cloud"])
@@ -88,7 +89,7 @@ def main() -> int:
     if args.cli:
         return run_cli(args)
     from .server import start_web_app
-    return start_web_app(args.port, auto_install=not args.no_auto_install)
+    return start_web_app(args.port, auto_install=not args.no_auto_install, open_browser=args.open_browser)
 
 
 if __name__ == "__main__":

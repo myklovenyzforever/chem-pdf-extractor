@@ -232,7 +232,7 @@ def find_free_port(preferred_port: int) -> int:
     raise RuntimeError(f"无法找到可用本地端口，最后一次错误：{last_error}")
 
 
-def start_web_app(port: int, auto_install: bool) -> int:
+def start_web_app(port: int, auto_install: bool, open_browser: bool = False) -> int:
     from .config import ensure_dependencies, import_runtime_dependencies
     ensure_dependencies(auto_install=auto_install)
     runtime = import_runtime_dependencies()
@@ -242,9 +242,13 @@ def start_web_app(port: int, auto_install: bool) -> int:
     app.server = server
     RequestHandler.app = app
     url = f"http://127.0.0.1:{actual_port}/"
-    print(f"Chem-PDF-Extractor 页面已启动：{url}")
+    print("Chem-PDF-Extractor 页面已启动：")
+    print(url)
+    if open_browser:
+        webbrowser.open(url)
+    else:
+        print("请复制上面的地址到浏览器打开。")
     print('关闭浏览器标签页不会停止正在运行的本地服务；需要停止任务请点页面里的”停止任务”。')
-    webbrowser.open(url)
     try:
         server.serve_forever()
     finally:
