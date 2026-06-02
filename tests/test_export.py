@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from ShuJuTiQuJiaoBen import export_csv
+from chem_pdf_extractor.export import export_csv
 
 
 class ExportTest(unittest.TestCase):
