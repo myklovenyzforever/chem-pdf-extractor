@@ -1,0 +1,639 @@
+from __future__ import annotations
+
+import importlib
+import json
+import os
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+DEFAULT_MODEL = "minicpm-v:latest"
+DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434"
+DEFAULT_MAX_CHARS = 0
+DEFAULT_NUM_CTX = 8192
+DEFAULT_CLOUD_SERVICE_NAME = "silicon"
+DEFAULT_CLOUD_MODEL = "deepseek-ai/DeepSeek-V4-Pro"
+DEFAULT_CLOUD_BASE_URL = "https://api.siliconflow.cn/v1"
+DEFAULT_CLOUD_API_KEY = ""
+LOCAL_CONFIG_NAME = "config.local.json"
+MAX_ARTIFACT_NAME_CHARS = 80
+OUTPUT_EXCEL_NAME = "提取结果.xlsx"
+ERROR_LOG_NAME = "错误日志.txt"
+PARTIAL_JSONL_NAME = "提取结果.partial.jsonl"
+BAD_ROWS_EXCEL_NAME = "坏数据.xlsx"
+BAD_ROWS_JSONL_NAME = "坏数据.jsonl"
+SUSPICIOUS_ROWS_EXCEL_NAME = "可疑数据.xlsx"
+SUSPICIOUS_ROWS_JSONL_NAME = "可疑数据.jsonl"
+ERROR_STATS_EXCEL_NAME = "错误统计.xlsx"
+ERROR_STATS_JSONL_NAME = "错误统计.jsonl"
+MARKDOWN_DIR_NAME = "md文件"
+CACHE_DIR_NAME = "抽取缓存"
+FAILED_SOURCES_DIR_NAME = "提取失败源文件"
+BUNDLED_RUNTIME_DIR_NAME = "YiLaiHuanJing"
+LEGACY_BUNDLED_RUNTIME_DIR_NAME = "运行依赖"
+BAD_ROW_MIN_FILL_RATE = 0.40
+BAD_ROW_EMPTY_MARKERS = {"n/a", "na", "null", "none", "-999"}
+BAD_ROW_FIELD_WEIGHTS = {"required": 1.0, "recommended": 0.5, "optional": 0.0}
+EXTRACTION_CACHE_VERSION = "2026-05-quality-v2"
+CLOUD_RETRY_COUNT = 3
+CLOUD_RETRY_BASE_DELAY_SECONDS = 2.0
+CLOUD_RETRY_MAX_DELAY_SECONDS = 20.0
+DEFAULT_CLOUD_MODEL_SUGGESTIONS = [
+    "deepseek-ai/DeepSeek-V4-Pro",
+    "deepseek-ai/DeepSeek-V4-Flash",
+    "deepseek-ai/DeepSeek-V3",
+    "deepseek-ai/DeepSeek-V3.2",
+    "deepseek-ai/DeepSeek-V3.1-Terminus",
+    "deepseek-ai/DeepSeek-R1",
+    "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
+    "deepseek-ai/DeepSeek-OCR",
+    "Pro/deepseek-ai/DeepSeek-V3.2",
+    "Pro/deepseek-ai/DeepSeek-V3.1-Terminus",
+    "Pro/deepseek-ai/DeepSeek-V3",
+    "Pro/deepseek-ai/DeepSeek-R1",
+    "ByteDance-Seed/Seed-OSS-36B-Instruct",
+    "MiniMaxAI/MiniMax-M2.5",
+    "Pro/MiniMaxAI/MiniMax-M2.5",
+    "Pro/moonshotai/Kimi-K2.6",
+    "Pro/moonshotai/Kimi-K2.5",
+    "Pro/zai-org/GLM-5.1",
+    "Pro/zai-org/GLM-5",
+    "Pro/zai-org/GLM-4.7",
+    "zai-org/GLM-4.5-Air",
+    "zai-org/GLM-4.5V",
+    "THUDM/GLM-4-32B-0414",
+    "THUDM/GLM-4-9B-0414",
+    "THUDM/GLM-Z1-9B-0414",
+    "Qwen/Qwen3.6-35B-A3B",
+    "Qwen/Qwen3.6-27B",
+    "Qwen/Qwen3.5-397B-A17B",
+    "Qwen/Qwen3.5-122B-A10B",
+    "Qwen/Qwen3.5-35B-A3B",
+    "Qwen/Qwen3.5-27B",
+    "Qwen/Qwen3.5-9B",
+    "Qwen/Qwen3.5-4B",
+    "Qwen/Qwen3-32B",
+    "Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "Qwen/Qwen3-14B",
+    "Qwen/Qwen3-8B",
+    "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+    "Qwen/Qwen2.5-72B-Instruct-128K",
+    "Qwen/Qwen2.5-72B-Instruct",
+    "Qwen/Qwen2.5-32B-Instruct",
+    "Qwen/Qwen2.5-14B-Instruct",
+    "Qwen/Qwen2.5-7B-Instruct",
+    "Pro/Qwen/Qwen2.5-7B-Instruct",
+    "LoRA/Qwen/Qwen2.5-72B-Instruct",
+    "LoRA/Qwen/Qwen2.5-32B-Instruct",
+    "LoRA/Qwen/Qwen2.5-14B-Instruct",
+    "LoRA/Qwen/Qwen2.5-7B-Instruct",
+    "Qwen/Qwen3-VL-32B-Thinking",
+    "Qwen/Qwen3-VL-32B-Instruct",
+    "Qwen/Qwen3-VL-30B-A3B-Thinking",
+    "Qwen/Qwen3-VL-30B-A3B-Instruct",
+    "Qwen/Qwen3-VL-8B-Thinking",
+    "Qwen/Qwen3-VL-8B-Instruct",
+    "Qwen/Qwen3-Omni-30B-A3B-Thinking",
+    "Qwen/Qwen3-Omni-30B-A3B-Instruct",
+    "Qwen/Qwen3-Omni-30B-A3B-Captioner",
+    "Qwen/Qwen-Image",
+    "Qwen/Qwen-Image-Edit",
+    "Qwen/Qwen-Image-Edit-2509",
+    "tencent/Hunyuan-A13B-Instruct",
+    "tencent/Hunyuan-MT-7B",
+    "stepfun-ai/Step-3.5-Flash",
+    "inclusionAI/Ling-flash-2.0",
+    "inclusionAI/Ling-mini-2.0",
+    "BAAI/bge-m3",
+    "Pro/BAAI/bge-m3",
+    "BAAI/bge-large-zh-v1.5",
+    "BAAI/bge-large-en-v1.5",
+    "BAAI/bge-reranker-v2-m3",
+    "Pro/BAAI/bge-reranker-v2-m3",
+    "Qwen/Qwen3-Embedding-8B",
+    "Qwen/Qwen3-Embedding-4B",
+    "Qwen/Qwen3-Embedding-0.6B",
+    "Qwen/Qwen3-Reranker-8B",
+    "Qwen/Qwen3-Reranker-4B",
+    "Qwen/Qwen3-Reranker-0.6B",
+    "Qwen/Qwen3-VL-Embedding-8B",
+    "Qwen/Qwen3-VL-Reranker-8B",
+    "netease-youdao/bce-embedding-base_v1",
+    "netease-youdao/bce-reranker-base_v1",
+    "PaddlePaddle/PaddleOCR-VL-1.5",
+    "baidu/ERNIE-Image-Turbo",
+    "Kwai-Kolors/Kolors",
+    "Tongyi-MAI/Z-Image",
+    "Tongyi-MAI/Z-Image-Turbo",
+    "Wan-AI/Wan2.2-T2V-A14B",
+    "Wan-AI/Wan2.2-I2V-A14B",
+    "FunAudioLLM/CosyVoice2-0.5B",
+    "FunAudioLLM/SenseVoiceSmall",
+    "fnlp/MOSS-TTSD-v0.5",
+    "TeleAI/TeleSpeechASR",
+]
+
+MINERU_EXE = Path(os.environ.get("MINERU_EXE", "mineru"))
+MINERU_OUTPUT_ROOT = Path(os.environ.get("MINERU_OUTPUT_ROOT", str(PROJECT_ROOT / ".mineru_outputs")))
+MINERU_DEFAULT_BACKEND = os.environ.get("MINERU_BACKEND", "pipeline")
+MINERU_DEFAULT_METHOD = os.environ.get("MINERU_METHOD", "txt")
+MINERU_DEFAULT_FORMULA = os.environ.get("MINERU_FORMULA", "false")
+MINERU_DEFAULT_TABLE = os.environ.get("MINERU_TABLE", "false")
+
+REQUIRED_PACKAGES = {
+    "pymupdf4llm": "pymupdf4llm",
+    "fitz": "pymupdf",
+    "pypdf": "pypdf",
+    "langchain": "langchain",
+    "langchain_ollama": "langchain-ollama",
+    "pydantic": "pydantic",
+    "pandas": "pandas",
+    "openpyxl": "openpyxl",
+}
+
+DEFAULT_FIELDS = [
+    {"label": "工艺名称", "requirement": "required", "description": "文本（中文/英文）。抽取论文中的工艺、反应路线或过程名称。"},
+    {"label": "原料", "requirement": "required", "description": "下拉列表。抽取主要原料、反应物或进料名称，可用分号分隔多个原料。"},
+    {"label": "CAS号", "requirement": "required", "description": "文本，格式 xx-xx-x。抽取原料或核心物质 CAS 号，多个用分号分隔。"},
+    {"label": "催化剂通用名", "requirement": "required", "description": "文本。抽取催化剂通用名称、简称或体系名称。"},
+    {"label": "具体型号/牌号", "requirement": "recommended", "description": "文本（重要）。抽取商业牌号、型号、批号或论文中给出的具体催化剂编号。"},
+    {"label": "催化剂制备方法", "requirement": "optional", "description": "文本描述。概括浸渍、沉淀、水热、焙烧、还原等制备步骤。"},
+    {"label": "催化剂类型", "requirement": "recommended", "description": "下拉列表。归纳为金属、氧化物、分子筛、负载型、均相、酶、电催化剂等类型。"},
+    {"label": "物理形状", "requirement": "optional", "description": "下拉列表。抽取粉末、颗粒、片状、球形、蜂窝、膜、电极等形态。"},
+    {"label": "催化剂寿命", "requirement": "optional", "description": "文本。抽取寿命、稳定运行时间、循环次数、失活信息或再生信息。"},
+    {"label": "反应温度（℃）", "requirement": "required", "description": "数字（℃）。只填摄氏温度数值；若原文为 K 或其他单位，换算为 ℃。"},
+    {"label": "温度误差", "requirement": "recommended", "description": "数字 (℃)。抽取温度波动、误差或范围半宽；没有明确误差则留空。"},
+    {"label": "反应压力（MPa）", "requirement": "required", "description": "数字（MPa）。只填 MPa 数值；若原文为 bar、atm、Pa 等，换算为 MPa。"},
+    {"label": "压力误差", "requirement": "recommended", "description": "数字 (MPa)。抽取压力误差、波动或范围半宽；没有明确误差则留空。"},
+    {"label": "反应规模/空速", "requirement": "recommended", "description": "数字 (h^-1)。优先抽取 GHSV、WHSV、LHSV、空速或规模；无法换算时保留原文表达。"},
+    {"label": "数据类型/实验室/工业化", "requirement": "recommended", "description": "实验室小试/中试放大/工业化。根据论文实验规模和装置描述判断。"},
+    {"label": "反应器形式", "requirement": "required", "description": "下拉列表。抽取固定床、釜式、管式、流化床、微反应器、电解槽、膜反应器等。"},
+    {"label": "物性方法", "requirement": "required", "description": "下拉列表。抽取 GC、HPLC、GC-MS、NMR、滴定、在线分析、模拟方法或物性计算方法。"},
+    {"label": "转化率（%）", "requirement": "required", "description": "数字（0-100）。抽取主要原料转化率，填百分数数值。"},
+    {"label": "选择性（%）", "requirement": "required", "description": "下拉列表/数字。抽取目标产物选择性；若为数值，填百分数；若为定性分类，保留原文。"},
+    {"label": "产物组成", "requirement": "required", "description": "抽取产物组成总体描述，包括主产物、副产物和组成比例来源。"},
+    {"label": "产物1: 名称", "requirement": "required", "description": "文本。抽取第一种主要产物名称。"},
+    {"label": "产物1: CAS号", "requirement": "required", "description": "文本。抽取第一种主要产物 CAS 号。"},
+    {"label": "产物1: 数值", "requirement": "required", "description": "数字 (%)。抽取第一种产物的组成、选择性、收率或占比百分数。"},
+    {"label": "产物2: 名称", "requirement": "required", "description": "文本。抽取第二种主要产物名称。"},
+    {"label": "产物2: CAS号", "requirement": "required", "description": "文本。抽取第二种主要产物 CAS 号。"},
+    {"label": "产物2: 数值", "requirement": "required", "description": "数字 (%)。抽取第二种产物的组成、选择性、收率或占比百分数。"},
+    {"label": "产物3: 名称", "requirement": "recommended", "description": "文本。抽取第三种产物名称；没有第三种产物则留空。"},
+    {"label": "产物3: 数值", "requirement": "recommended", "description": "数字 (%)。抽取第三种产物对应百分数；没有则留空。"},
+    {"label": "产物4: 名称", "requirement": "optional", "description": "文本。抽取第四种产物名称；没有则留空。"},
+    {"label": "产物4: 数值", "requirement": "optional", "description": "文本/数字。抽取第四种产物对应数值或原文描述；没有则留空。"},
+    {"label": "数据来源", "requirement": "optional", "description": "文本。记录数据来自正文、表格、图、补充材料或具体表/图编号。"},
+    {"label": "产品分离", "requirement": "recommended", "description": "文本描述。抽取分离方法、纯化步骤、收集方式或后处理条件。"},
+    {"label": "反应热", "requirement": "recommended", "description": "放热/吸热/无反应热。根据原文热效应、焓变或工艺描述判断。"},
+    {"label": "反应机理", "requirement": "optional", "description": "文本描述，第一句话是主要反应式；随后简述关键中间体、活性位点或机理结论。"},
+    {"label": "文献出处-链接", "requirement": "required", "description": "以 http 或 https 开始的 url。优先 DOI 链接、出版社链接或论文网页。"},
+    {"label": "文献题目", "requirement": "required", "description": "文本描述。抽取论文正式题目。"},
+    {"label": "流程图", "requirement": "recommended", "description": "图片。若当前文本无法直接提取图片，记录流程图编号、图题、页码或简要流程描述。"},
+]
+
+CHINESE_TRANSLATION_FIELDS = {
+    "工艺名称", "原料", "CAS号", "催化剂通用名", "具体型号/牌号",
+    "催化剂制备方法", "催化剂类型", "物理形状", "催化剂寿命",
+    "反应温度（℃）", "温度误差", "反应压力（MPa）", "压力误差",
+    "反应规模/空速", "数据类型/实验室/工业化", "反应器形式", "物性方法",
+    "转化率（%）", "选择性（%）", "产物组成",
+    "产物1: 名称", "产物1: CAS号", "产物1: 数值",
+    "产物2: 名称", "产物2: CAS号", "产物2: 数值",
+    "产物3: 名称", "产物3: 数值", "产物4: 名称", "产物4: 数值",
+    "数据来源", "产品分离", "反应热", "反应机理",
+}
+
+EXPORT_EXCLUDED_COLUMNS = [
+    "source_path", "source_file", "record_index", "record_count",
+    "llm_provider", "llm_service", "llm_model", "ollama_model",
+    "pdf_to_md_mode", "markdown_chars_total", "markdown_chars_used",
+    "was_truncated", "quality_retry_used",
+]
+
+
+@dataclass
+class RuntimeDeps:
+    pd: Any
+    pymupdf4llm: Any
+    fitz: Any
+    PdfReader: Any
+    ChatPromptTemplate: Any
+    ChatOllama: Any
+    Field: Any
+    create_model: Any
+
+
+def script_dir() -> Path:
+    return PROJECT_ROOT
+
+
+def default_input_dir() -> Path:
+    nearby = script_dir() / "input_pdfs"
+    return nearby if nearby.exists() else script_dir()
+
+
+def default_output_path() -> Path:
+    return script_dir() / OUTPUT_EXCEL_NAME
+
+
+def local_config_path() -> Path:
+    return script_dir() / LOCAL_CONFIG_NAME
+
+
+def mask_api_key(key: str) -> str:
+    key = (key or "").strip()
+    if not key:
+        return ""
+    if len(key) <= 8:
+        return key[:2] + "..."
+    return key[:4] + "..." + key[-2:]
+
+
+def normalize_local_config(raw: dict[str, Any] | None) -> dict[str, Any]:
+    raw = raw or {}
+    return {
+        "cloud_service_name": str(
+            raw.get("cloud_service_name")
+            or raw.get("llm_service_name")
+            or raw.get("service_name")
+            or DEFAULT_CLOUD_SERVICE_NAME
+        ).strip(),
+        "cloud_api_key": str(raw.get("cloud_api_key") or raw.get("api_key") or "").strip(),
+        "cloud_base_url": str(raw.get("cloud_base_url") or raw.get("base_url") or DEFAULT_CLOUD_BASE_URL).strip(),
+        "cloud_model": str(raw.get("cloud_model") or raw.get("model") or DEFAULT_CLOUD_MODEL).strip(),
+        "cloud_active": bool(raw.get("cloud_active", True)),
+    }
+
+
+def load_local_config() -> dict[str, Any]:
+    path = local_config_path()
+    if not path.exists():
+        return {}
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        if isinstance(data, dict):
+            return normalize_local_config(data)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return {}
+
+
+def save_local_config(config: dict[str, Any]) -> Path:
+    normalized = normalize_local_config(config)
+    payload = {
+        "llm_service_name": normalized["cloud_service_name"],
+        "api_key": normalized["cloud_api_key"],
+        "base_url": normalized["cloud_base_url"],
+        "model": normalized["cloud_model"],
+        "cloud_active": normalized["cloud_active"],
+    }
+    path = local_config_path()
+    with path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+    return path
+
+
+def apply_cloud_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
+    local_config = load_local_config()
+    env_api_key = os.environ.get("CHEM_PDF_EXTRACTOR_API_KEY") or os.environ.get("CHEM_EXTRACTOR_CLOUD_API_KEY") or ""
+    defaults = {
+        "cloud_service_name": local_config.get("cloud_service_name") or DEFAULT_CLOUD_SERVICE_NAME,
+        "cloud_model": local_config.get("cloud_model") or os.environ.get("CHEM_PDF_EXTRACTOR_MODEL") or DEFAULT_CLOUD_MODEL,
+        "cloud_base_url": local_config.get("cloud_base_url") or os.environ.get("CHEM_PDF_EXTRACTOR_BASE_URL") or DEFAULT_CLOUD_BASE_URL,
+        "cloud_api_key": local_config.get("cloud_api_key") or env_api_key or DEFAULT_CLOUD_API_KEY,
+        "cloud_active": local_config.get("cloud_active", True),
+    }
+    for key, value in defaults.items():
+        if key == "cloud_active":
+            config.setdefault(key, value)
+        elif not str(config.get(key) or "").strip():
+            config[key] = value
+    return config
+
+
+def short_error(exc: BaseException, limit: int = 500) -> str:
+    text = f"{type(exc).__name__}: {exc}"
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) > limit:
+        text = text[: limit - 3] + "..."
+    return text
+
+
+def format_duration(seconds: float) -> str:
+    total = max(0, int(round(seconds)))
+    hours, rem = divmod(total, 3600)
+    minutes, secs = divmod(rem, 60)
+    if hours:
+        return f"{hours}小时{minutes}分{secs}秒"
+    if minutes:
+        return f"{minutes}分{secs}秒"
+    if seconds < 10:
+        return f"{seconds:.1f}秒"
+    return f"{secs}秒"
+
+
+def add_stat(stats: dict[str, float] | None, key: str, value: float = 1.0) -> None:
+    if stats is not None:
+        stats[key] = stats.get(key, 0.0) + value
+
+
+def eta_text(started_at: float, done: int, total: int) -> str:
+    import time as _time
+    if done <= 0 or total <= 0 or done >= total:
+        return "预计剩余 0秒"
+    elapsed = _time.perf_counter() - started_at
+    remaining = max(0, total - done)
+    eta = elapsed / done * remaining
+    return f"预计剩余 {format_duration(eta)}"
+
+
+def stage_summary(stats: dict[str, float]) -> str:
+    if not stats:
+        return ""
+    parts = []
+    mapping = [
+        ("pdf_to_md", "PDF转MD"),
+        ("llm_extraction", "LLM抽取"),
+        ("quality_retry", "二次抽取"),
+        ("translation", "翻译"),
+    ]
+    for key, label in mapping:
+        value = stats.get(key, 0.0)
+        if value:
+            parts.append(f"{label}{format_duration(value)}")
+    cache_hits = int(stats.get("extract_cache_hit", 0))
+    if cache_hits:
+        parts.append(f"抽取缓存命中{cache_hits}次")
+    return "；".join(parts)
+
+
+def infer_field_type(label: str, description: str) -> str:
+    text = f"{label} {description}".lower()
+    desc = description.strip().lower()
+    if desc.startswith("数字") or "只填" in text:
+        return "float"
+    return "str"
+
+
+def normalize_requirement(value: Any) -> str:
+    text = str(value or "").strip().lower()
+    mapping = {
+        "必填": "required", "required": "required",
+        "建议": "recommended", "推荐": "recommended", "recommended": "recommended",
+        "选填": "optional", "可选": "optional", "optional": "optional",
+    }
+    return mapping.get(text, "optional")
+
+
+def requirement_label(value: str) -> str:
+    return {"required": "必填", "recommended": "建议", "optional": "选填"}.get(value, "选填")
+
+
+def requirement_rule(value: str) -> str:
+    if value == "required":
+        return "【必填】必须优先检索全文、表格、图注和补充材料中的相关信息，尽最大努力抽取；只有原文确实不存在或无法判断时才留空，严禁编造"
+    if value == "recommended":
+        return "【建议】尽量抽取；若原文没有明确给出或无法可靠判断，可以留空"
+    return "【选填】有明确证据时抽取；没有就留空"
+
+
+def normalize_fields(fields: list[dict[str, Any]] | None) -> list[dict[str, str]]:
+    source = fields or DEFAULT_FIELDS
+    normalized: list[dict[str, str]] = []
+    for item in source:
+        label = str(item.get("label", "")).strip()
+        if not label:
+            continue
+        description = str(item.get("description", "")).strip() or label
+        field_type = str(item.get("type") or infer_field_type(label, description)).strip().lower()
+        if field_type not in {"str", "float", "int"}:
+            field_type = infer_field_type(label, description)
+        requirement = normalize_requirement(item.get("requirement"))
+        normalized.append({
+            "label": label, "type": field_type,
+            "requirement": requirement, "description": description,
+        })
+    if not normalized:
+        first = DEFAULT_FIELDS[0]
+        description = str(first.get("description", "")).strip() or str(first.get("label", "字段")).strip()
+        normalized = [{
+            "label": str(first.get("label", "字段")).strip() or "字段",
+            "type": str(first.get("type") or infer_field_type(str(first.get("label", "")), description)),
+            "requirement": normalize_requirement(first.get("requirement")),
+            "description": description,
+        }]
+    used: dict[str, int] = {}
+    for item in normalized:
+        label = item["label"]
+        used[label] = used.get(label, 0) + 1
+        if used[label] > 1:
+            item["label"] = f"{label} ({used[label]})"
+    return normalized
+
+
+def python_type(type_name: str) -> type:
+    return str
+
+
+def missing_rule(type_name: str) -> str:
+    if type_name in {"float", "int"}:
+        return "缺失时留空；若有数据，只输出纯数字"
+    return "缺失时留空，不要输出 N/A、null、-999 或自行编造内容"
+
+
+def field_instructions(fields: list[dict[str, str]]) -> str:
+    lines = []
+    for index, item in enumerate(fields, start=1):
+        requirement = item.get("requirement", "optional")
+        lines.append(
+            f"{index}. {item['label']} [{requirement_label(requirement)}]: "
+            f"{item['description']}；{requirement_rule(requirement)}；{missing_rule(item['type'])}"
+        )
+    return "\n".join(lines)
+
+
+def build_dynamic_model(fields: list[dict[str, str]], runtime: RuntimeDeps):
+    from pydantic import Field as _Field, create_model as _create_model
+    record_fields: dict[str, Any] = {}
+    key_to_label: dict[str, str] = {}
+    for index, item in enumerate(fields, start=1):
+        key = f"field_{index:02d}"
+        key_to_label[key] = item["label"]
+        desc = (
+            f"字段名：{item['label']}。"
+            f"字段要求：{requirement_rule(item.get('requirement', 'optional'))}。"
+            f"字段说明：{item['description']}。"
+            f"{missing_rule(item['type'])}。"
+            "中英文文献均可抽取，保留原文中最清楚的表达。"
+        )
+        record_fields[key] = (python_type(item["type"]), _Field(default="", description=desc))
+    record_model = _create_model("ExtractionRecord", **record_fields)
+    model = _create_model(
+        "ExtractionResult",
+        records=(
+            list[record_model],
+            _Field(
+                default_factory=list,
+                description=(
+                    "抽取到的数据记录列表。同一篇文献中如果有多个工艺、催化剂、实验条件、"
+                    "数据表行或可独立成行的结果，就拆成多条 records；只有一条时也放在列表中。"
+                ),
+            ),
+        ),
+    )
+    return model, key_to_label
+
+
+def bad_row_min_fill_rate_from_config(config: dict[str, Any]) -> float:
+    raw = config.get("bad_row_min_fill_percent", config.get("bad_row_min_fill_rate", BAD_ROW_MIN_FILL_RATE))
+    if raw is None or raw == "":
+        return BAD_ROW_MIN_FILL_RATE
+    try:
+        numeric = float(raw)
+    except (TypeError, ValueError):
+        return BAD_ROW_MIN_FILL_RATE
+    if numeric > 1:
+        numeric = numeric / 100.0
+    return max(0.0, min(1.0, numeric))
+
+
+def candidate_pythons() -> list[Path]:
+    candidates: list[Path] = []
+    bundled_python = PROJECT_ROOT / BUNDLED_RUNTIME_DIR_NAME / "python" / "python.exe"
+    candidates.append(bundled_python)
+    legacy_bundled_python = PROJECT_ROOT / LEGACY_BUNDLED_RUNTIME_DIR_NAME / "python" / "python.exe"
+    candidates.append(legacy_bundled_python)
+    env_python = os.environ.get("CHEM_PDF_EXTRACTOR_PYTHON") or os.environ.get("CHEM_EXTRACTOR_PYTHON")
+    if env_python:
+        candidates.append(Path(env_python))
+    current = Path(sys.executable).resolve()
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        try:
+            resolved = candidate.resolve()
+        except OSError:
+            resolved = candidate
+        key = str(resolved).casefold()
+        if key == str(current).casefold() or key in seen:
+            continue
+        seen.add(key)
+        unique.append(resolved)
+    return unique
+
+
+def python_has_required_packages(python_exe: Path) -> bool:
+    if not python_exe.exists():
+        return False
+    code = "import " + ", ".join(REQUIRED_PACKAGES.keys())
+    result = subprocess.run(
+        [str(python_exe), "-c", code],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False,
+    )
+    return result.returncode == 0
+
+
+def try_reexec_with_ready_python() -> None:
+    if os.environ.get("CHEM_EXTRACTOR_REEXECED") == "1":
+        return
+    for python_exe in candidate_pythons():
+        if python_has_required_packages(python_exe):
+            print(f"当前 Python 缺依赖：{sys.executable}")
+            print(f"找到已安装依赖的 Python：{python_exe}")
+            print("正在自动切换并重启脚本...")
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os.environ["CHEM_EXTRACTOR_REEXECED"] = "1"
+            wrapper = PROJECT_ROOT / "ShuJuTiQuJiaoBen.py"
+            os.execv(str(python_exe), [str(python_exe), str(wrapper), *sys.argv[1:]])
+
+
+def clean_pip_env() -> dict[str, str]:
+    env = os.environ.copy()
+    for key in [
+        "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY",
+        "http_proxy", "https_proxy", "all_proxy",
+        "PIP_PROXY", "pip_proxy",
+    ]:
+        env.pop(key, None)
+    return env
+
+
+def find_missing_imports() -> list[str]:
+    missing: list[str] = []
+    for import_name, package_name in REQUIRED_PACKAGES.items():
+        try:
+            importlib.import_module(import_name)
+        except ModuleNotFoundError:
+            missing.append(package_name)
+    return sorted(set(missing))
+
+
+def run_pip_install(packages: list[str]) -> bool:
+    commands = [
+        [sys.executable, "-m", "pip", "install", "--disable-pip-version-check", *packages],
+        [sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
+         "-i", "https://pypi.tuna.tsinghua.edu.cn/simple",
+         "--trusted-host", "pypi.tuna.tsinghua.edu.cn", *packages],
+        [sys.executable, "-m", "pip", "install", "--disable-pip-version-check",
+         "-i", "https://mirrors.aliyun.com/pypi/simple/",
+         "--trusted-host", "mirrors.aliyun.com", *packages],
+    ]
+    for command in commands:
+        print("\n正在尝试安装依赖：")
+        print(" ".join(command))
+        result = subprocess.run(command, check=False, env=clean_pip_env())
+        if result.returncode == 0:
+            return True
+    return False
+
+
+def ensure_dependencies(auto_install: bool = True) -> None:
+    missing = find_missing_imports()
+    if not missing:
+        return
+    print("当前 Python 缺少依赖：", ", ".join(missing))
+    try_reexec_with_ready_python()
+    if auto_install:
+        installed = run_pip_install(missing)
+        if installed and not find_missing_imports():
+            print("依赖安装完成，继续执行。")
+            return
+    mirror_command = (
+        f'"{sys.executable}" -m pip install '
+        "-i https://pypi.tuna.tsinghua.edu.cn/simple "
+        "--trusted-host pypi.tuna.tsinghua.edu.cn "
+        + " ".join(missing)
+    )
+    raise SystemExit(
+        "\n依赖没有安装成功，脚本无法继续。\n"
+        "你可以手动复制下面这条命令到 PowerShell 执行：\n"
+        f"{mirror_command}\n"
+    )
+
+
+def import_runtime_dependencies() -> RuntimeDeps:
+    import fitz
+    import pandas as pd
+    import pymupdf4llm
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_ollama import ChatOllama
+    from pydantic import Field, create_model
+    from pypdf import PdfReader
+    return RuntimeDeps(
+        pd=pd, pymupdf4llm=pymupdf4llm, fitz=fitz, PdfReader=PdfReader,
+        ChatPromptTemplate=ChatPromptTemplate, ChatOllama=ChatOllama,
+        Field=Field, create_model=create_model,
+    )
