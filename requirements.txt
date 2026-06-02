@@ -1,3 +1,7 @@
+# Full installation dependencies, including optional PyMuPDF-based PDF backends.
+# If PyMuPDF / pymupdf4llm fails on Windows + Python 3.12, install
+# requirements-core.txt instead and use --pdf-mode pypdf_text.
+
 pymupdf4llm>=0.0.17
 pymupdf>=1.24
 pypdf>=4.0

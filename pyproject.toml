@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chem-pdf-extractor"
-version = "0.1.0"
+version = "0.1.2"
 description = "Extract structured experimental data from scientific PDF papers for chemical engineering and related research."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -25,8 +25,6 @@ classifiers = [
   "Topic :: Text Processing :: Linguistic",
 ]
 dependencies = [
-  "pymupdf4llm>=0.0.17",
-  "pymupdf>=1.24",
   "pypdf>=4.0",
   "langchain>=0.2",
   "langchain-core>=0.2",
@@ -37,6 +35,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+pdf = [
+  "pymupdf4llm>=0.0.17",
+  "pymupdf>=1.24",
+]
 test = ["pytest>=8"]
 
 [tool.setuptools]
