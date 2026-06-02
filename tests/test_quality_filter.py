@@ -1,6 +1,6 @@
 import unittest
 
-from ShuJuTiQuJiaoBen import calculate_fill_rate, row_is_bad_data
+from chem_pdf_extractor.quality import calculate_fill_rate, row_is_bad_data
 
 
 class QualityFilterTest(unittest.TestCase):
