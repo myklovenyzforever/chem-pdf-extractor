@@ -92,9 +92,10 @@ The `examples/` directory contains synthetic demonstration files:
 
 The example data is synthetic and does not represent real published papers.
 
-## Usage Cases
+## Project Docs
 
 - [Usage Case: Catalysis Literature Data Extraction](docs/use_case_catalysis_literature_extraction.md)
+- [Roadmap](ROADMAP.md)
 
 ## Screenshots
 
