@@ -90,6 +90,10 @@ The `examples/` directory contains synthetic demonstration files:
 
 The example data is synthetic and does not represent real published papers.
 
+## Usage Cases
+
+- [Usage Case: Catalysis Literature Data Extraction](docs/use_case_catalysis_literature_extraction.md)
+
 ## Screenshots
 
 The current web interface screenshot is shown below. An Excel output screenshot will be added later.
