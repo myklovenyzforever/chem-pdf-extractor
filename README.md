@@ -1,14 +1,16 @@
 # Chem-PDF-Extractor
 
+Chem-PDF-Extractor is an open-source tool for extracting structured experimental data from chemical engineering, catalysis, materials, energy, and environmental research PDFs into Excel/CSV tables. It is designed for literature reviews, preliminary dataset construction, and manual verification workflows.
+
+Chem-PDF-Extractor 是一个面向化工、催化、材料、能源与环境领域论文的开源 PDF 数据抽取工具，可将文献中的实验条件和结果整理为 Excel/CSV 表格，适用于文献综述、初步数据集构建和后续人工核验流程。
+
 **Language / 语言:** [English](#english) | [中文](#chinese)
 
 <a id="english"></a>
 
 ## Overview
 
-Chem-PDF-Extractor is an open-source tool for extracting structured experimental data from scientific PDF papers, with a focus on chemical engineering, catalysis, materials, and environmental research.
-
-It helps researchers convert PDF papers to Markdown/text, define configurable LLM-based extraction fields, extract multiple records from one paper, and export structured results to Excel/CSV. It also supports low-quality row filtering, error logs, suspicious-data records, bad-data records, resumable processing, cache reuse, OpenAI-compatible APIs, and local Ollama models.
+The project provides an inspectable first-pass workflow for converting PDF papers to Markdown/text, defining configurable LLM-based extraction fields, extracting multiple records from one paper, and exporting structured results for review. It also supports low-quality row filtering, error logs, suspicious-data records, bad-data records, resumable processing, cache reuse, OpenAI-compatible APIs, and local Ollama models.
 
 ## Why This Project
 
