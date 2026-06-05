@@ -99,9 +99,13 @@ The example data is synthetic and does not represent real published papers.
 
 ## Screenshots
 
-The current web interface screenshot is shown below. An Excel output screenshot will be added later.
+The current web interface screenshot and a synthetic Excel/CSV output preview are shown below.
 
 ![Web UI](docs/screenshots/web-ui-zh+en.png)
+
+![Synthetic Excel Output Preview](docs/screenshots/excel-output-example.svg)
+
+The output preview uses synthetic data only and does not represent real published papers or real extracted research results.
 
 ## Limitations
 
@@ -196,9 +200,13 @@ python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
 
 ## 截图
 
-当前网页界面截图如下。Excel 输出示例截图后续补充。
+当前网页界面截图和合成 Excel/CSV 输出预览如下。
 
 ![网页界面](docs/screenshots/web-ui-zh+en.png)
+
+![合成 Excel 输出预览](docs/screenshots/excel-output-example.svg)
+
+输出预览仅使用合成数据，不代表真实发表论文或真实抽取结果。
 
 ## 注意事项
 
