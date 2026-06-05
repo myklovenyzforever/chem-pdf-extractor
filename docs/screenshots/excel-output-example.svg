@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="430" viewBox="0 0 1280 430" role="img" aria-labelledby="title desc">
+  <title id="title">Synthetic Excel/CSV Output Preview</title>
+  <desc id="desc">A synthetic spreadsheet-style preview showing example output columns and rows. The data is not real research data.</desc>
+  <rect width="1280" height="430" fill="#ffffff"/>
+
+  <text x="40" y="48" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#111827">
+    Synthetic Excel/CSV Output Preview
+  </text>
+  <text x="40" y="78" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#b91c1c">
+    Synthetic data only. Not real research results.
+  </text>
+
+  <g font-family="Arial, Helvetica, sans-serif" font-size="15" fill="#111827">
+    <rect x="30" y="105" width="1220" height="44" fill="#eaf2ff" stroke="#b8c7dd"/>
+    <rect x="30" y="149" width="1220" height="42" fill="#ffffff" stroke="#d2dbe8"/>
+    <rect x="30" y="191" width="1220" height="42" fill="#f8fafc" stroke="#d2dbe8"/>
+    <rect x="30" y="233" width="1220" height="42" fill="#ffffff" stroke="#d2dbe8"/>
+
+    <g stroke="#b8c7dd">
+      <line x1="165" y1="105" x2="165" y2="275"/>
+      <line x1="305" y1="105" x2="305" y2="275"/>
+      <line x1="440" y1="105" x2="440" y2="275"/>
+      <line x1="570" y1="105" x2="570" y2="275"/>
+      <line x1="675" y1="105" x2="675" y2="275"/>
+      <line x1="790" y1="105" x2="790" y2="275"/>
+      <line x1="900" y1="105" x2="900" y2="275"/>
+      <line x1="1015" y1="105" x2="1015" y2="275"/>
+    </g>
+
+    <g font-weight="700" fill="#1f2937">
+      <text x="42" y="133">Source file</text>
+      <text x="177" y="133">Catalyst</text>
+      <text x="317" y="133">Feedstock</text>
+      <text x="452" y="133">Temperature</text>
+      <text x="582" y="133">Pressure</text>
+      <text x="687" y="133">Conversion</text>
+      <text x="802" y="133">Selectivity</text>
+      <text x="912" y="133">Product</text>
+      <text x="1027" y="133">Notes</text>
+    </g>
+
+    <text x="42" y="175">paper_001.pdf</text>
+    <text x="177" y="175">Catalyst A</text>
+    <text x="317" y="175">Feedstock A</text>
+    <text x="452" y="175">350 C</text>
+    <text x="582" y="175">1 atm</text>
+    <text x="687" y="175">85%</text>
+    <text x="802" y="175">92%</text>
+    <text x="912" y="175">Product A</text>
+    <text x="1027" y="175">synthetic example</text>
+
+    <text x="42" y="217">paper_002.pdf</text>
+    <text x="177" y="217">Catalyst B</text>
+    <text x="317" y="217">Feedstock B</text>
+    <text x="452" y="217">420 C</text>
+    <text x="582" y="217">2 MPa</text>
+    <text x="687" y="217">78%</text>
+    <text x="802" y="217">88%</text>
+    <text x="912" y="217">Product B</text>
+    <text x="1027" y="217">synthetic example</text>
+
+    <text x="42" y="259">paper_003.pdf</text>
+    <text x="177" y="259">Catalyst C</text>
+    <text x="317" y="259">Feedstock C</text>
+    <text x="452" y="259">300 C</text>
+    <text x="582" y="259">-</text>
+    <text x="687" y="259">-</text>
+    <text x="802" y="259">-</text>
+    <text x="912" y="259">Product C</text>
+    <text x="1027" y="259">needs review</text>
+  </g>
+
+  <g font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#64748b">
+    <rect x="40" y="315" width="1200" height="58" rx="8" fill="#f8fafc" stroke="#d2dbe8"/>
+    <text x="60" y="345">
+      This preview illustrates the table format only. Field names, row counts, and values depend on user configuration and manual verification.
+    </text>
+  </g>
+</svg>
