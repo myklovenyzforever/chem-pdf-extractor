@@ -1,0 +1,3 @@
+source_file,catalyst,feedstock,reaction_temperature,reaction_pressure,conversion,selectivity,main_product,notes
+synthetic_catalysis_note_001.pdf,Catalyst A,Feedstock A,350 C,1 atm,85%,92%,Product A,Synthetic demo row only
+synthetic_catalysis_note_002.pdf,Catalyst B,Feedstock B,420 C,2 MPa,78%,88%,Product B,Synthetic demo row only

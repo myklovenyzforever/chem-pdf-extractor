@@ -1,0 +1,47 @@
+[
+  {
+    "label": "source_file",
+    "requirement": "optional",
+    "description": "Source PDF filename used to align the extracted row with the input document."
+  },
+  {
+    "label": "catalyst",
+    "requirement": "required",
+    "description": "Catalyst name or sample label mentioned in the synthetic note."
+  },
+  {
+    "label": "feedstock",
+    "requirement": "required",
+    "description": "Main feedstock or reactant used in the synthetic reaction note."
+  },
+  {
+    "label": "reaction_temperature",
+    "requirement": "required",
+    "description": "Reaction temperature with unit as stated in the synthetic note."
+  },
+  {
+    "label": "reaction_pressure",
+    "requirement": "required",
+    "description": "Reaction pressure with unit as stated in the synthetic note."
+  },
+  {
+    "label": "conversion",
+    "requirement": "required",
+    "description": "Reported conversion value from the synthetic note."
+  },
+  {
+    "label": "selectivity",
+    "requirement": "required",
+    "description": "Reported selectivity value from the synthetic note."
+  },
+  {
+    "label": "main_product",
+    "requirement": "required",
+    "description": "Main product mentioned in the synthetic note."
+  },
+  {
+    "label": "notes",
+    "requirement": "optional",
+    "description": "Short note that the row is synthetic and for demonstration only."
+  }
+]
