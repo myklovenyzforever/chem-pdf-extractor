@@ -1,0 +1,112 @@
+[
+  {
+    "label": "source_file",
+    "requirement": "recommended",
+    "description": "Source document filename or identifier used to trace electrochemical records."
+  },
+  {
+    "label": "electrochemical_system",
+    "requirement": "required",
+    "description": "Electrochemical system or task such as energy storage, electrocatalysis, water splitting, oxygen reaction, or carbon dioxide reduction."
+  },
+  {
+    "label": "working_electrode",
+    "requirement": "required",
+    "description": "Working electrode substrate, geometry, or electrode type."
+  },
+  {
+    "label": "active_material",
+    "requirement": "required",
+    "description": "Active material, catalyst, coating, or electrode material under evaluation."
+  },
+  {
+    "label": "electrolyte",
+    "requirement": "required",
+    "description": "Electrolyte composition and concentration. Verify units and solvent or aqueous basis manually."
+  },
+  {
+    "label": "reference_electrode",
+    "requirement": "recommended",
+    "description": "Reference electrode used for potential reporting. Potential conversions require manual verification."
+  },
+  {
+    "label": "counter_electrode",
+    "requirement": "optional",
+    "description": "Counter electrode material or configuration when reported."
+  },
+  {
+    "label": "cell_configuration",
+    "requirement": "optional",
+    "description": "Cell setup such as two-electrode, three-electrode, flow cell, membrane cell, or coin cell."
+  },
+  {
+    "label": "loading_mg_cm2",
+    "requirement": "optional",
+    "description": "Active material loading in mg/cm2. Verify area basis and normalization."
+  },
+  {
+    "label": "potential_window_v",
+    "requirement": "recommended",
+    "description": "Potential or voltage window in V. Check reference electrode and cell configuration."
+  },
+  {
+    "label": "current_density_ma_cm2",
+    "requirement": "recommended",
+    "description": "Current density in mA/cm2. Verify geometric, mass-normalized, or other basis."
+  },
+  {
+    "label": "overpotential_mv",
+    "requirement": "recommended",
+    "description": "Overpotential in mV. Confirm reference scale and benchmark current density."
+  },
+  {
+    "label": "tafel_slope_mv_dec",
+    "requirement": "optional",
+    "description": "Tafel slope in mV/dec if reported. Verify fitting range manually."
+  },
+  {
+    "label": "capacity_mah_g",
+    "requirement": "recommended",
+    "description": "Specific capacity in mAh/g for battery-type measurements when reported."
+  },
+  {
+    "label": "specific_capacitance_f_g",
+    "requirement": "recommended",
+    "description": "Specific capacitance in F/g for supercapacitor measurements when reported."
+  },
+  {
+    "label": "cycle_number",
+    "requirement": "optional",
+    "description": "Cycle number used for stability, retention, or durability reporting."
+  },
+  {
+    "label": "capacity_retention_percent",
+    "requirement": "optional",
+    "description": "Capacity or activity retention in percent after cycling or durability testing."
+  },
+  {
+    "label": "scan_rate_mv_s",
+    "requirement": "optional",
+    "description": "Scan rate in mV/s for cyclic voltammetry or related measurements."
+  },
+  {
+    "label": "test_temperature_c",
+    "requirement": "optional",
+    "description": "Test temperature in Celsius when reported."
+  },
+  {
+    "label": "performance_metric",
+    "requirement": "required",
+    "description": "Primary performance metric reported for the system. Verify unit, normalization, and test condition."
+  },
+  {
+    "label": "data_source_location",
+    "requirement": "recommended",
+    "description": "Location of the extracted value, such as table, figure, caption, or experimental section."
+  },
+  {
+    "label": "notes",
+    "requirement": "optional",
+    "description": "Short caveats about reference scales, normalization, units, or manual review needs."
+  }
+]
