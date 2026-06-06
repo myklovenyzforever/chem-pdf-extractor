@@ -23,6 +23,13 @@ When reporting a problem, prefer synthetic PDFs, synthetic examples, or permissi
 
 LLM extraction results should be manually reviewed. They should not be treated as final scientific conclusions without human verification.
 
+For related project policies, see:
+
+- [Security Policy](SECURITY.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+
+Pull requests should follow the checklist in `.github/pull_request_template.md`.
+
 ## Running Tests
 
 Before opening a pull request, run at least:
@@ -45,6 +52,13 @@ Markdown files should be saved as UTF-8 without BOM. Chinese and English content
 提交 issue 或 PR 时，请不要上传真实 API Key、token、私有 PDF、本机绝对路径、`config.local.json`、输出文件、日志中的隐私信息或未授权公开的论文材料。
 
 复现问题时，建议使用合成 PDF、合成数据或确认可以公开分享的样例。大模型抽取结果必须人工核验，不能直接作为最终科研结论。
+
+相关项目规范：
+
+- [Security Policy](SECURITY.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+
+Pull requests should follow the checklist in `.github/pull_request_template.md`.
 
 提交 PR 前至少运行：
 
