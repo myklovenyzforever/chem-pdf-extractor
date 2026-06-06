@@ -1,0 +1,107 @@
+[
+  {
+    "label": "source_file",
+    "requirement": "required",
+    "description": "Source document filename or identifier used to trace each extracted row back to the input file."
+  },
+  {
+    "label": "study_system",
+    "requirement": "required",
+    "description": "Overall catalytic system or reaction family discussed in the document."
+  },
+  {
+    "label": "reaction_name",
+    "requirement": "optional",
+    "description": "Named reaction or process. Use concise wording and verify terminology manually."
+  },
+  {
+    "label": "feedstock",
+    "requirement": "required",
+    "description": "Main reactant or feedstock. Preserve chemical names as written and verify abbreviations."
+  },
+  {
+    "label": "co_feed",
+    "requirement": "optional",
+    "description": "Additional reactant, carrier gas, co-reactant, or diluent if reported."
+  },
+  {
+    "label": "catalyst",
+    "requirement": "required",
+    "description": "Catalyst name, composition, or sample code as reported by the document."
+  },
+  {
+    "label": "catalyst_composition",
+    "requirement": "optional",
+    "description": "Elemental composition, loading, support, promoter, or formulation details when available."
+  },
+  {
+    "label": "catalyst_preparation_method",
+    "requirement": "optional",
+    "description": "Catalyst synthesis or pretreatment method. Summarize briefly and verify conditions manually."
+  },
+  {
+    "label": "reactor_type",
+    "requirement": "recommended",
+    "description": "Reactor type such as fixed bed, batch reactor, flow reactor, membrane reactor, or microreactor."
+  },
+  {
+    "label": "reaction_temperature_c",
+    "requirement": "required",
+    "description": "Reaction temperature in Celsius. Use numeric values when possible and verify unit conversions manually."
+  },
+  {
+    "label": "reaction_pressure_mpa",
+    "requirement": "recommended",
+    "description": "Reaction pressure in MPa. Convert units only when the conversion is clear and manually checked."
+  },
+  {
+    "label": "space_velocity",
+    "requirement": "recommended",
+    "description": "Space velocity or residence-time condition, including units such as h^-1 when reported."
+  },
+  {
+    "label": "reaction_time_h",
+    "requirement": "optional",
+    "description": "Reaction time or time on stream in hours when available."
+  },
+  {
+    "label": "conversion_percent",
+    "requirement": "required",
+    "description": "Conversion of the main feedstock in percent. Check whether conversion basis is defined."
+  },
+  {
+    "label": "selectivity_percent",
+    "requirement": "recommended",
+    "description": "Selectivity to target product in percent. Confirm product basis before use."
+  },
+  {
+    "label": "yield_percent",
+    "requirement": "recommended",
+    "description": "Yield of target product in percent. Verify whether it is calculated or directly reported."
+  },
+  {
+    "label": "main_product",
+    "requirement": "required",
+    "description": "Main product or target product extracted from the reported reaction results."
+  },
+  {
+    "label": "byproducts",
+    "requirement": "optional",
+    "description": "Important byproducts or product distribution notes when available."
+  },
+  {
+    "label": "carbon_balance_percent",
+    "requirement": "optional",
+    "description": "Carbon balance in percent if reported. Treat missing or unclear values cautiously."
+  },
+  {
+    "label": "data_source_location",
+    "requirement": "recommended",
+    "description": "Location of the extracted value, such as abstract, table, figure, caption, or supporting text."
+  },
+  {
+    "label": "notes",
+    "requirement": "optional",
+    "description": "Short caveats about units, ambiguity, missing values, or manual review needs."
+  }
+]

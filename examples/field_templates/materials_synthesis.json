@@ -1,0 +1,107 @@
+[
+  {
+    "label": "source_file",
+    "requirement": "recommended",
+    "description": "Source document filename or identifier used to trace extracted synthesis records."
+  },
+  {
+    "label": "material_name",
+    "requirement": "required",
+    "description": "Material name, sample label, or target product described in the synthesis workflow."
+  },
+  {
+    "label": "material_category",
+    "requirement": "required",
+    "description": "Material class such as oxide, carbon material, adsorbent, membrane, zeolite, MOF, or composite."
+  },
+  {
+    "label": "precursor",
+    "requirement": "required",
+    "description": "Main precursor or raw material used for synthesis. Preserve chemical names carefully."
+  },
+  {
+    "label": "solvent",
+    "requirement": "optional",
+    "description": "Solvent, dispersant, or liquid medium used during preparation."
+  },
+  {
+    "label": "synthesis_method",
+    "requirement": "required",
+    "description": "Synthesis route such as hydrothermal, sol-gel, impregnation, precipitation, pyrolysis, or calcination."
+  },
+  {
+    "label": "synthesis_temperature_c",
+    "requirement": "recommended",
+    "description": "Main synthesis temperature in Celsius. Verify whether multiple stages are reported."
+  },
+  {
+    "label": "synthesis_time_h",
+    "requirement": "recommended",
+    "description": "Main synthesis duration in hours. Convert units only when unambiguous."
+  },
+  {
+    "label": "calcination_temperature_c",
+    "requirement": "recommended",
+    "description": "Calcination or heat-treatment temperature in Celsius when reported."
+  },
+  {
+    "label": "calcination_time_h",
+    "requirement": "optional",
+    "description": "Calcination or heat-treatment duration in hours when reported."
+  },
+  {
+    "label": "atmosphere",
+    "requirement": "recommended",
+    "description": "Gas atmosphere or environment used during synthesis, drying, pyrolysis, or calcination."
+  },
+  {
+    "label": "ph",
+    "requirement": "optional",
+    "description": "Solution pH or pH adjustment condition. Verify whether it is initial, final, or controlled pH."
+  },
+  {
+    "label": "template_agent",
+    "requirement": "optional",
+    "description": "Template, surfactant, structure-directing agent, or additive used in synthesis."
+  },
+  {
+    "label": "drying_condition",
+    "requirement": "optional",
+    "description": "Drying temperature, duration, and method if available."
+  },
+  {
+    "label": "surface_area_m2_g",
+    "requirement": "recommended",
+    "description": "BET surface area in m2/g. Verify measurement method and degassing conditions manually."
+  },
+  {
+    "label": "pore_volume_cm3_g",
+    "requirement": "optional",
+    "description": "Pore volume in cm3/g. Confirm whether total, micro, or mesopore volume is reported."
+  },
+  {
+    "label": "particle_size_nm",
+    "requirement": "optional",
+    "description": "Particle size in nanometers. Check whether the value is from microscopy, diffraction, or another method."
+  },
+  {
+    "label": "crystal_phase",
+    "requirement": "optional",
+    "description": "Crystal phase or structural assignment. Verify with the stated characterization method."
+  },
+  {
+    "label": "characterization_methods",
+    "requirement": "optional",
+    "description": "Characterization methods used to support material properties or structure."
+  },
+  {
+    "label": "target_application",
+    "requirement": "optional",
+    "description": "Intended application such as catalysis, adsorption, separation, energy storage, or sensing."
+  },
+  {
+    "label": "notes",
+    "requirement": "optional",
+    "description": "Short caveats about synthesis stages, uncertain units, or manual verification needs."
+  }
+]

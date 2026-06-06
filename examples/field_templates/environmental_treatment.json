@@ -1,0 +1,107 @@
+[
+  {
+    "label": "source_file",
+    "requirement": "recommended",
+    "description": "Source document filename or identifier used to trace extracted treatment records."
+  },
+  {
+    "label": "treatment_process",
+    "requirement": "required",
+    "description": "Treatment process such as adsorption, photocatalysis, oxidation, reduction, membrane separation, or remediation."
+  },
+  {
+    "label": "pollutant",
+    "requirement": "required",
+    "description": "Target pollutant or contaminant. Preserve naming and verify compound identity manually."
+  },
+  {
+    "label": "initial_concentration_mg_l",
+    "requirement": "required",
+    "description": "Initial pollutant concentration in mg/L. Convert units only when clearly supported."
+  },
+  {
+    "label": "solution_volume_ml",
+    "requirement": "optional",
+    "description": "Solution volume in mL used in the treatment experiment."
+  },
+  {
+    "label": "catalyst_or_adsorbent",
+    "requirement": "required",
+    "description": "Catalyst, adsorbent, membrane, reagent, or treatment material used in the experiment."
+  },
+  {
+    "label": "dosage_g_l",
+    "requirement": "recommended",
+    "description": "Material dosage in g/L when reported. Check whether the basis is volume or mass."
+  },
+  {
+    "label": "light_source",
+    "requirement": "optional",
+    "description": "Light source, wavelength, power, or irradiation condition for photochemical treatment."
+  },
+  {
+    "label": "oxidant",
+    "requirement": "optional",
+    "description": "Oxidant, reductant, activator, or auxiliary reagent used in the treatment process."
+  },
+  {
+    "label": "ph",
+    "requirement": "recommended",
+    "description": "Solution pH. Verify whether pH is initial, adjusted, buffered, or monitored during treatment."
+  },
+  {
+    "label": "temperature_c",
+    "requirement": "optional",
+    "description": "Treatment temperature in Celsius when reported."
+  },
+  {
+    "label": "reaction_time_min",
+    "requirement": "required",
+    "description": "Treatment or reaction time in minutes. Check whether equilibrium time or sampling time is reported."
+  },
+  {
+    "label": "removal_efficiency_percent",
+    "requirement": "recommended",
+    "description": "Removal efficiency in percent. Removal and degradation may not be equivalent and must be manually checked."
+  },
+  {
+    "label": "degradation_efficiency_percent",
+    "requirement": "recommended",
+    "description": "Degradation efficiency in percent. Confirm whether mineralization, transformation, or disappearance is measured."
+  },
+  {
+    "label": "adsorption_capacity_mg_g",
+    "requirement": "recommended",
+    "description": "Adsorption capacity in mg/g. Verify equilibrium basis and concentration calculation."
+  },
+  {
+    "label": "rate_constant",
+    "requirement": "optional",
+    "description": "Kinetic rate constant and its unit when reported. Verify model assumptions manually."
+  },
+  {
+    "label": "water_matrix",
+    "requirement": "optional",
+    "description": "Water matrix such as synthetic solution, tap water, wastewater, groundwater, or seawater."
+  },
+  {
+    "label": "analysis_method",
+    "requirement": "optional",
+    "description": "Analytical method used to measure pollutant concentration or transformation."
+  },
+  {
+    "label": "reuse_cycles",
+    "requirement": "optional",
+    "description": "Number of reuse or regeneration cycles when reported."
+  },
+  {
+    "label": "data_source_location",
+    "requirement": "recommended",
+    "description": "Location of the extracted value, such as table, figure, caption, or method section."
+  },
+  {
+    "label": "notes",
+    "requirement": "optional",
+    "description": "Short caveats about basis, units, matrix effects, or manual review needs."
+  }
+]
