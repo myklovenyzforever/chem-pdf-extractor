@@ -127,11 +127,7 @@ The output preview uses synthetic data only and does not represent real publishe
 
 ## Roadmap
 
-- More field templates for chemical engineering and catalysis.
-- Better PDF layout handling.
-- Regression examples.
-- More tests.
-- Documentation improvements.
+See [ROADMAP.md](ROADMAP.md) for planned maintenance directions, including PDF layout handling, tests, documentation, field templates, and safer review workflows.
 
 ## License
 
