@@ -31,7 +31,7 @@ from .config import (
 )
 from .diagnostics import append_diagnostic_log, log_exception, log_startup_event
 from .extractor import JobState, run_extraction_job, state_update
-from .llm import choose_model, get_cloud_models, get_ollama_models
+from .llm import choose_model, fetch_openai_compatible_models, get_ollama_models
 from .text_safety import json_dumps_utf8
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -150,12 +150,12 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.send_json({"ok": False, "error": str(exc)})
             return
 
-        if parsed.path == "/api/cloud-models":
+        if parsed.path in {"/api/models", "/api/cloud-models"}:
             try:
                 config = self.read_json()
                 base_url = str(config.get("base_url") or DEFAULT_CLOUD_BASE_URL).strip()
                 api_key = str(config.get("api_key") or "").strip()
-                models = get_cloud_models(base_url, api_key)
+                models = fetch_openai_compatible_models(base_url, api_key)
                 default_model = DEFAULT_CLOUD_MODEL if DEFAULT_CLOUD_MODEL in models else models[0]
                 self.send_json({"ok": True, "models": models, "default_model": default_model})
             except Exception as exc:

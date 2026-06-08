@@ -21,9 +21,9 @@ DEFAULT_MODEL = "minicpm-v:latest"
 DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434"
 DEFAULT_MAX_CHARS = 0
 DEFAULT_NUM_CTX = 8192
-DEFAULT_CLOUD_SERVICE_NAME = "silicon"
-DEFAULT_CLOUD_MODEL = "deepseek-ai/DeepSeek-V4-Pro"
-DEFAULT_CLOUD_BASE_URL = "https://api.siliconflow.cn/v1"
+DEFAULT_CLOUD_SERVICE_NAME = "openai_compatible"
+DEFAULT_CLOUD_MODEL = "provider/model-name"
+DEFAULT_CLOUD_BASE_URL = "https://api.example.com/v1"
 DEFAULT_CLOUD_API_KEY = ""
 LOCAL_CONFIG_NAME = "config.local.json"
 MAX_ARTIFACT_NAME_CHARS = 80
@@ -48,100 +48,7 @@ EXTRACTION_CACHE_VERSION = "2026-05-quality-v2"
 CLOUD_RETRY_COUNT = 3
 CLOUD_RETRY_BASE_DELAY_SECONDS = 2.0
 CLOUD_RETRY_MAX_DELAY_SECONDS = 20.0
-DEFAULT_CLOUD_MODEL_SUGGESTIONS = [
-    "deepseek-ai/DeepSeek-V4-Pro",
-    "deepseek-ai/DeepSeek-V4-Flash",
-    "deepseek-ai/DeepSeek-V3",
-    "deepseek-ai/DeepSeek-V3.2",
-    "deepseek-ai/DeepSeek-V3.1-Terminus",
-    "deepseek-ai/DeepSeek-R1",
-    "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
-    "deepseek-ai/DeepSeek-OCR",
-    "Pro/deepseek-ai/DeepSeek-V3.2",
-    "Pro/deepseek-ai/DeepSeek-V3.1-Terminus",
-    "Pro/deepseek-ai/DeepSeek-V3",
-    "Pro/deepseek-ai/DeepSeek-R1",
-    "ByteDance-Seed/Seed-OSS-36B-Instruct",
-    "MiniMaxAI/MiniMax-M2.5",
-    "Pro/MiniMaxAI/MiniMax-M2.5",
-    "Pro/moonshotai/Kimi-K2.6",
-    "Pro/moonshotai/Kimi-K2.5",
-    "Pro/zai-org/GLM-5.1",
-    "Pro/zai-org/GLM-5",
-    "Pro/zai-org/GLM-4.7",
-    "zai-org/GLM-4.5-Air",
-    "zai-org/GLM-4.5V",
-    "THUDM/GLM-4-32B-0414",
-    "THUDM/GLM-4-9B-0414",
-    "THUDM/GLM-Z1-9B-0414",
-    "Qwen/Qwen3.6-35B-A3B",
-    "Qwen/Qwen3.6-27B",
-    "Qwen/Qwen3.5-397B-A17B",
-    "Qwen/Qwen3.5-122B-A10B",
-    "Qwen/Qwen3.5-35B-A3B",
-    "Qwen/Qwen3.5-27B",
-    "Qwen/Qwen3.5-9B",
-    "Qwen/Qwen3.5-4B",
-    "Qwen/Qwen3-32B",
-    "Qwen/Qwen3-30B-A3B-Instruct-2507",
-    "Qwen/Qwen3-14B",
-    "Qwen/Qwen3-8B",
-    "Qwen/Qwen3-Coder-30B-A3B-Instruct",
-    "Qwen/Qwen2.5-72B-Instruct-128K",
-    "Qwen/Qwen2.5-72B-Instruct",
-    "Qwen/Qwen2.5-32B-Instruct",
-    "Qwen/Qwen2.5-14B-Instruct",
-    "Qwen/Qwen2.5-7B-Instruct",
-    "Pro/Qwen/Qwen2.5-7B-Instruct",
-    "LoRA/Qwen/Qwen2.5-72B-Instruct",
-    "LoRA/Qwen/Qwen2.5-32B-Instruct",
-    "LoRA/Qwen/Qwen2.5-14B-Instruct",
-    "LoRA/Qwen/Qwen2.5-7B-Instruct",
-    "Qwen/Qwen3-VL-32B-Thinking",
-    "Qwen/Qwen3-VL-32B-Instruct",
-    "Qwen/Qwen3-VL-30B-A3B-Thinking",
-    "Qwen/Qwen3-VL-30B-A3B-Instruct",
-    "Qwen/Qwen3-VL-8B-Thinking",
-    "Qwen/Qwen3-VL-8B-Instruct",
-    "Qwen/Qwen3-Omni-30B-A3B-Thinking",
-    "Qwen/Qwen3-Omni-30B-A3B-Instruct",
-    "Qwen/Qwen3-Omni-30B-A3B-Captioner",
-    "Qwen/Qwen-Image",
-    "Qwen/Qwen-Image-Edit",
-    "Qwen/Qwen-Image-Edit-2509",
-    "tencent/Hunyuan-A13B-Instruct",
-    "tencent/Hunyuan-MT-7B",
-    "stepfun-ai/Step-3.5-Flash",
-    "inclusionAI/Ling-flash-2.0",
-    "inclusionAI/Ling-mini-2.0",
-    "BAAI/bge-m3",
-    "Pro/BAAI/bge-m3",
-    "BAAI/bge-large-zh-v1.5",
-    "BAAI/bge-large-en-v1.5",
-    "BAAI/bge-reranker-v2-m3",
-    "Pro/BAAI/bge-reranker-v2-m3",
-    "Qwen/Qwen3-Embedding-8B",
-    "Qwen/Qwen3-Embedding-4B",
-    "Qwen/Qwen3-Embedding-0.6B",
-    "Qwen/Qwen3-Reranker-8B",
-    "Qwen/Qwen3-Reranker-4B",
-    "Qwen/Qwen3-Reranker-0.6B",
-    "Qwen/Qwen3-VL-Embedding-8B",
-    "Qwen/Qwen3-VL-Reranker-8B",
-    "netease-youdao/bce-embedding-base_v1",
-    "netease-youdao/bce-reranker-base_v1",
-    "PaddlePaddle/PaddleOCR-VL-1.5",
-    "baidu/ERNIE-Image-Turbo",
-    "Kwai-Kolors/Kolors",
-    "Tongyi-MAI/Z-Image",
-    "Tongyi-MAI/Z-Image-Turbo",
-    "Wan-AI/Wan2.2-T2V-A14B",
-    "Wan-AI/Wan2.2-I2V-A14B",
-    "FunAudioLLM/CosyVoice2-0.5B",
-    "FunAudioLLM/SenseVoiceSmall",
-    "fnlp/MOSS-TTSD-v0.5",
-    "TeleAI/TeleSpeechASR",
-]
+DEFAULT_CLOUD_MODEL_SUGGESTIONS = ["provider/model-name"]
 
 MINERU_EXE = Path(os.environ.get("MINERU_EXE", "mineru"))
 MINERU_OUTPUT_ROOT = Path(os.environ.get("MINERU_OUTPUT_ROOT", str(PROJECT_ROOT / ".mineru_outputs")))

@@ -440,18 +440,19 @@
         <section id="cloudPanel" class="api-panel" style="display:none;">
           <h2 data-i18n="api_config">编辑 LLM API 配置</h2>
           <label><span data-i18n="service_name">LLM 服务名称</span> <span style="color:#d92d20">*</span></label>
-          <input id="cloudServiceName" placeholder="例如：silicon / deepseek / openrouter" data-i18n-placeholder="placeholder_service" />
+          <input id="cloudServiceName" placeholder="openai_compatible" data-i18n-placeholder="placeholder_service" />
           <label data-i18n="model_name">模型名称</label>
           <div class="inline-row">
-            <select id="cloudModel">
+            <input id="cloudModel" list="cloudModelOptions" autocomplete="off" />
+            <datalist id="cloudModelOptions">
               __DEFAULT_CLOUD_MODEL_OPTIONS__
-            </select>
-            <button type="button" onclick="loadCloudModels()" data-i18n="load_cloud_models">读取云端模型</button>
+            </datalist>
+            <button type="button" onclick="loadCloudModels()" data-i18n="load_cloud_models">获取模型列表</button>
           </div>
           <label>LLM API KEY</label>
           <input id="cloudApiKey" type="password" autocomplete="off" placeholder="YOUR_API_KEY_HERE" />
           <label>LLM BASE URL</label>
-          <input id="cloudBaseUrl" placeholder="https://api.siliconflow.cn/v1" />
+          <input id="cloudBaseUrl" placeholder="https://api.example.com/v1" />
           <div class="cloud-actions">
             <div class="checks">
               <label><input id="cloudActive" type="checkbox" /> <span data-i18n="cloud_active">激活此配置（云端模式必须勾选）</span></label>
@@ -459,7 +460,7 @@
             <button id="refreshModelsBtn" type="button" onclick="loadModels()" data-i18n="refresh_models">刷新模型</button>
             <button id="saveConfigBtn" type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">保存本地配置</button>
           </div>
-          <p class="small" data-i18n="api_help">兼容 SiliconFlow、DeepSeek、OpenRouter 等 OpenAI-compatible 接口。仓库不内置真实 Key；可在页面填写并保存到本地 config.local.json，运行日志和 Excel 不记录 Key。</p>
+          <p class="small" data-i18n="api_help">填写 OpenAI-compatible Base URL 和 API Key；服务商支持 /models 时可点击获取模型列表。不支持时仍可手动填写模型名。</p>
         </section>
 
         <section class="progress-panel">
@@ -538,13 +539,13 @@
         stop: "停止任务",
         api_config: "编辑 LLM API 配置",
         service_name: "LLM 服务名称",
-        placeholder_service: "例如：silicon / deepseek / openrouter",
+        placeholder_service: "openai_compatible",
         model_name: "模型名称",
-        load_cloud_models: "读取云端模型",
+        load_cloud_models: "获取模型列表",
         cloud_active: "激活此配置",
         save_local_config: "保存本地配置",
         refresh_models: "刷新模型",
-        api_help: "兼容 SiliconFlow、DeepSeek、OpenRouter 等 OpenAI-compatible 接口。仓库不内置真实 Key；可在页面填写并保存到本地 config.local.json，运行日志和 Excel 不记录 Key。",
+        api_help: "填写 OpenAI-compatible Base URL 和 API Key；服务商支持 /models 时可点击获取模型列表。不支持时仍可手动填写模型名。",
         progress: "进度",
         stat_done: "已处理",
         stat_total: "总数",
@@ -611,13 +612,13 @@
         stop: "Stop",
         api_config: "Edit LLM API Config",
         service_name: "LLM Service Name",
-        placeholder_service: "e.g. silicon / deepseek / openrouter",
+        placeholder_service: "openai_compatible",
         model_name: "Model Name",
-        load_cloud_models: "Load Cloud Models",
+        load_cloud_models: "Fetch models",
         cloud_active: "Active",
         save_local_config: "Save Config",
         refresh_models: "Refresh Models",
-        api_help: "Compatible with SiliconFlow, DeepSeek, OpenRouter and other OpenAI-compatible APIs. The repository contains no real Key; you can enter and save it locally to config.local.json. Logs and Excel never record the Key.",
+        api_help: "Enter an OpenAI-compatible Base URL and API key. If the provider supports the /models endpoint, use Fetch models to load model IDs. If discovery is unavailable, enter the model name manually.",
         progress: "Progress",
         stat_done: "Done",
         stat_total: "Total",
@@ -813,17 +814,18 @@
     }
 
     function fillCloudModelSuggestions(models, selectedValue = "") {
-      const select = document.getElementById("cloudModel");
-      const previous = selectedValue || select.value;
-      select.innerHTML = "";
+      const input = document.getElementById("cloudModel");
+      const list = document.getElementById("cloudModelOptions");
+      const previous = selectedValue || input.value;
+      list.innerHTML = "";
       models.forEach(name => {
         const opt = document.createElement("option");
         opt.value = name;
         opt.textContent = name;
-        select.appendChild(opt);
+        list.appendChild(opt);
       });
-      if (previous && models.includes(previous)) select.value = previous;
-      else if (models.length) select.value = models[0];
+      if (previous) input.value = previous;
+      else if (models.length) input.value = models[0];
     }
 
     async function loadCloudModels() {
@@ -836,7 +838,7 @@
         return;
       }
       try {
-        const res = await fetch("/api/cloud-models", {
+        const res = await fetch("/api/models", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({base_url: baseUrl, api_key: apiKey})
