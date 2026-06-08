@@ -42,6 +42,7 @@ from .export import (
     processed_paths_from_rows,
     write_jsonl,
 )
+from .diagnostics import append_diagnostic_log, log_exception
 from .llm import (
     build_extraction_chain,
     choose_model,
@@ -112,6 +113,7 @@ class JobState:
     def add_log(self, message: str) -> None:
         line = f"[{datetime.now().strftime('%H:%M:%S')}] {message}"
         print(line)
+        append_diagnostic_log("task.log", line)
         with self.lock:
             self.logs.append(line)
             self.logs = self.logs[-300:]
@@ -630,7 +632,9 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
         state.add_log(f"总耗时：{format_duration(time.perf_counter() - total_started)}")
         state_update(state, message="任务完成")
     except Exception as exc:
+        log_exception(exc, context="run_extraction_job")
         state.add_log(f"任务异常：{exc}")
+        state.add_log("完整错误详见 logs/crash.log")
         try:
             export_jsonl_excel(error_stats_jsonl_path, error_stats_excel_path, runtime)
         except Exception:

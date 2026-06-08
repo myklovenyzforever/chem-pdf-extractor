@@ -6,6 +6,7 @@ config.local.json
 *.token
 
 # User papers and generated runtime outputs
+logs/
 *.pdf
 提取结果.xlsx
 提取结果.partial.jsonl
