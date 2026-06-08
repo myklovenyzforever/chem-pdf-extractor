@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 
 from .config import (
     DEFAULT_CLOUD_BASE_URL,
@@ -15,6 +14,8 @@ from .config import (
     BAD_ROW_MIN_FILL_RATE,
     load_local_config,
 )
+from .diagnostics import log_startup_event
+from .text_safety import json_dumps_utf8
 
 
 def parse_args() -> argparse.Namespace:
@@ -49,6 +50,7 @@ def parse_args() -> argparse.Namespace:
 def run_cli(args: argparse.Namespace) -> int:
     from .config import default_input_dir, default_output_path, ensure_dependencies, import_runtime_dependencies
     from .extractor import JobState, run_extraction_job
+    log_startup_event(mode="cli")
     ensure_dependencies(auto_install=not args.no_auto_install)
     runtime = import_runtime_dependencies()
     state = JobState()
@@ -80,7 +82,7 @@ def run_cli(args: argparse.Namespace) -> int:
     }
     run_extraction_job(config, runtime, state)
     snapshot = state.snapshot()
-    print(json.dumps(snapshot, ensure_ascii=False, indent=2))
+    print(json_dumps_utf8(snapshot, indent=2))
     return 0
 
 

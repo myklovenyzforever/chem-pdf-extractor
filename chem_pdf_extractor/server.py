@@ -29,7 +29,8 @@ from .config import (
     mask_api_key,
     save_local_config,
 )
-from .extractor import JobState, run_extraction_job
+from .diagnostics import append_diagnostic_log, log_exception, log_startup_event
+from .extractor import JobState, run_extraction_job, state_update
 from .llm import choose_model, get_cloud_models, get_ollama_models
 from .text_safety import json_dumps_utf8
 
@@ -187,7 +188,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                         selected_cloud_model = DEFAULT_CLOUD_MODEL
                     config["cloud_model"] = selected_cloud_model
                     config["model"] = selected_cloud_model
-                thread = threading.Thread(target=run_extraction_job, args=(config, self.app.runtime, self.app.state), daemon=True)
+                thread = threading.Thread(target=_run_extraction_job_with_logging, args=(config, self.app.runtime, self.app.state), daemon=True)
                 thread.start()
                 self.send_json({"ok": True})
             except Exception as exc:
@@ -233,26 +234,52 @@ def find_free_port(preferred_port: int) -> int:
     raise RuntimeError(f"无法找到可用本地端口，最后一次错误：{last_error}")
 
 
+def _run_extraction_job_with_logging(config: dict[str, Any], runtime: RuntimeDeps, state: JobState) -> None:
+    try:
+        run_extraction_job(config, runtime, state)
+    except Exception as exc:
+        log_exception(exc, context="background_extraction_thread")
+        try:
+            state.add_log("后台任务异常，详见 logs/crash.log")
+            state_update(state, running=False, message="任务异常，详见 logs/crash.log")
+        except Exception:
+            pass
+
+
 def start_web_app(port: int, auto_install: bool, open_browser: bool = False) -> int:
     from .config import ensure_dependencies, import_runtime_dependencies
-    ensure_dependencies(auto_install=auto_install)
-    runtime = import_runtime_dependencies()
-    app = ChemExtractorApp(runtime)
-    actual_port = find_free_port(port)
-    server = ThreadingHTTPServer(("127.0.0.1", actual_port), RequestHandler)
-    app.server = server
-    RequestHandler.app = app
-    url = f"http://127.0.0.1:{actual_port}/"
-    print("Chem-PDF-Extractor 页面已启动：")
-    print(url)
-    if open_browser:
-        webbrowser.open(url)
-    else:
-        print("请复制上面的地址到浏览器打开。")
-    print('关闭浏览器标签页不会停止正在运行的本地服务；需要停止任务请点页面里的”停止任务”。')
+    log_startup_event(mode="web", extra={"requested_port": port, "open_browser": open_browser})
+    server: ThreadingHTTPServer | None = None
     try:
+        append_diagnostic_log("startup.log", "checking dependencies")
+        ensure_dependencies(auto_install=auto_install)
+        append_diagnostic_log("startup.log", "importing runtime dependencies")
+        runtime = import_runtime_dependencies()
+        app = ChemExtractorApp(runtime)
+        actual_port = find_free_port(port)
+        server = ThreadingHTTPServer(("127.0.0.1", actual_port), RequestHandler)
+        app.server = server
+        RequestHandler.app = app
+        url = f"http://127.0.0.1:{actual_port}/"
+        append_diagnostic_log(
+            "startup.log",
+            f"local Web UI URL: {url}; selected port: {actual_port}; open_browser: {open_browser}",
+        )
+        print("Chem-PDF-Extractor 页面已启动：")
+        print(url)
+        if open_browser:
+            webbrowser.open(url)
+        else:
+            print("请复制上面的地址到浏览器打开。")
+        print('关闭浏览器标签页不会停止正在运行的本地服务；需要停止任务请点页面里的”停止任务”。')
         server.serve_forever()
+        append_diagnostic_log("startup.log", "web server serve_forever ended")
+    except Exception as exc:
+        log_exception(exc, context="web_server")
+        raise
     finally:
-        server.server_close()
-        print("Chem-PDF-Extractor 本地服务已关闭。")
+        if server is not None:
+            server.server_close()
+            append_diagnostic_log("startup.log", "web server closed")
+            print("Chem-PDF-Extractor 本地服务已关闭。")
     return 0
