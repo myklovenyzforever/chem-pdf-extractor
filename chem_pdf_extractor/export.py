@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .config import ERROR_LOG_NAME, EXPORT_EXCLUDED_COLUMNS, RuntimeDeps
+from .config import ERROR_LOG_NAME, EXPORT_EXCLUDED_COLUMNS, REVIEW_AID_FIELD_LABELS, RuntimeDeps
 from .text_safety import json_dumps_utf8, utf8_safe_obj
 
 
@@ -89,11 +89,40 @@ def export_jsonl_excel(jsonl_path: Path, excel_path: Path, runtime: RuntimeDeps)
     return True
 
 
+def order_review_aid_columns_last(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return export rows with review-aid columns present and ordered last."""
+    review_labels = set(REVIEW_AID_FIELD_LABELS)
+    columns: list[str] = []
+    for row in rows:
+        for key in row:
+            if key in EXPORT_EXCLUDED_COLUMNS or key in review_labels:
+                continue
+            if key not in columns:
+                columns.append(key)
+    columns.extend(REVIEW_AID_FIELD_LABELS)
+
+    ordered_rows: list[dict[str, Any]] = []
+    for row in rows:
+        visible = {key: value for key, value in row.items() if key not in EXPORT_EXCLUDED_COLUMNS}
+        ordered_rows.append({key: visible.get(key, "") for key in columns})
+    return ordered_rows
+
+
+def _empty_result_row() -> dict[str, Any]:
+    row = {"message": f"没有成功提取到任何结果，请查看 {ERROR_LOG_NAME}"}
+    for label in REVIEW_AID_FIELD_LABELS:
+        row[label] = ""
+    return row
+
+
 def export_excel(rows: list[dict[str, Any]], output_path: Path, runtime: RuntimeDeps) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    if not rows:
+        dataframe = runtime.pd.DataFrame(utf8_safe_obj(order_review_aid_columns_last([_empty_result_row()])))
+        dataframe.to_excel(output_path, index=False)
+        return
     if rows:
-        dataframe = runtime.pd.DataFrame(utf8_safe_obj(rows))
-        dataframe = dataframe.drop(columns=EXPORT_EXCLUDED_COLUMNS, errors="ignore")
+        dataframe = runtime.pd.DataFrame(utf8_safe_obj(order_review_aid_columns_last(rows)))
         dataframe = dataframe.replace(["N/A", "n/a", "NA", "na", "null", "None", "-999", -999], "")
     else:
         dataframe = runtime.pd.DataFrame(
@@ -104,10 +133,9 @@ def export_excel(rows: list[dict[str, Any]], output_path: Path, runtime: Runtime
 
 def export_csv(rows: list[dict[str, Any]], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    clean_rows = []
-    for row in rows:
-        clean_rows.append({key: value for key, value in row.items() if key not in EXPORT_EXCLUDED_COLUMNS})
-    clean_rows = utf8_safe_obj(clean_rows)
+    clean_rows = utf8_safe_obj(order_review_aid_columns_last(rows))
+    if not clean_rows:
+        clean_rows = utf8_safe_obj(order_review_aid_columns_last([_empty_result_row()]))
     if not clean_rows:
         clean_rows = utf8_safe_obj([{"message": f"没有成功提取到任何结果，请查看 {ERROR_LOG_NAME}"}])
     fieldnames: list[str] = []
