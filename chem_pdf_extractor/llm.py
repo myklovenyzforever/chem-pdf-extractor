@@ -231,6 +231,16 @@ def translate_item_batch_to_chinese_cloud(
     return parse_translation_payload(extract_json_object(content))
 
 
+MODEL_DISCOVERY_ERROR = "Failed to fetch models. Please check Base URL, API key, or enter the model manually."
+
+
+def build_openai_compatible_models_url(base_url: str) -> str:
+    cleaned = str(base_url or "").strip()
+    if not cleaned:
+        raise RuntimeError("LLM BASE URL is empty.")
+    return cleaned.rstrip("/") + "/models"
+
+
 def parse_model_ids(payload: dict[str, Any]) -> list[str]:
     data = payload.get("data")
     if not isinstance(data, list):
@@ -248,6 +258,45 @@ def parse_model_ids(payload: dict[str, Any]) -> list[str]:
             models.append(model_id)
             seen.add(model_id)
     return models
+
+
+def parse_openai_compatible_model_ids(payload: dict[str, Any]) -> list[str]:
+    data = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(data, list):
+        raise ValueError("Invalid model list response: missing data list.")
+    models: list[str] = []
+    seen: set[str] = set()
+    for item in data:
+        if not isinstance(item, dict):
+            raise ValueError("Invalid model list response: model item is not an object.")
+        model_id = str(item.get("id") or "").strip()
+        if not model_id:
+            raise ValueError("Invalid model list response: model id is missing.")
+        if model_id not in seen:
+            models.append(model_id)
+            seen.add(model_id)
+    if not models:
+        raise ValueError("No models were returned by the provider.")
+    return models
+
+
+def fetch_openai_compatible_models(base_url: str, api_key: str, timeout: float = 10.0) -> list[str]:
+    if not str(base_url or "").strip():
+        raise RuntimeError("LLM BASE URL is empty.")
+    if not str(api_key or "").strip():
+        raise RuntimeError("LLM API KEY is empty.")
+    url = build_openai_compatible_models_url(base_url)
+    request = urllib.request.Request(
+        url,
+        headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
+        method="GET",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8", errors="replace"))
+        return parse_openai_compatible_model_ids(payload)
+    except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
+        raise RuntimeError(MODEL_DISCOVERY_ERROR) from exc
 
 
 def fetch_cloud_models_once(base_url: str, api_key: str, query: str = "") -> list[str]:

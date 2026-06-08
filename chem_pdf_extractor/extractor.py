@@ -13,6 +13,7 @@ from .config import (
     BAD_ROWS_EXCEL_NAME,
     BAD_ROWS_JSONL_NAME,
     CACHE_DIR_NAME,
+    DEFAULT_CLOUD_MODEL,
     ERROR_LOG_NAME,
     ERROR_STATS_EXCEL_NAME,
     ERROR_STATS_JSONL_NAME,
@@ -529,7 +530,7 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
             try:
                 translation_base_url = str(config.get("cloud_base_url") or "").strip()
                 translation_api_key = str(config.get("cloud_api_key") or "").strip()
-                translation_model_name = str(config.get("cloud_model") or config.get("model") or "deepseek-ai/DeepSeek-V4-Pro").strip()
+                translation_model_name = str(config.get("cloud_model") or config.get("model") or DEFAULT_CLOUD_MODEL).strip()
                 if not translation_base_url or not translation_api_key or not translation_model_name:
                     raise RuntimeError("云端 API KEY、BASE URL 或模型名称为空。")
                 translation_batch_translator = lambda batch: translate_item_batch_to_chinese_cloud(
