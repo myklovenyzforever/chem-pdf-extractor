@@ -1,5 +1,7 @@
 # Local runtime and user-only configuration
+bundled_runtime/
 YiLaiHuanJing/
+运行依赖/
 config.local.json
 .env
 *.key
