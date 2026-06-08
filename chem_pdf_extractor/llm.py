@@ -20,6 +20,7 @@ from .config import (
     requirement_rule,
     short_error,
 )
+from .text_safety import json_dumps_utf8
 
 
 def tail_text(text: str, limit: int = 4000) -> str:
@@ -170,7 +171,7 @@ def cloud_chat_completion(
             "model": model, "messages": messages, "temperature": 0,
             "response_format": {"type": "json_object"},
         }
-        data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        data = json_dumps_utf8(body).encode("utf-8")
         request = urllib.request.Request(
             url, data=data,
             headers={
