@@ -224,6 +224,59 @@ EXPORT_EXCLUDED_COLUMNS = [
     "was_truncated", "quality_retry_used",
 ]
 
+REVIEW_AID_FIELD_LABELS = [
+    "source_evidence",
+    "source_hint",
+    "verification_status",
+    "review_note",
+]
+
+REVIEW_AID_FIELDS = [
+    {
+        "label": "source_evidence",
+        "type": "str",
+        "requirement": "optional",
+        "description": (
+            "Extract a short source excerpt from the converted PDF text that supports the row. "
+            "Prefer the sentence, table row, caption fragment, or nearby phrase that directly "
+            "supports the extracted values. Keep it short. Do not invent evidence. If no clear "
+            "source evidence is found, leave empty."
+        ),
+    },
+    {
+        "label": "source_hint",
+        "type": "str",
+        "requirement": "optional",
+        "description": (
+            "Indicate where the evidence appears to come from. Use one of: body_text, table, "
+            "figure_caption, supplementary, ocr_text, not_clear. If uncertain, use not_clear."
+        ),
+    },
+    {
+        "label": "verification_status",
+        "type": "str",
+        "requirement": "optional",
+        "description": (
+            "Provide a review-oriented status, not a statistical confidence score. Use one of: "
+            "direct_text_match, inferred, needs_review, low_confidence. Use direct_text_match "
+            "only when the value is directly supported by nearby text or a table. Use inferred "
+            "when interpretation or unit conversion was needed. Use needs_review when the source "
+            "is unclear or multiple interpretations are possible. Use low_confidence when evidence "
+            "is weak."
+        ),
+    },
+    {
+        "label": "review_note",
+        "type": "str",
+        "requirement": "optional",
+        "description": (
+            "Briefly explain why the row should or should not be reviewed. Mention uncertainty, "
+            "unit conversion, missing context, OCR ambiguity, table complexity, or unclear source "
+            "when applicable. Keep it short. Do not include long paper text."
+        ),
+    },
+]
+
 
 @dataclass
 class RuntimeDeps:
@@ -445,6 +498,30 @@ def normalize_fields(fields: list[dict[str, Any]] | None) -> list[dict[str, str]
         if used[label] > 1:
             item["label"] = f"{label} ({used[label]})"
     return normalized
+
+
+def append_review_aid_fields(fields: list[dict[str, Any]]) -> list[dict[str, str]]:
+    """Append manual-review aid fields without mutating user field definitions."""
+    normalized = normalize_fields(fields)
+    review_labels = set(REVIEW_AID_FIELD_LABELS)
+    by_label = {item["label"]: dict(item) for item in normalized}
+    result = [dict(item) for item in normalized if item["label"] not in review_labels]
+
+    for template in REVIEW_AID_FIELDS:
+        label = template["label"]
+        item = dict(by_label.get(label, template))
+        item["label"] = label
+        item["type"] = "str"
+        item["requirement"] = "optional"
+        if not str(item.get("description", "")).strip():
+            item["description"] = str(template["description"])
+        result.append({
+            "label": str(item["label"]),
+            "type": str(item["type"]),
+            "requirement": str(item["requirement"]),
+            "description": str(item["description"]),
+        })
+    return result
 
 
 def python_type(type_name: str) -> type:

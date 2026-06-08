@@ -490,8 +490,14 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
             raise RuntimeError(f"没有找到 PDF 文件：{input_dir}")
 
         fields = config.get("fields") or []
-        from .config import normalize_fields as _normalize_fields, build_dynamic_model as _build_dynamic_model
-        fields = _normalize_fields(fields)
+        from .config import (
+            REVIEW_AID_FIELD_LABELS,
+            append_review_aid_fields as _append_review_aid_fields,
+            build_dynamic_model as _build_dynamic_model,
+            normalize_fields as _normalize_fields,
+        )
+        user_fields = _normalize_fields(fields)
+        fields = _append_review_aid_fields(user_fields)
         extraction_model, key_to_label = _build_dynamic_model(fields, runtime)
         bad_row_min_fill_rate = bad_row_min_fill_rate_from_config(config)
 
@@ -554,7 +560,10 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
         state.add_log(f"坏数据阈值：填写率低于 {bad_row_min_fill_rate:.0%} 删除")
         state.add_log(f"MD 保存目录：{input_dir / MARKDOWN_DIR_NAME}")
         state.add_log(f"失败源文件目录：{input_dir / FAILED_SOURCES_DIR_NAME}")
-        state.add_log(f"字段数量：{len(fields)}")
+        state.add_log(
+            f"Field count: user={len(user_fields)}, review_aid={len(REVIEW_AID_FIELD_LABELS)}, "
+            f"model_total={len(fields)}"
+        )
 
         for index, pdf_path in enumerate(pdf_files, start=1):
             if wait_while_paused(state, rows, output_path, runtime, bad_rows_jsonl_path, bad_rows_excel_path):
