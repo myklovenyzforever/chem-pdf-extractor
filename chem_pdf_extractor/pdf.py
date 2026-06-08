@@ -22,6 +22,7 @@ from .config import (
     load_pymupdf4llm,
     short_error,
 )
+from .text_safety import utf8_safe_text
 
 
 def safe_output_name(name: str, max_chars: int = MAX_ARTIFACT_NAME_CHARS) -> str:
@@ -90,7 +91,7 @@ def save_markdown_artifacts(
     artifact_dir.mkdir(parents=True, exist_ok=True)
     images_dir.mkdir(parents=True, exist_ok=True)
     markdown_path = markdown_artifact_path(input_dir, pdf_path)
-    markdown_path.write_text(markdown, encoding="utf-8")
+    markdown_path.write_text(utf8_safe_text(markdown), encoding="utf-8")
     copy_image_artifacts(source_images_dir, images_dir)
     return markdown_path, images_dir
 

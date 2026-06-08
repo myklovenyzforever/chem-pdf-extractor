@@ -31,6 +31,7 @@ from .config import (
 )
 from .extractor import JobState, run_extraction_job
 from .llm import choose_model, get_cloud_models, get_ollama_models
+from .text_safety import json_dumps_utf8
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
@@ -41,8 +42,8 @@ def load_html_template() -> str:
 
 def render_html(defaults: dict[str, Any], default_fields: list[dict[str, Any]]) -> str:
     html = load_html_template()
-    html = html.replace("__DEFAULT_FIELDS_JSON__", json.dumps(default_fields, ensure_ascii=False))
-    html = html.replace("__DEFAULT_CONFIG_JSON__", json.dumps(defaults, ensure_ascii=False))
+    html = html.replace("__DEFAULT_FIELDS_JSON__", json_dumps_utf8(default_fields))
+    html = html.replace("__DEFAULT_CONFIG_JSON__", json_dumps_utf8(defaults))
     model_options = "\n".join(
         f'                <option value="{html_lib.escape(model)}">{html_lib.escape(model)}</option>'
         for model in DEFAULT_CLOUD_MODEL_SUGGESTIONS
@@ -65,7 +66,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         return
 
     def send_json(self, payload: dict[str, Any], status: int = 200) -> None:
-        data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        data = json_dumps_utf8(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))

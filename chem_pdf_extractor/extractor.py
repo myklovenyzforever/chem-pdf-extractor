@@ -69,6 +69,7 @@ from .quality import (
     quality_retry_hint,
     translate_rows_to_chinese,
 )
+from .text_safety import json_dumps_utf8, utf8_safe_obj
 
 
 class JobState:
@@ -223,12 +224,12 @@ def save_extraction_cache(cache_path: Path, rows: list[dict[str, Any]]) -> None:
     slim_rows = []
     cache_excluded = set(EXPORT_EXCLUDED_COLUMNS) | {"源文件名"}
     for row in rows:
-        slim_rows.append({key: value for key, value in row.items() if key not in cache_excluded})
+        slim_rows.append(utf8_safe_obj({key: value for key, value in row.items() if key not in cache_excluded}))
     payload = {
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "rows": slim_rows,
     }
-    cache_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    cache_path.write_text(json_dumps_utf8(payload, indent=2), encoding="utf-8")
 
 
 def add_source_metadata(
