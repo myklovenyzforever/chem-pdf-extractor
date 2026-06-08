@@ -39,8 +39,8 @@ ERROR_STATS_JSONL_NAME = "错误统计.jsonl"
 MARKDOWN_DIR_NAME = "md文件"
 CACHE_DIR_NAME = "抽取缓存"
 FAILED_SOURCES_DIR_NAME = "提取失败源文件"
-BUNDLED_RUNTIME_DIR_NAME = "YiLaiHuanJing"
-LEGACY_BUNDLED_RUNTIME_DIR_NAME = "运行依赖"
+BUNDLED_RUNTIME_DIR_NAME = "bundled_runtime"
+LEGACY_BUNDLED_RUNTIME_DIR_NAMES = ["YiLaiHuanJing", "运行依赖"]
 BAD_ROW_MIN_FILL_RATE = 0.40
 BAD_ROW_EMPTY_MARKERS = {"n/a", "na", "null", "none", "-999"}
 BAD_ROW_FIELD_WEIGHTS = {"required": 1.0, "recommended": 0.5, "optional": 0.0}
@@ -517,8 +517,8 @@ def candidate_pythons() -> list[Path]:
     candidates: list[Path] = []
     bundled_python = PROJECT_ROOT / BUNDLED_RUNTIME_DIR_NAME / "python" / "python.exe"
     candidates.append(bundled_python)
-    legacy_bundled_python = PROJECT_ROOT / LEGACY_BUNDLED_RUNTIME_DIR_NAME / "python" / "python.exe"
-    candidates.append(legacy_bundled_python)
+    for runtime_dir_name in LEGACY_BUNDLED_RUNTIME_DIR_NAMES:
+        candidates.append(PROJECT_ROOT / runtime_dir_name / "python" / "python.exe")
     env_python = os.environ.get("CHEM_PDF_EXTRACTOR_PYTHON") or os.environ.get("CHEM_EXTRACTOR_PYTHON")
     if env_python:
         candidates.append(Path(env_python))

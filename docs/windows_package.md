@@ -2,7 +2,7 @@
 
 This document is for packaging and safety guidance only.
 
-The source repository does not include `YiLaiHuanJing/`. `YiLaiHuanJing/` is excluded because it is large, machine-specific, and better distributed through a release package when needed. Do not commit packaged runtime folders to the source repository. Do not include private PDFs, API keys, logs, outputs, caches, or `config.local.json` in release packages.
+The source repository does not include `bundled_runtime/` or `YiLaiHuanJing/`. `bundled_runtime/` is the recommended runtime directory name for Windows packages. `YiLaiHuanJing/` is a legacy bundled runtime name. Runtime folders are large, machine-specific, and better distributed through a release package when needed. Do not commit packaged runtime folders to the source repository. Do not include private PDFs, API keys, logs, outputs, caches, or `config.local.json` in release packages.
 
 ## Purpose
 
@@ -10,9 +10,9 @@ This guide explains how a Windows one-click package may be prepared for non-prog
 
 It is intended for maintainers or advanced users who want to build a local Windows package. It does not replace the source-based installation workflow.
 
-## Why YiLaiHuanJing/ is not in the source repository
+## Why bundled_runtime/ is not in the source repository
 
-`YiLaiHuanJing/` is a bundled runtime or dependency environment.
+`bundled_runtime/` is the recommended bundled runtime or dependency environment name. `YiLaiHuanJing/` remains supported as a legacy bundled runtime name.
 
 It is excluded from the source repository because:
 
@@ -30,12 +30,19 @@ An example Windows package may look like this:
 
 ```text
 Chem-PDF-Extractor-Windows/
+  Start-Chem-PDF-Extractor.bat
   ShuJuTiQuJiaoBen.py
-  YiJianQiDong.bat
   requirements.txt
   requirements-core.txt
   config.example.json
   README or quick-start note
+  bundled_runtime/
+```
+
+Optional legacy compatibility files:
+
+```text
+  YiJianQiDong.bat
   YiLaiHuanJing/
 ```
 
@@ -44,13 +51,15 @@ The exact structure may change, but the package should make it clear how the use
 ## Files that may be included
 
 - `ShuJuTiQuJiaoBen.py`
-- `YiJianQiDong.bat`
+- `Start-Chem-PDF-Extractor.bat`
+- `YiJianQiDong.bat` as a legacy compatibility launcher
 - `requirements.txt`
 - `requirements-core.txt`
 - `config.example.json`
 - `LICENSE`
 - `README` or a short quick-start note
-- `YiLaiHuanJing/` only in release packages, not in source commits
+- `bundled_runtime/` only in release packages, not in source commits
+- `YiLaiHuanJing/` as a legacy compatibility runtime directory only
 
 ## Files that must not be included
 
@@ -63,6 +72,7 @@ The exact structure may change, but the package should make it clear how the use
 - user input folders
 - extracted Excel or CSV outputs
 - logs containing local paths or extracted private data
+- `logs/`
 - `md文件/`
 - `抽取缓存/`
 - error logs
@@ -95,11 +105,12 @@ Before creating a Windows package, check:
 
 1. Unzip the package to a simple path.
 2. Avoid paths with special characters if startup fails.
-3. Double-click `YiJianQiDong.bat` if provided.
-4. If the browser does not open automatically, copy the local URL printed in the terminal.
-5. Start with 3-5 PDFs before running a large batch.
-6. Enter API keys only in the local UI or local config.
-7. Do not share `config.local.json`.
+3. Double-click `Start-Chem-PDF-Extractor.bat`.
+4. If using an older package, `YiJianQiDong.bat` may still be available as a legacy launcher.
+5. If the browser does not open automatically, copy the local URL printed in the terminal.
+6. Start with 3-5 PDFs before running a large batch.
+7. Enter API keys only in the local UI or local config.
+8. Do not share `config.local.json`.
 
 Windows environments vary. If the bundled package fails, users may still use the source installation workflow.
 
@@ -141,8 +152,8 @@ When preparing a GitHub Release package:
 
 ## 中文说明
 
-这个文档用于说明 Windows 一键包的打包边界和安全检查。源码仓库不包含 `YiLaiHuanJing/`，因为该目录通常较大、与机器环境相关，更适合作为 release 包的一部分，而不是提交到 `main` 分支。
+这个文档用于说明 Windows 一键包的打包边界和安全检查。源码仓库不包含推荐运行时目录 `bundled_runtime/`，也不包含旧兼容运行时目录 `YiLaiHuanJing/`，因为这些目录通常较大、与机器环境相关，更适合作为 release 包的一部分，而不是提交到 `main` 分支。
 
 一键包中不得包含真实 API Key、`config.local.json`、私有 PDF、未发表论文、真实输出表格、日志、缓存、`md文件/`、`抽取缓存/` 或任何工业/科研保密数据。
 
-用户启动时可以双击 `YiJianQiDong.bat`。如果浏览器没有自动打开，应复制终端中打印的本地 URL 到浏览器。大模型抽取结果必须人工核验，不能直接作为最终科研结论。
+用户启动时推荐双击 `Start-Chem-PDF-Extractor.bat`。`YiJianQiDong.bat` 和 `YiLaiHuanJing/` 作为兼容旧包保留。如果浏览器没有自动打开，应复制终端中打印的本地 URL 到浏览器。大模型抽取结果必须人工核验，不能直接作为最终科研结论。
