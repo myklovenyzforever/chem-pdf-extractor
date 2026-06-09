@@ -46,7 +46,7 @@ For the compatibility fallback:
 
 ```powershell
 python -m pip install -r requirements-core.txt
-python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
+python run_chem_pdf_extractor.py --cli --pdf-mode pypdf_text
 ```
 
 Do not commit real keys, `.env`, `config.local.json`, private PDFs, output files, logs, or caches.
@@ -97,7 +97,7 @@ python -m pip install -r requirements.txt
 
 ```powershell
 python -m pip install -r requirements-core.txt
-python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
+python run_chem_pdf_extractor.py --cli --pdf-mode pypdf_text
 ```
 
 不要提交真实密钥、`.env`、`config.local.json`、私有 PDF、输出文件、日志或缓存。

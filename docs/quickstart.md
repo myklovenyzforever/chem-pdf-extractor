@@ -12,7 +12,7 @@ cd chem-pdf-extractor
 python -m venv .venv
 .\.venv\Scripts\activate
 python -m pip install -r requirements.txt
-python ShuJuTiQuJiaoBen.py
+python run_chem_pdf_extractor.py
 ```
 
 By default, the program prints the local Web UI URL in the terminal and does not open the browser automatically. Copy the printed URL into your browser, select a PDF folder, configure extraction fields, and start processing.
@@ -20,7 +20,7 @@ By default, the program prints the local Web UI URL in the terminal and does not
 If you want the program to open the browser automatically, run:
 
 ```powershell
-python ShuJuTiQuJiaoBen.py --open-browser
+python run_chem_pdf_extractor.py --open-browser
 ```
 
 ### Route B: Windows compatibility fallback
@@ -29,7 +29,7 @@ If `pymupdf4llm` / `pymupdf` fails to install or import on Windows + Python 3.12
 
 ```powershell
 python -m pip install -r requirements-core.txt
-python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
+python run_chem_pdf_extractor.py --cli --pdf-mode pypdf_text
 ```
 
 `pypdf_text` is more stable, but it is weaker for complex tables, two-column layouts, mixed figure/text pages, and scanned PDFs. Complex scanned PDFs may require OCR or MinerU support.
@@ -57,7 +57,7 @@ cd chem-pdf-extractor
 python -m venv .venv
 .\.venv\Scripts\activate
 python -m pip install -r requirements.txt
-python ShuJuTiQuJiaoBen.py
+python run_chem_pdf_extractor.py
 ```
 
 默认情况下，程序只会在终端打印本地网页地址，不会自动打开浏览器。复制终端显示的地址到浏览器打开后，选择 PDF 文件夹、配置抽取字段，然后开始处理。
@@ -65,7 +65,7 @@ python ShuJuTiQuJiaoBen.py
 如果希望自动打开浏览器，可以运行：
 
 ```powershell
-python ShuJuTiQuJiaoBen.py --open-browser
+python run_chem_pdf_extractor.py --open-browser
 ```
 
 ### 路线 B：Windows 兼容降级
@@ -74,7 +74,7 @@ python ShuJuTiQuJiaoBen.py --open-browser
 
 ```powershell
 python -m pip install -r requirements-core.txt
-python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
+python run_chem_pdf_extractor.py --cli --pdf-mode pypdf_text
 ```
 
 `pypdf_text` 更稳定，但对复杂表格、双栏排版、图文混排和扫描版 PDF 的解析能力较弱。复杂扫描版 PDF 可能需要 OCR 或 MinerU 支持。

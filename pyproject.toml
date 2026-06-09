@@ -42,4 +42,7 @@ pdf = [
 test = ["pytest>=8"]
 
 [tool.setuptools]
-py-modules = ["ShuJuTiQuJiaoBen"]
+py-modules = ["run_chem_pdf_extractor"]
+
+[tool.setuptools.packages.find]
+include = ["chem_pdf_extractor*"]
