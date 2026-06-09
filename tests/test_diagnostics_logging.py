@@ -48,7 +48,7 @@ class DiagnosticsLoggingTest(unittest.TestCase):
         self.assertIn("unit_test", content)
 
     def test_log_startup_event_redacts_api_key_like_arguments(self):
-        argv = ["ShuJuTiQuJiaoBen.py", "--cloud-api-key", "sk-secret-value", "--port", "8766"]
+        argv = ["run_chem_pdf_extractor.py", "--cloud-api-key", "sk-secret-value", "--port", "8766"]
         with tempfile.TemporaryDirectory() as tmp:
             with (
                 patch.dict(os.environ, {"CHEM_PDF_EXTRACTOR_LOG_DIR": tmp}),

@@ -584,7 +584,7 @@ def try_reexec_with_ready_python() -> None:
             sys.stdout.flush()
             sys.stderr.flush()
             os.environ["CHEM_EXTRACTOR_REEXECED"] = "1"
-            wrapper = PROJECT_ROOT / "ShuJuTiQuJiaoBen.py"
+            wrapper = PROJECT_ROOT / "run_chem_pdf_extractor.py"
             os.execv(str(python_exe), [str(python_exe), str(wrapper), *sys.argv[1:]])
 
 

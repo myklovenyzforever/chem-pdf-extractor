@@ -2,7 +2,7 @@
 
 ## v0.1.2 - Windows compatibility and release cleanup
 
-- Kept `ShuJuTiQuJiaoBen.py` as a lightweight launcher after modularization.
+- Kept a lightweight script launcher after modularization.
 - Moved main implementation into the `chem_pdf_extractor/` package modules.
 - Removed hardcoded cloud API key exposure from Web UI defaults.
 - Added safer local configuration handling for cloud API settings.

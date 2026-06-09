@@ -31,7 +31,7 @@ An example Windows package may look like this:
 ```text
 Chem-PDF-Extractor-Windows/
   Start-Chem-PDF-Extractor.bat
-  ShuJuTiQuJiaoBen.py
+  run_chem_pdf_extractor.py
   requirements.txt
   requirements-core.txt
   config.example.json
@@ -50,7 +50,7 @@ The exact structure may change, but the package should make it clear how the use
 
 ## Files that may be included
 
-- `ShuJuTiQuJiaoBen.py`
+- `run_chem_pdf_extractor.py`
 - `Start-Chem-PDF-Extractor.bat`
 - `YiJianQiDong.bat` as a legacy compatibility launcher
 - `requirements.txt`

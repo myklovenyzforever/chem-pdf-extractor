@@ -34,8 +34,8 @@ class EnglishEntrypointsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue("Chem-PDF-Extractor" in result.stdout or "--cli" in result.stdout)
 
-    def test_legacy_script_help(self):
-        result = self.run_help([sys.executable, "ShuJuTiQuJiaoBen.py", "--help"])
+    def test_script_entry_help(self):
+        result = self.run_help([sys.executable, "run_chem_pdf_extractor.py", "--help"])
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue("Chem-PDF-Extractor" in result.stdout or "--cli" in result.stdout)
@@ -61,16 +61,18 @@ class EnglishEntrypointsTest(unittest.TestCase):
         content = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
         self.assertIn("python -m chem_pdf_extractor", content)
-        self.assertIn("ShuJuTiQuJiaoBen.py", content)
-        self.assertRegex(content, r"[Ll]egacy")
+        self.assertIn("run_chem_pdf_extractor.py", content)
+        self.assertNotIn("python ShuJuTiQuJiaoBen.py", content)
 
     def test_windows_package_guide_prefers_english_launcher(self):
         content = (REPO_ROOT / "docs" / "windows_package.md").read_text(encoding="utf-8")
 
         self.assertIn("Start-Chem-PDF-Extractor.bat", content)
+        self.assertIn("run_chem_pdf_extractor.py", content)
         self.assertIn("bundled_runtime/", content)
         self.assertIn("YiJianQiDong.bat", content)
         self.assertIn("YiLaiHuanJing/", content)
+        self.assertNotIn("ShuJuTiQuJiaoBen.py", content)
         self.assertRegex(content, r"[Ll]egacy")
 
     def test_gitignore_ignores_new_runtime_directory(self):

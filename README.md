@@ -57,13 +57,13 @@ python -m pip install -r requirements-core.txt
 python -m chem_pdf_extractor --cli --pdf-mode pypdf_text
 ```
 
-Legacy compatibility:
+Alternative script entry:
 
 ```powershell
-python ShuJuTiQuJiaoBen.py
+python run_chem_pdf_extractor.py
 ```
 
-The legacy script is kept for existing Windows packages and older local workflows.
+The module entry point remains the recommended way to run the project.
 
 ## Configuration
 
@@ -93,7 +93,7 @@ Legacy names such as `YiJianQiDong.bat` and `YiLaiHuanJing/` are kept for compat
 
 The one-click package may include:
 
-- `ShuJuTiQuJiaoBen.py`
+- `run_chem_pdf_extractor.py`
 - `Start-Chem-PDF-Extractor.bat`
 - `bundled_runtime/`
 - `YiJianQiDong.bat` as a legacy launcher

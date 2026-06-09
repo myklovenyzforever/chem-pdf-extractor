@@ -88,7 +88,7 @@ The field list can be adjusted for a specific review topic. For example, a catal
 ### CLI example
 
 ```bash
-python ShuJuTiQuJiaoBen.py --cli --input-dir ./literature_batch --output ./outputs/提取结果.xlsx --pdf-mode pypdf_text
+python run_chem_pdf_extractor.py --cli --input-dir ./literature_batch --output ./outputs/提取结果.xlsx --pdf-mode pypdf_text
 ```
 
 - `pypdf_text` is used here as the most compatible fallback mode.
@@ -98,7 +98,7 @@ python ShuJuTiQuJiaoBen.py --cli --input-dir ./literature_batch --output ./outpu
 ### Web UI example
 
 ```bash
-python ShuJuTiQuJiaoBen.py
+python run_chem_pdf_extractor.py
 ```
 
 The program prints a local URL in the terminal. Copy that URL into a browser to open the Web UI.
@@ -106,7 +106,7 @@ The program prints a local URL in the terminal. Copy that URL into a browser to 
 If users want to open the browser automatically, they can run:
 
 ```bash
-python ShuJuTiQuJiaoBen.py --open-browser
+python run_chem_pdf_extractor.py --open-browser
 ```
 
 In the Web UI, users can choose the PDF folder, configure extraction fields, select the model provider, choose the PDF conversion mode, and monitor progress from the running log.

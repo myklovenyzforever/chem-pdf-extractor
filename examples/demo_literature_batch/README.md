@@ -20,7 +20,7 @@ It uses synthetic content only. The PDFs are not real papers, the values are not
 1. Start the application from the repository root:
 
    ```powershell
-   python ShuJuTiQuJiaoBen.py
+   python run_chem_pdf_extractor.py
    ```
 
 2. Open the local Web UI URL printed in the terminal.

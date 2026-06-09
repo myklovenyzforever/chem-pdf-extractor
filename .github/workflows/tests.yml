@@ -41,7 +41,10 @@ jobs:
           python -m pip install -r ${{ matrix.requirements-file }}
 
       - name: Compile main script
-        run: python -m py_compile ShuJuTiQuJiaoBen.py
+        run: python -m py_compile run_chem_pdf_extractor.py
+
+      - name: Check module entrypoint
+        run: python -m chem_pdf_extractor --help
 
       - name: Run lightweight local tests
         run: python -m unittest discover -s tests -v

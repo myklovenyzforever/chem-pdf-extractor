@@ -35,7 +35,7 @@ Pull requests should follow the checklist in `.github/pull_request_template.md`.
 Before opening a pull request, run at least:
 
 ```powershell
-python -m py_compile ShuJuTiQuJiaoBen.py
+python -m py_compile run_chem_pdf_extractor.py
 python -m unittest discover -s tests -v
 ```
 
@@ -63,7 +63,7 @@ Pull requests should follow the checklist in `.github/pull_request_template.md`.
 提交 PR 前至少运行：
 
 ```powershell
-python -m py_compile ShuJuTiQuJiaoBen.py
+python -m py_compile run_chem_pdf_extractor.py
 python -m unittest discover -s tests -v
 ```
 

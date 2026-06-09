@@ -14,7 +14,7 @@
 
 ## Checklist
 
-- [ ] I have run `python -m py_compile ShuJuTiQuJiaoBen.py`.
+- [ ] I have run `python -m py_compile run_chem_pdf_extractor.py`.
 - [ ] I have run `python -m unittest discover -s tests -v`.
 - [ ] I did not commit real API keys, tokens, passwords, or `config.local.json`.
 - [ ] I did not commit private PDFs, unpublished manuscripts, or confidential files.

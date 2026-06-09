@@ -3,7 +3,7 @@
 # Use this file when the full PDF backend stack fails to install or import.
 # In that case, run the tool with:
 #
-#   python ShuJuTiQuJiaoBen.py --cli --pdf-mode pypdf_text
+#   python -m chem_pdf_extractor --cli --pdf-mode pypdf_text
 
 pypdf>=4.0
 langchain>=0.2
