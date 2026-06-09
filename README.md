@@ -73,6 +73,8 @@ Normal users can enter the API key in the web interface. The configuration can b
 
 Users can enter an OpenAI-compatible Base URL and API key, then use "Fetch models" to load available model IDs when the provider supports the `/models` endpoint. If model discovery is unavailable, users can still enter the model name manually.
 
+Cloud extraction requires a real API key, Base URL, and model name. Placeholder values are rejected before a task starts.
+
 Environment variables are supported for advanced users, but they are optional and not required for normal use.
 
 ```powershell
@@ -222,6 +224,7 @@ python -m chem_pdf_extractor --cli --pdf-mode pypdf_text
 - 本地 Ollama 可作为可选模型后端。
 - 使用 OpenAI-compatible API 时，需要自行填写 Base URL、模型名称和 API Key。
 - 用户可以填写 OpenAI-compatible Base URL 和 API Key，并在服务商支持 `/models` 接口时点击“获取模型列表”加载可用模型；如果服务商不支持模型列表接口，也可以手动填写模型名。
+- 使用云端抽取时需要填写真实 API Key、Base URL 和模型名；占位配置会在任务开始前被拦截。
 
 ## 截图
 

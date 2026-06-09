@@ -838,7 +838,7 @@
         return;
       }
       try {
-        const res = await fetch("/api/models", {
+        const res = await fetch("/api/cloud-models", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({base_url: baseUrl, api_key: apiKey})

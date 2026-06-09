@@ -26,6 +26,8 @@ DEFAULT_CLOUD_MODEL = "provider/model-name"
 DEFAULT_CLOUD_BASE_URL = "https://api.example.com/v1"
 DEFAULT_CLOUD_API_KEY = ""
 LOCAL_CONFIG_NAME = "config.local.json"
+PLACEHOLDER_CLOUD_BASE_URL_MARKERS = {"api.example.com"}
+PLACEHOLDER_CLOUD_MODELS = {"provider/model-name", "model-name", "your-model-name"}
 MAX_ARTIFACT_NAME_CHARS = 80
 OUTPUT_EXCEL_NAME = "提取结果.xlsx"
 ERROR_LOG_NAME = "错误日志.txt"
@@ -223,6 +225,20 @@ def mask_api_key(key: str) -> str:
     return key[:4] + "..." + key[-2:]
 
 
+def _bool_config_value(value: Any, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        lowered = value.strip().lower()
+        if lowered in {"1", "true", "yes", "on"}:
+            return True
+        if lowered in {"0", "false", "no", "off"}:
+            return False
+    return bool(value)
+
+
 def normalize_local_config(raw: dict[str, Any] | None) -> dict[str, Any]:
     raw = raw or {}
     return {
@@ -235,7 +251,7 @@ def normalize_local_config(raw: dict[str, Any] | None) -> dict[str, Any]:
         "cloud_api_key": str(raw.get("cloud_api_key") or raw.get("api_key") or "").strip(),
         "cloud_base_url": str(raw.get("cloud_base_url") or raw.get("base_url") or DEFAULT_CLOUD_BASE_URL).strip(),
         "cloud_model": str(raw.get("cloud_model") or raw.get("model") or DEFAULT_CLOUD_MODEL).strip(),
-        "cloud_active": bool(raw.get("cloud_active", True)),
+        "cloud_active": _bool_config_value(raw.get("cloud_active"), False),
     }
 
 
@@ -277,7 +293,7 @@ def apply_cloud_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
         "cloud_model": local_config.get("cloud_model") or os.environ.get("CHEM_PDF_EXTRACTOR_MODEL") or DEFAULT_CLOUD_MODEL,
         "cloud_base_url": local_config.get("cloud_base_url") or os.environ.get("CHEM_PDF_EXTRACTOR_BASE_URL") or DEFAULT_CLOUD_BASE_URL,
         "cloud_api_key": local_config.get("cloud_api_key") or env_api_key or DEFAULT_CLOUD_API_KEY,
-        "cloud_active": local_config.get("cloud_active", True),
+        "cloud_active": local_config.get("cloud_active", False),
     }
     for key, value in defaults.items():
         if key == "cloud_active":
@@ -285,6 +301,30 @@ def apply_cloud_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
         elif not str(config.get(key) or "").strip():
             config[key] = value
     return config
+
+
+def validate_cloud_start_config(config: dict[str, Any]) -> str | None:
+    if str(config.get("llm_provider") or "").strip().lower() != "cloud":
+        return None
+
+    api_key = str(config.get("cloud_api_key") or config.get("api_key") or "").strip()
+    if not api_key:
+        return "请先填写云端 API Key，或切换到本地 Ollama。"
+
+    base_url = str(config.get("cloud_base_url") or config.get("base_url") or "").strip()
+    if not base_url:
+        return "请填写 OpenAI-compatible Base URL。"
+    lowered_base_url = base_url.rstrip("/").lower()
+    if any(marker in lowered_base_url for marker in PLACEHOLDER_CLOUD_BASE_URL_MARKERS):
+        return "请填写真实的 OpenAI-compatible Base URL。"
+
+    model = str(config.get("cloud_model") or config.get("model") or "").strip()
+    if not model:
+        return "请填写或选择云端模型名称。"
+    if model.lower() in PLACEHOLDER_CLOUD_MODELS:
+        return "请填写或选择真实的云端模型名称。"
+
+    return None
 
 
 def short_error(exc: BaseException, limit: int = 500) -> str:
