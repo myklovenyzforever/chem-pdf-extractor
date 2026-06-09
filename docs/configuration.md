@@ -16,11 +16,11 @@ config.local.json
 
 ```json
 {
-  "llm_service_name": "silicon",
+  "llm_service_name": "openai_compatible",
   "api_key": "YOUR_API_KEY_HERE",
   "base_url": "https://api.example.com/v1",
   "model": "provider/model-name",
-  "cloud_active": true
+  "cloud_active": false
 }
 ```
 
@@ -67,11 +67,11 @@ config.local.json
 
 ```json
 {
-  "llm_service_name": "silicon",
+  "llm_service_name": "openai_compatible",
   "api_key": "YOUR_API_KEY_HERE",
   "base_url": "https://api.example.com/v1",
   "model": "provider/model-name",
-  "cloud_active": true
+  "cloud_active": false
 }
 ```
 

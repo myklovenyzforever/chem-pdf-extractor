@@ -94,6 +94,15 @@ class ModelDiscoveryTest(unittest.TestCase):
         for forbidden in ["silicon", "siliconflow", "deepseek", "openrouter"]:
             self.assertNotIn(forbidden, raw_text)
 
+    def test_configuration_doc_uses_provider_neutral_example(self):
+        doc_path = Path(__file__).resolve().parent.parent / "docs" / "configuration.md"
+        raw_text = doc_path.read_text(encoding="utf-8").lower()
+
+        self.assertIn('"llm_service_name": "openai_compatible"', raw_text)
+        self.assertIn('"cloud_active": false', raw_text)
+        self.assertNotIn('"llm_service_name": "silicon"', raw_text)
+        self.assertNotIn('"cloud_active": true', raw_text)
+
 
 if __name__ == "__main__":
     unittest.main()
