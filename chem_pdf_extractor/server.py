@@ -28,6 +28,7 @@ from .config import (
     load_local_config,
     mask_api_key,
     save_local_config,
+    validate_cloud_start_config,
 )
 from .diagnostics import append_diagnostic_log, log_exception, log_startup_event
 from .extractor import JobState, run_extraction_job, state_update
@@ -94,7 +95,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 "cloud_model_suggestions": DEFAULT_CLOUD_MODEL_SUGGESTIONS,
                 "cloud_api_key": "",
                 "cloud_base_url": local_config.get("cloud_base_url") or os.environ.get("CHEM_PDF_EXTRACTOR_BASE_URL") or DEFAULT_CLOUD_BASE_URL,
-                "cloud_active": local_config.get("cloud_active", True),
+                "cloud_active": local_config.get("cloud_active", False),
                 "recursive": True,
                 "max_chars": DEFAULT_MAX_CHARS,
                 "num_ctx": DEFAULT_NUM_CTX,
@@ -115,6 +116,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/models":
+            # GET /api/models is for local Ollama model discovery.
             query = urllib.parse.parse_qs(parsed.query)
             base_url = query.get("base_url", [DEFAULT_OLLAMA_BASE_URL])[0]
             try:
@@ -150,7 +152,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.send_json({"ok": False, "error": str(exc)})
             return
 
-        if parsed.path in {"/api/models", "/api/cloud-models"}:
+        if parsed.path in {"/api/cloud-models", "/api/models"}:
+            # POST /api/cloud-models is the preferred OpenAI-compatible model discovery endpoint.
+            # POST /api/models is kept as a compatibility alias for older frontends.
             try:
                 config = self.read_json()
                 base_url = str(config.get("base_url") or DEFAULT_CLOUD_BASE_URL).strip()
@@ -188,6 +192,13 @@ class RequestHandler(BaseHTTPRequestHandler):
                         selected_cloud_model = DEFAULT_CLOUD_MODEL
                     config["cloud_model"] = selected_cloud_model
                     config["model"] = selected_cloud_model
+                    validation_error = validate_cloud_start_config(config)
+                    if validation_error:
+                        self.send_json({"ok": False, "error": validation_error})
+                        return
+                    if not bool(config.get("cloud_active", False)):
+                        self.send_json({"ok": False, "error": '请先勾选"激活此配置"，再使用云端 API。'})
+                        return
                 thread = threading.Thread(target=_run_extraction_job_with_logging, args=(config, self.app.runtime, self.app.state), daemon=True)
                 thread.start()
                 self.send_json({"ok": True})

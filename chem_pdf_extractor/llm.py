@@ -241,25 +241,6 @@ def build_openai_compatible_models_url(base_url: str) -> str:
     return cleaned.rstrip("/") + "/models"
 
 
-def parse_model_ids(payload: dict[str, Any]) -> list[str]:
-    data = payload.get("data")
-    if not isinstance(data, list):
-        return []
-    models: list[str] = []
-    seen: set[str] = set()
-    for item in data:
-        if isinstance(item, str):
-            model_id = item
-        elif isinstance(item, dict):
-            model_id = str(item.get("id") or item.get("name") or "").strip()
-        else:
-            continue
-        if model_id and model_id not in seen:
-            models.append(model_id)
-            seen.add(model_id)
-    return models
-
-
 def parse_openai_compatible_model_ids(payload: dict[str, Any]) -> list[str]:
     data = payload.get("data") if isinstance(payload, dict) else None
     if not isinstance(data, list):
@@ -297,35 +278,6 @@ def fetch_openai_compatible_models(base_url: str, api_key: str, timeout: float =
         return parse_openai_compatible_model_ids(payload)
     except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, ValueError) as exc:
         raise RuntimeError(MODEL_DISCOVERY_ERROR) from exc
-
-
-def fetch_cloud_models_once(base_url: str, api_key: str, query: str = "") -> list[str]:
-    url = base_url.rstrip("/") + "/models" + query
-    request = urllib.request.Request(
-        url,
-        headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
-        method="GET",
-    )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        payload = json.loads(response.read().decode("utf-8", errors="replace"))
-    return parse_model_ids(payload)
-
-
-def get_cloud_models(base_url: str, api_key: str) -> list[str]:
-    if not base_url:
-        raise RuntimeError("LLM BASE URL 为空。")
-    if not api_key:
-        raise RuntimeError("LLM API KEY 为空。")
-    errors: list[str] = []
-    for query in ["?type=text&sub_type=chat", ""]:
-        try:
-            models = fetch_cloud_models_once(base_url, api_key, query)
-            if models:
-                return models
-        except Exception as exc:
-            errors.append(str(exc))
-    details = "；".join(errors[-2:])
-    raise RuntimeError(f"没有读取到云端模型列表。{details}")
 
 
 def extract_with_cloud_api(
