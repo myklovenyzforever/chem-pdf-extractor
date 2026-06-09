@@ -935,6 +935,24 @@
       pollStatus();
     }
 
+    function updateLogPanel(lines) {
+      const logsEl = document.getElementById("logs");
+      if (!logsEl) {
+        return;
+      }
+
+      const wasEmpty = !logsEl.textContent;
+      const wasNearBottom = logsEl.scrollTop + logsEl.clientHeight >= logsEl.scrollHeight - 24;
+      const nextText = (lines || []).join("\n");
+
+      if (logsEl.textContent !== nextText) {
+        logsEl.textContent = nextText;
+        if (wasEmpty || wasNearBottom) {
+          logsEl.scrollTop = logsEl.scrollHeight;
+        }
+      }
+    }
+
     async function pollStatus() {
       try {
         const res = await fetch("/api/status");
@@ -947,7 +965,7 @@
         document.getElementById("message").textContent = localizedStatusMessage(data.message);
         document.getElementById("currentFile").textContent = data.current_file ? t("prefix_current_file") + data.current_file : "";
         document.getElementById("outputInfo").textContent = data.output_path ? t("prefix_output") + data.output_path + " | " + t("prefix_error_log") + data.error_log_path : "";
-        document.getElementById("logs").textContent = (data.logs || []).join("\n");
+        updateLogPanel(data.logs || []);
         document.getElementById("startBtn").disabled = !!data.running;
         document.getElementById("stopBtn").disabled = !data.running;
         document.getElementById("pauseBtn").disabled = !data.running || !!data.pause_requested;
