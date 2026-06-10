@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -78,9 +78,7 @@ class PdfModeTest(unittest.TestCase):
 
         self.assertIn(["mineru"], candidates)
         self.assertIn(["magic-pdf"], candidates)
-        self.assertLess(candidates.index(["mineru"]), candidates.index(["magic-pdf"]))
-
-    def test_pypdf_text_existing_behavior_still_works(self):
+        self.assertLess(candidates.index(["mineru"]), candidates.index(["magic-pdf"]))    def test_pypdf_text_existing_behavior_still_works(self):
         class FakePage:
             def extract_text(self):
                 return "stable pypdf text"
@@ -108,3 +106,4 @@ class PdfModeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
