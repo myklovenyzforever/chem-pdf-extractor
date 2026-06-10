@@ -52,21 +52,39 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertIn('<div class="form-field full-span">', template)
         self.assertIn('data-i18n="pdf_mode_mineru">MinerU</option>', template)
 
-    def test_task_layout_no_longer_forces_equal_height_cards(self):
+    def test_workbench_layout_bounds_desktop_height_without_stretching_task_panel(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
         top_grid = css_block(template, ".top-grid")
         task_panel = css_block(template, ".task-panel")
         progress_panel = css_block(template, "\n    .progress-panel")
 
         self.assertIn("align-items: start", top_grid)
-        self.assertIn("height: auto", top_grid)
-        self.assertIn("overflow: visible", top_grid)
+        self.assertIn("height: min(760px, calc(100vh - 24px))", top_grid)
+        self.assertIn("overflow: hidden", top_grid)
         self.assertNotIn("align-items: stretch", top_grid)
-        self.assertNotIn("height: min(760px, calc(100vh - 24px))", top_grid)
         self.assertIn("flex: 0 0 auto", task_panel)
         self.assertIn("overflow: visible", task_panel)
         self.assertNotIn("flex: 1 1 0", task_panel)
         self.assertIn("flex: 0 0 auto", progress_panel)
+
+    def test_log_panel_pre_scrolls_internally(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+        log_panel = css_block(template, ".log-panel")
+        log_pre = css_block(template, ".log-panel pre")
+
+        self.assertIn("height: 100%", log_panel)
+        self.assertIn("overflow: hidden", log_panel)
+        self.assertIn("flex: 1 1 auto", log_pre)
+        self.assertIn("min-height: 0", log_pre)
+        self.assertIn("height: auto", log_pre)
+        self.assertIn("overflow: auto", log_pre)
+        self.assertNotIn("height: 320px", log_pre)
+
+    def test_narrow_layout_uses_auto_height_and_fixed_log_area(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        self.assertIn(".top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); height: auto; overflow: visible; }", template)
+        self.assertIn(".log-panel { height: 360px; }", template)
 
     def test_cloud_mode_hides_only_ollama_fields(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
