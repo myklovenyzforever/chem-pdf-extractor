@@ -50,26 +50,26 @@
       display: grid;
       grid-template-columns: minmax(0, 3fr) minmax(0, 3fr) minmax(0, 4fr);
       gap: 14px;
-      align-items: stretch;
+      align-items: start;
       margin-bottom: 12px;
-      height: min(760px, calc(100vh - 24px));
-      overflow: hidden;
+      height: auto;
+      overflow: visible;
     }
     .config-stack {
       display: flex;
       flex-direction: column;
       gap: 12px;
       min-width: 0;
-      height: 100%;
-      overflow: hidden;
+      height: auto;
+      overflow: visible;
     }
     .left-stack {
       display: flex;
       flex-direction: column;
       gap: 12px;
       min-width: 0;
-      height: 100%;
-      overflow: hidden;
+      height: auto;
+      overflow: visible;
     }
     .app-logo {
       flex: 0 0 auto;
@@ -150,22 +150,22 @@
       min-width: 0;
     }
     .task-panel {
-      flex: 1 1 0;
+      flex: 0 0 auto;
       display: flex;
       flex-direction: column;
       min-height: 0;
       min-width: 0;
-      overflow: hidden;
+      overflow: visible;
       padding: 12px 14px;
     }
-    .task-panel > .small { margin-top: auto; }
+    .task-panel > .small { margin-top: 8px; }
     .api-panel, .progress-panel { min-height: 0; min-width: 0; }
     .api-panel {
       flex: 0 0 auto;
-      overflow: hidden;
+      overflow: visible;
     }
     .progress-panel {
-      flex: 1 1 0;
+      flex: 0 0 auto;
       display: flex;
       flex-direction: column;
     }
@@ -240,7 +240,7 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px 10px;
-      margin-top: 12px;
+      margin-top: 8px;
     }
     .cloud-actions .checks { margin-top: 0; }
     .cloud-actions .checks label { line-height: 1.2; }
@@ -273,6 +273,8 @@
       gap: 8px 12px;
       align-items: end;
     }
+    .api-grid { gap: 7px 10px; }
+    .api-panel label { margin-top: 5px; }
     .form-field { min-width: 0; }
     .form-field.full-span { grid-column: 1 / -1; }
     .form-field label {
@@ -283,7 +285,7 @@
       display: block;
     }
     .field-help {
-      margin: 5px 0 0;
+      margin: 4px 0 0;
       color: var(--muted);
       font-size: 12px;
       line-height: 1.35;
@@ -296,10 +298,10 @@
     }
     #cloudModelCustom[hidden] { display: none; }
     .advanced-config {
-      margin-top: 10px;
+      margin-top: 8px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 8px 10px;
+      padding: 7px 10px;
       background: var(--panel-soft);
     }
     .advanced-config summary {
@@ -428,11 +430,11 @@
                 <option value="ollama" data-i18n="provider_ollama">Local Ollama</option>
               </select>
             </div>
-            <div class="form-field">
+            <div class="form-field ollama-only">
               <label data-i18n="local_ollama_model">Local Ollama Model</label>
               <select id="model"></select>
             </div>
-            <div class="form-field">
+            <div class="form-field full-span">
               <label data-i18n="pdf_mode">PDF Mode</label>
               <select id="pdfMode">
                 <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm</option>
@@ -447,7 +449,7 @@
               <label data-i18n="max_chars">Max Upload Characters (0 = no truncation)</label>
               <input id="maxChars" type="number" value="0" min="0" />
             </div>
-            <div class="form-field">
+            <div class="form-field ollama-only">
               <label>Ollama num_ctx</label>
               <input id="numCtx" type="number" value="8192" min="1024" />
             </div>
@@ -459,7 +461,7 @@
               <label data-i18n="bad_row_percent">Bad Data Threshold (%)</label>
               <input id="badRowMinFillPercent" type="number" value="40" min="0" max="100" step="1" />
             </div>
-            <div class="form-field full-span">
+            <div class="form-field full-span ollama-only">
               <label data-i18n="ollama_url">Ollama URL</label>
               <input id="ollamaBaseUrl" value="http://127.0.0.1:11434" />
             </div>
@@ -509,7 +511,6 @@
               <label><input id="cloudActive" type="checkbox" /> <span data-i18n="cloud_active">Activate this config</span></label>
             </div>
             <button id="saveConfigBtn" type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">Save Config</button>
-            <button id="refreshModelsBtn" type="button" onclick="loadModels()" data-i18n="refresh_models">Refresh Models</button>
           </div>
           <details class="advanced-config">
             <summary data-i18n="advanced_settings">Advanced settings</summary>
@@ -602,13 +603,13 @@
         load_cloud_models: "获取模型列表",
         manual_model_option: "手动输入模型名",
         placeholder_custom_model: "provider/model-name",
-        cloud_model_help: "可从已获取模型中选择；获取失败时仍可手动输入。",
+        cloud_model_help: "选择已获取模型；不支持 /models 时可手动输入。",
         advanced_settings: "高级设置",
         service_name_help: "默认使用 openai_compatible；旧 config.local.json 仍兼容。",
         cloud_active: "激活此配置",
         save_local_config: "保存本地配置",
         refresh_models: "刷新模型",
-        api_help: "填写 OpenAI-compatible Base URL 和 API Key；服务商支持 /models 时可点击获取模型列表，不支持时手动填写模型名。",
+        api_help: "填写 Base URL 和 API Key 后，可获取模型列表或手动填写模型名。",
         progress: "进度",
         stat_done: "已处理",
         stat_total: "总数",
@@ -681,13 +682,13 @@
         load_cloud_models: "Fetch models",
         manual_model_option: "Manual input",
         placeholder_custom_model: "provider/model-name",
-        cloud_model_help: "Choose a fetched model, or use manual input when discovery is unavailable.",
+        cloud_model_help: "Choose a fetched model, or enter one manually if /models is unavailable.",
         advanced_settings: "Advanced settings",
         service_name_help: "Defaults to openai_compatible. Existing config.local.json files remain compatible.",
         cloud_active: "Active",
         save_local_config: "Save Config",
         refresh_models: "Refresh Models",
-        api_help: "Enter an OpenAI-compatible Base URL and API key. If the provider supports /models, use Fetch models; otherwise enter the model manually.",
+        api_help: "Enter Base URL and API key, then fetch models or type a model name.",
         progress: "Progress",
         stat_done: "Done",
         stat_total: "Total",
@@ -998,8 +999,12 @@
     function onProviderChange() {
       const provider = document.getElementById("llmProvider").value;
       const cloudPanel = document.getElementById("cloudPanel");
-      cloudPanel.style.display = provider === "cloud" ? "block" : "none";
-      document.getElementById("autoFallback").disabled = provider === "cloud";
+      const isCloud = provider === "cloud";
+      cloudPanel.style.display = isCloud ? "block" : "none";
+      document.querySelectorAll(".ollama-only").forEach(el => {
+        el.hidden = isCloud;
+      });
+      document.getElementById("autoFallback").disabled = isCloud;
     }
 
     async function startJob() {
