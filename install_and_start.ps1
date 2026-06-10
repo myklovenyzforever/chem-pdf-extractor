@@ -39,8 +39,42 @@ function Invoke-LoggedCommand {
   )
   $display = "$FilePath $($Arguments -join ' ')"
   Write-LauncherLog "Running: $display" $LogPath
-  & $FilePath @Arguments 2>&1 | Tee-Object -FilePath $LogPath -Append
-  $exitCode = $LASTEXITCODE
+
+  $stdoutPath = Join-Path $LogsDir ("native-stdout-{0}.log" -f ([guid]::NewGuid().ToString("N")))
+  $stderrPath = Join-Path $LogsDir ("native-stderr-{0}.log" -f ([guid]::NewGuid().ToString("N")))
+  $quotedArgs = @()
+  foreach ($argument in $Arguments) {
+    if ($argument -match '\s') {
+      $quotedArgs += ('"{0}"' -f ($argument -replace '"', '\"'))
+    } else {
+      $quotedArgs += $argument
+    }
+  }
+
+  try {
+    $process = Start-Process -FilePath $FilePath -ArgumentList $quotedArgs -NoNewWindow -Wait -PassThru -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+    $exitCode = $process.ExitCode
+
+    if (Test-Path -LiteralPath $stdoutPath) {
+      $stdout = Get-Content -LiteralPath $stdoutPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+      if ($stdout) {
+        Write-LauncherLog "stdout:" $LogPath
+        Add-Content -LiteralPath $LogPath -Encoding UTF8 -Value $stdout
+        Write-Host $stdout
+      }
+    }
+    if (Test-Path -LiteralPath $stderrPath) {
+      $stderr = Get-Content -LiteralPath $stderrPath -Raw -Encoding UTF8 -ErrorAction SilentlyContinue
+      if ($stderr) {
+        Write-LauncherLog "stderr:" $LogPath
+        Add-Content -LiteralPath $LogPath -Encoding UTF8 -Value $stderr
+        Write-Host $stderr
+      }
+    }
+  } finally {
+    Remove-Item -LiteralPath $stdoutPath, $stderrPath -Force -ErrorAction SilentlyContinue
+  }
+
   Write-LauncherLog "Exit code: $exitCode" $LogPath
   if ($exitCode -ne 0) {
     $message = "Command failed: $display"
@@ -49,6 +83,30 @@ function Invoke-LoggedCommand {
     }
     throw $message
   }
+}
+
+function Add-ProjectScriptsToPath {
+  param([string]$PythonExe)
+  $scriptsDir = Split-Path -Parent $PythonExe
+  if ((Test-Path -LiteralPath $scriptsDir) -and ($env:PATH -notlike "*$scriptsDir*")) {
+    $env:PATH = "$scriptsDir;$env:PATH"
+    Write-LauncherLog "Prepended project Scripts directory to PATH: $scriptsDir"
+  }
+  return $scriptsDir
+}
+
+function Set-MinerUEnvironmentIfAvailable {
+  param([string]$PythonExe)
+  $scriptsDir = Add-ProjectScriptsToPath -PythonExe $PythonExe
+  $mineruExe = Join-Path $scriptsDir "mineru.exe"
+  if (Test-Path -LiteralPath $mineruExe) {
+    $resolvedMinerU = (Resolve-Path -LiteralPath $mineruExe).Path
+    $env:MINERU_COMMAND = $resolvedMinerU
+    Write-LauncherLog "MINERU_COMMAND set to: $resolvedMinerU"
+    return $true
+  }
+  Write-LauncherLog "mineru.exe not found in project Scripts directory: $mineruExe"
+  return $false
 }
 
 function Test-Python311 {
@@ -290,11 +348,52 @@ function Install-MinerU {
       throw "uv was installed but uv.exe was not found."
     }
     Invoke-LoggedCommand -FilePath $uvExe -Arguments @("pip", "install", "--python", $PythonExe, "-r", $mineruRequirements) -FailureHint "MinerU installation failed. Try rerunning the launcher and selecting option 2, pymupdf4llm, instead."
+    Set-MinerUEnvironmentIfAvailable -PythonExe $PythonExe | Out-Null
     Write-LauncherLog "MinerU installation finished"
     Write-Step "MinerU backend installation finished."
   } catch {
     Write-LauncherLog "MinerU installation failed: $($_.Exception.Message)"
-    throw "MinerU installation failed. Check logs/install.log. You can retry safely, or rerun the launcher and choose option 2, pymupdf4llm, instead.`n$($_.Exception.Message)"
+    throw "MinerU installation failed. Check logs/install.log.`n$($_.Exception.Message)"
+  }
+}
+
+function Resolve-MinerUInstallFailure {
+  param(
+    [string]$PythonExe,
+    [string]$FailureMessage
+  )
+  while ($true) {
+    Write-Host ""
+    Write-Host "MinerU installation did not complete successfully."
+    Write-Host "Reason: $FailureMessage"
+    Write-Host ""
+    Write-Host "[1] Retry MinerU installation"
+    Write-Host "[2] Continue now with pymupdf4llm"
+    Write-Host "[3] Exit"
+    $choice = Read-Host "Enter 1, 2, or 3"
+    switch ($choice.Trim()) {
+      "1" {
+        try {
+          Install-MinerU -PythonExe $PythonExe
+          Save-BackendChoice "mineru"
+          return "mineru"
+        } catch {
+          $FailureMessage = $_.Exception.Message
+          Write-LauncherLog "MinerU retry failed: $FailureMessage"
+        }
+      }
+      "2" {
+        Write-Step "Continuing with pymupdf4llm backend."
+        Save-BackendChoice "pymupdf4llm"
+        return "pymupdf4llm"
+      }
+      "3" {
+        throw "MinerU installation was cancelled by the user."
+      }
+      default {
+        Write-Host "Invalid input. Please enter 1, 2, or 3."
+      }
+    }
   }
 }
 
@@ -306,13 +405,22 @@ function Install-DependenciesForBackend {
   switch ($Backend) {
     "pypdf_text" {
       Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $ProjectRoot "requirements-core.txt")
+      return "pypdf_text"
     }
     "pymupdf4llm" {
       Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $ProjectRoot "requirements.txt")
+      return "pymupdf4llm"
     }
     "mineru" {
       Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $ProjectRoot "requirements.txt")
-      Install-MinerU -PythonExe $PythonExe
+      try {
+        Install-MinerU -PythonExe $PythonExe
+        Save-BackendChoice "mineru"
+        return "mineru"
+      } catch {
+        Write-LauncherLog "MinerU install flow requires user decision: $($_.Exception.Message)"
+        return Resolve-MinerUInstallFailure -PythonExe $PythonExe -FailureMessage $_.Exception.Message
+      }
     }
     default {
       throw "Unknown backend selected: $Backend"
@@ -330,7 +438,13 @@ try {
   $pythonExe = Ensure-ProjectPython
   Write-Step "Project Python: $pythonExe"
 
-  Install-DependenciesForBackend -PythonExe $pythonExe -Backend $backend
+  $backend = Install-DependenciesForBackend -PythonExe $pythonExe -Backend $backend
+  Add-ProjectScriptsToPath -PythonExe $pythonExe | Out-Null
+  if ($backend -eq "mineru") {
+    if (-not (Set-MinerUEnvironmentIfAvailable -PythonExe $pythonExe)) {
+      Write-LauncherLog "MinerU backend selected, but mineru.exe was not found before app startup."
+    }
+  }
 
   $url = "http://127.0.0.1:8766/"
   $startupArgs = @("-m", "chem_pdf_extractor", "--pdf-mode", $backend, "--open-browser")

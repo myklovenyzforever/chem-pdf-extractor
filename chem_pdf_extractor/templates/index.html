@@ -236,16 +236,14 @@
     }
     .task-panel .checks label { min-width: 0; }
     .cloud-actions {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 8px 10px;
       margin-top: 12px;
     }
     .cloud-actions .checks { margin-top: 0; }
     .cloud-actions .checks label { line-height: 1.2; }
-    .cloud-actions #refreshModelsBtn { justify-self: end; }
-    .cloud-actions #saveConfigBtn { grid-column: 1 / -1; justify-self: start; }
     button {
       border: 1px solid var(--line);
       background: #fff;
@@ -269,6 +267,47 @@
     .task-panel .actions { gap: 8px; margin-top: 8px; }
     .task-panel .action-row { gap: 8px; }
     .task-panel .action-row + .action-row { margin-top: 6px; }
+    .task-grid, .api-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      align-items: end;
+    }
+    .form-field { min-width: 0; }
+    .form-field.full-span { grid-column: 1 / -1; }
+    .form-field label {
+      min-height: 0;
+      height: auto;
+      line-height: 1.18;
+      margin: 0 0 4px;
+      display: block;
+    }
+    .field-help {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+    .cloud-model-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+    #cloudModelCustom[hidden] { display: none; }
+    .advanced-config {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: var(--panel-soft);
+    }
+    .advanced-config summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
     table { width: 100%; min-width: 1180px; table-layout: fixed; border-collapse: collapse; font-size: 13px; }
     .field-name-col { width: 24%; }
     .requirement-col { width: 100px; }
@@ -354,6 +393,7 @@
       body { overflow-x: auto; }
       main { overflow-x: visible; }
       .top-grid { grid-template-columns: 1fr; height: auto; min-height: 0; overflow: visible; }
+      .task-grid, .api-grid, .cloud-model-row { grid-template-columns: 1fr; }
       .app-header { flex-wrap: wrap; }
       .stats { grid-template-columns: repeat(2, 1fr); }
     }
@@ -371,66 +411,71 @@
           </div>
         </div>
         <section class="task-panel">
-          <h2 data-i18n="task_settings">任务设置</h2>
-          <label data-i18n="input_dir">PDF 输入目录</label>
-          <input id="inputDir" />
-          <label data-i18n="output_path">Excel 输出路径</label>
-          <input id="outputPath" />
-          <label data-i18n="llm_provider">LLM 提供方</label>
-          <select id="llmProvider" onchange="onProviderChange()">
-            <option value="cloud" data-i18n="provider_cloud">云端 OpenAI-compatible API</option>
-            <option value="ollama" data-i18n="provider_ollama">本地 Ollama</option>
-          </select>
-          <div class="row">
-            <div>
-              <label data-i18n="local_ollama_model">本地 Ollama 模型</label>
-              <select id="model"></select>
+          <h2 data-i18n="task_settings">Task Settings</h2>
+          <div class="task-grid">
+            <div class="form-field full-span">
+              <label data-i18n="input_dir">PDF Input Folder</label>
+              <input id="inputDir" />
             </div>
-            <div>
-              <label data-i18n="pdf_mode">PDF 到 Markdown / 文本方式</label>
-              <select id="pdfMode">
-                <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf_text：轻量 fallback</option>
-                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm：推荐默认</option>
-                <option value="mineru" data-i18n="pdf_mode_mineru">mineru：复杂版面/表格/扫描件重后端</option>
-                <option value="auto" data-i18n="pdf_mode_auto">auto：按需尝试增强 fallback</option>
-                <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF 普通文本</option>
+            <div class="form-field full-span">
+              <label data-i18n="output_path">Excel Output Path</label>
+              <input id="outputPath" />
+            </div>
+            <div class="form-field full-span">
+              <label data-i18n="llm_provider">LLM Provider</label>
+              <select id="llmProvider" onchange="onProviderChange()">
+                <option value="cloud" data-i18n="provider_cloud">Cloud OpenAI-compatible API</option>
+                <option value="ollama" data-i18n="provider_ollama">Local Ollama</option>
               </select>
             </div>
-          </div>
-          <div class="row">
-            <div>
-              <label data-i18n="max_chars">上传最大字符数（0 表示不截断）</label>
+            <div class="form-field">
+              <label data-i18n="local_ollama_model">Local Ollama Model</label>
+              <select id="model"></select>
+            </div>
+            <div class="form-field">
+              <label data-i18n="pdf_mode">PDF Mode</label>
+              <select id="pdfMode">
+                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm</option>
+                <option value="mineru" data-i18n="pdf_mode_mineru">MinerU</option>
+                <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf_text</option>
+                <option value="auto" data-i18n="pdf_mode_auto">auto</option>
+                <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF text</option>
+              </select>
+              <p class="field-help" data-i18n="pdf_mode_help">Use MinerU for complex layouts; pymupdf4llm remains the default.</p>
+            </div>
+            <div class="form-field">
+              <label data-i18n="max_chars">Max Upload Characters (0 = no truncation)</label>
               <input id="maxChars" type="number" value="0" min="0" />
             </div>
-            <div>
+            <div class="form-field">
               <label>Ollama num_ctx</label>
               <input id="numCtx" type="number" value="8192" min="1024" />
             </div>
-          </div>
-          <div class="row">
-            <div>
-              <label data-i18n="llm_timeout">LLM 超时秒数（0 表示不限制）</label>
+            <div class="form-field">
+              <label data-i18n="llm_timeout">LLM Timeout Seconds (0 = unlimited)</label>
               <input id="llmTimeout" type="number" value="0" min="0" />
             </div>
-            <div>
-              <label data-i18n="bad_row_percent">错误百分比（低于此百分比判为坏数据）</label>
+            <div class="form-field">
+              <label data-i18n="bad_row_percent">Bad Data Threshold (%)</label>
               <input id="badRowMinFillPercent" type="number" value="40" min="0" max="100" step="1" />
             </div>
+            <div class="form-field full-span">
+              <label data-i18n="ollama_url">Ollama URL</label>
+              <input id="ollamaBaseUrl" value="http://127.0.0.1:11434" />
+            </div>
           </div>
-          <label data-i18n="ollama_url">Ollama 地址</label>
-          <input id="ollamaBaseUrl" value="http://127.0.0.1:11434" />
           <div class="checks">
-            <label><input id="recursive" type="checkbox" /> <span data-i18n="recursive">递归处理子文件夹</span></label>
-            <label><input id="autoFallback" type="checkbox" /> <span data-i18n="auto_fallback">模型失败时尝试备选模型</span></label>
+            <label><input id="recursive" type="checkbox" /> <span data-i18n="recursive">Process Subfolders Recursively</span></label>
+            <label><input id="autoFallback" type="checkbox" /> <span data-i18n="auto_fallback">Try backup model when model fails</span></label>
           </div>
           <div class="actions">
             <div class="action-row">
-              <button class="primary" id="startBtn" onclick="startJob()" data-i18n="start">开始处理</button>
+              <button class="primary" id="startBtn" onclick="startJob()" data-i18n="start">Start</button>
             </div>
             <div class="action-row">
-              <button id="pauseBtn" onclick="pauseJob()" data-i18n="pause">暂停任务</button>
-              <button id="resumeBtn" onclick="resumeJob()" data-i18n="resume">继续任务</button>
-              <button class="danger" id="stopBtn" onclick="stopJob()" data-i18n="stop">停止任务</button>
+              <button id="pauseBtn" onclick="pauseJob()" data-i18n="pause">Pause</button>
+              <button id="resumeBtn" onclick="resumeJob()" data-i18n="resume">Resume</button>
+              <button class="danger" id="stopBtn" onclick="stopJob()" data-i18n="stop">Stop</button>
             </div>
           </div>
         </section>
@@ -438,29 +483,41 @@
 
       <div class="config-stack">
         <section id="cloudPanel" class="api-panel" style="display:none;">
-          <h2 data-i18n="api_config">编辑 LLM API 配置</h2>
-          <label><span data-i18n="service_name">LLM 服务名称</span> <span style="color:#d92d20">*</span></label>
-          <input id="cloudServiceName" placeholder="openai_compatible" data-i18n-placeholder="placeholder_service" />
-          <label data-i18n="model_name">模型名称</label>
-          <div class="inline-row">
-            <input id="cloudModel" list="cloudModelOptions" autocomplete="off" />
-            <datalist id="cloudModelOptions">
-              __DEFAULT_CLOUD_MODEL_OPTIONS__
-            </datalist>
-            <button type="button" onclick="loadCloudModels()" data-i18n="load_cloud_models">获取模型列表</button>
+          <h2 data-i18n="api_config">Edit LLM API Config</h2>
+          <div class="api-grid">
+            <div class="form-field full-span">
+              <label>LLM BASE URL</label>
+              <input id="cloudBaseUrl" placeholder="https://api.example.com/v1" />
+            </div>
+            <div class="form-field full-span">
+              <label>LLM API KEY</label>
+              <input id="cloudApiKey" type="password" autocomplete="off" placeholder="YOUR_API_KEY_HERE" />
+            </div>
+            <div class="form-field full-span">
+              <label data-i18n="model_name">Model Name</label>
+              <div class="cloud-model-row">
+                <select id="cloudModelSelect" onchange="onCloudModelSelectChange()"></select>
+                <button type="button" onclick="loadCloudModels()" data-i18n="load_cloud_models">Fetch models</button>
+              </div>
+              <input id="cloudModelCustom" autocomplete="off" data-i18n-placeholder="placeholder_custom_model" placeholder="provider/model-name" oninput="syncCloudModelValue()" />
+              <input id="cloudModel" type="hidden" />
+              <p class="field-help" id="cloudModelHelp" data-i18n="cloud_model_help">Choose a fetched model or keep manual input if discovery is unavailable.</p>
+            </div>
           </div>
-          <label>LLM API KEY</label>
-          <input id="cloudApiKey" type="password" autocomplete="off" placeholder="YOUR_API_KEY_HERE" />
-          <label>LLM BASE URL</label>
-          <input id="cloudBaseUrl" placeholder="https://api.example.com/v1" />
           <div class="cloud-actions">
             <div class="checks">
-              <label><input id="cloudActive" type="checkbox" /> <span data-i18n="cloud_active">激活此配置（云端模式必须勾选）</span></label>
+              <label><input id="cloudActive" type="checkbox" /> <span data-i18n="cloud_active">Activate this config</span></label>
             </div>
-            <button id="refreshModelsBtn" type="button" onclick="loadModels()" data-i18n="refresh_models">刷新模型</button>
-            <button id="saveConfigBtn" type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">保存本地配置</button>
+            <button id="saveConfigBtn" type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">Save Config</button>
+            <button id="refreshModelsBtn" type="button" onclick="loadModels()" data-i18n="refresh_models">Refresh Models</button>
           </div>
-          <p class="small" data-i18n="api_help">填写 OpenAI-compatible Base URL 和 API Key；服务商支持 /models 时可点击获取模型列表。不支持时仍可手动填写模型名。</p>
+          <details class="advanced-config">
+            <summary data-i18n="advanced_settings">Advanced settings</summary>
+            <label data-i18n="service_name">LLM Service Name</label>
+            <input id="cloudServiceName" placeholder="openai_compatible" data-i18n-placeholder="placeholder_service" />
+            <p class="field-help" data-i18n="service_name_help">Defaults to openai_compatible. Existing config.local.json files remain compatible.</p>
+          </details>
+          <p class="small" data-i18n="api_help">Enter an OpenAI-compatible Base URL and API key. If the provider supports /models, use Fetch models; otherwise enter the model manually.</p>
         </section>
 
         <section class="progress-panel">
@@ -521,12 +578,13 @@
         provider_cloud: "云端 OpenAI-compatible API",
         provider_ollama: "本地 Ollama",
         local_ollama_model: "本地 Ollama 模型",
-        pdf_mode: "PDF 到 Markdown / 文本方式",
-        pdf_mode_mineru: "mineru：重型增强后端，适合复杂版面/表格/扫描件",
-        pdf_mode_auto: "auto：按需尝试增强 fallback",
-        pdf_mode_pymupdf4llm: "pymupdf4llm：推荐默认，适合多数科研 PDF",
-        pdf_mode_pymupdf_text: "PyMuPDF 普通文本",
-        pdf_mode_pypdf_text: "pypdf_text：轻量 fallback，安装最小",
+        pdf_mode: "PDF 解析方式",
+        pdf_mode_mineru: "MinerU",
+        pdf_mode_auto: "auto",
+        pdf_mode_pymupdf4llm: "pymupdf4llm",
+        pdf_mode_pymupdf_text: "PyMuPDF text",
+        pdf_mode_pypdf_text: "pypdf_text",
+        pdf_mode_help: "默认使用 pymupdf4llm；复杂版面、表格或扫描件可选 MinerU。",
         max_chars: "上传最大字符数（0 表示不截断）",
         llm_timeout: "LLM 超时秒数（0 表示不限制）",
         bad_row_percent: "错误百分比（低于此百分比判为坏数据）",
@@ -542,10 +600,15 @@
         placeholder_service: "openai_compatible",
         model_name: "模型名称",
         load_cloud_models: "获取模型列表",
+        manual_model_option: "手动输入模型名",
+        placeholder_custom_model: "provider/model-name",
+        cloud_model_help: "可从已获取模型中选择；获取失败时仍可手动输入。",
+        advanced_settings: "高级设置",
+        service_name_help: "默认使用 openai_compatible；旧 config.local.json 仍兼容。",
         cloud_active: "激活此配置",
         save_local_config: "保存本地配置",
         refresh_models: "刷新模型",
-        api_help: "填写 OpenAI-compatible Base URL 和 API Key；服务商支持 /models 时可点击获取模型列表。不支持时仍可手动填写模型名。",
+        api_help: "填写 OpenAI-compatible Base URL 和 API Key；服务商支持 /models 时可点击获取模型列表，不支持时手动填写模型名。",
         progress: "进度",
         stat_done: "已处理",
         stat_total: "总数",
@@ -594,12 +657,13 @@
         provider_cloud: "Cloud OpenAI-compatible API",
         provider_ollama: "Local Ollama",
         local_ollama_model: "Local Ollama Model",
-        pdf_mode: "PDF to Markdown / Text Mode",
-        pdf_mode_mineru: "mineru: heavy enhanced backend for complex layouts/tables/scanned PDFs",
-        pdf_mode_auto: "auto: try enhanced fallback when needed",
-        pdf_mode_pymupdf4llm: "pymupdf4llm: recommended default for most research PDFs",
-        pdf_mode_pymupdf_text: "PyMuPDF plain text",
-        pdf_mode_pypdf_text: "pypdf_text: lightweight fallback, smallest install",
+        pdf_mode: "PDF Mode",
+        pdf_mode_mineru: "MinerU",
+        pdf_mode_auto: "auto",
+        pdf_mode_pymupdf4llm: "pymupdf4llm",
+        pdf_mode_pymupdf_text: "PyMuPDF text",
+        pdf_mode_pypdf_text: "pypdf_text",
+        pdf_mode_help: "pymupdf4llm is the default. Use MinerU for complex layouts, tables, or scanned PDFs.",
         max_chars: "Max Upload Characters (0 = no truncation)",
         llm_timeout: "LLM Timeout Seconds (0 = unlimited)",
         bad_row_percent: "Bad Data Threshold (below this fill percent)",
@@ -615,10 +679,15 @@
         placeholder_service: "openai_compatible",
         model_name: "Model Name",
         load_cloud_models: "Fetch models",
+        manual_model_option: "Manual input",
+        placeholder_custom_model: "provider/model-name",
+        cloud_model_help: "Choose a fetched model, or use manual input when discovery is unavailable.",
+        advanced_settings: "Advanced settings",
+        service_name_help: "Defaults to openai_compatible. Existing config.local.json files remain compatible.",
         cloud_active: "Active",
         save_local_config: "Save Config",
         refresh_models: "Refresh Models",
-        api_help: "Enter an OpenAI-compatible Base URL and API key. If the provider supports the /models endpoint, use Fetch models to load model IDs. If discovery is unavailable, enter the model name manually.",
+        api_help: "Enter an OpenAI-compatible Base URL and API key. If the provider supports /models, use Fetch models; otherwise enter the model manually.",
         progress: "Progress",
         stat_done: "Done",
         stat_total: "Total",
@@ -652,7 +721,7 @@
         error_save_failed: "Save failed",
         alert_config_saved: "Saved to local config.local.json. This file is in .gitignore and should not be uploaded to GitHub.",
         alert_config_save_failed: "Failed to save local config: ",
-        alert_cloud_active: "Please check \"Activate this config\" before using the cloud API.",
+        alert_cloud_active: "Please check 'Activate this config' before using the cloud API.",
         alert_start_failed: "Start failed",
         prefix_current_file: "Current file: ",
         prefix_output: "Output: ",
@@ -720,6 +789,9 @@
       document.getElementById("langZh").classList.toggle("active", currentLang === "zh");
       document.getElementById("langEn").classList.toggle("active", currentLang === "en");
       applyFieldLanguage();
+      const manualOption = document.querySelector("#cloudModelSelect option[value='__manual__']");
+      if (manualOption) manualOption.textContent = t("manual_model_option");
+      syncCloudModelValue();
     }
 
     function setLanguage(lang) {
@@ -813,26 +885,71 @@
       }
     }
 
+    function getCloudServiceName() {
+      const input = document.getElementById("cloudServiceName");
+      const value = input ? input.value.trim() : "";
+      return value || "openai_compatible";
+    }
+
+    function syncCloudModelValue() {
+      const select = document.getElementById("cloudModelSelect");
+      const custom = document.getElementById("cloudModelCustom");
+      const hidden = document.getElementById("cloudModel");
+      if (!select || !custom || !hidden) return "";
+
+      const isManual = select.value === "__manual__";
+      custom.hidden = !isManual;
+      custom.disabled = !isManual;
+      const value = isManual ? custom.value.trim() : select.value.trim();
+      hidden.value = value;
+      return value;
+    }
+
+    function getCloudModelValue() {
+      return syncCloudModelValue();
+    }
+
+    function onCloudModelSelectChange() {
+      syncCloudModelValue();
+    }
+
     function fillCloudModelSuggestions(models, selectedValue = "") {
-      const input = document.getElementById("cloudModel");
-      const list = document.getElementById("cloudModelOptions");
-      const previous = selectedValue || input.value;
-      list.innerHTML = "";
-      models.forEach(name => {
+      const select = document.getElementById("cloudModelSelect");
+      const custom = document.getElementById("cloudModelCustom");
+      const hidden = document.getElementById("cloudModel");
+      if (!select || !custom || !hidden) return;
+
+      const previous = selectedValue || hidden.value || custom.value;
+      const uniqueModels = Array.from(new Set((models || []).filter(Boolean)));
+      select.innerHTML = "";
+      uniqueModels.forEach(name => {
         const opt = document.createElement("option");
         opt.value = name;
         opt.textContent = name;
-        list.appendChild(opt);
+        select.appendChild(opt);
       });
-      if (previous) input.value = previous;
-      else if (models.length) input.value = models[0];
+      const manual = document.createElement("option");
+      manual.value = "__manual__";
+      manual.textContent = t("manual_model_option");
+      select.appendChild(manual);
+
+      if (previous && uniqueModels.includes(previous)) {
+        select.value = previous;
+        custom.value = previous;
+      } else if (uniqueModels.length && !previous) {
+        select.value = uniqueModels[0];
+        custom.value = uniqueModels[0];
+      } else {
+        select.value = "__manual__";
+        custom.value = previous || "";
+      }
+      syncCloudModelValue();
     }
 
     async function loadCloudModels() {
       const baseUrl = document.getElementById("cloudBaseUrl").value.trim();
       const apiKey = document.getElementById("cloudApiKey").value.trim();
-      const modelSelect = document.getElementById("cloudModel");
-      const previousModel = modelSelect.value;
+      const previousModel = getCloudModelValue();
       if (!baseUrl || !apiKey) {
         alert(t("alert_fill_cloud"));
         return;
@@ -847,20 +964,21 @@
         if (!data.ok) throw new Error(data.error || t("error_cloud_read"));
         fillCloudModelSuggestions(data.models || [], previousModel);
         if (data.default_model && (data.models || []).includes(data.default_model) && !previousModel) {
-          modelSelect.value = data.default_model;
+          fillCloudModelSuggestions(data.models || [], data.default_model);
         }
         alert(t("alert_cloud_read_done") + (data.models || []).length + t("alert_cloud_read_unit"));
       } catch (err) {
+        fillCloudModelSuggestions([], previousModel);
         alert(t("alert_cloud_read_failed") + err.message);
       }
     }
 
     async function saveLocalConfig() {
       const payload = {
-        llm_service_name: document.getElementById("cloudServiceName").value.trim(),
+        llm_service_name: getCloudServiceName(),
         api_key: document.getElementById("cloudApiKey").value.trim(),
         base_url: document.getElementById("cloudBaseUrl").value.trim(),
-        model: document.getElementById("cloudModel").value.trim(),
+        model: getCloudModelValue(),
         cloud_active: document.getElementById("cloudActive").checked
       };
       try {
@@ -891,7 +1009,7 @@
         return;
       }
       const selectedModel = provider === "cloud"
-        ? document.getElementById("cloudModel").value.trim()
+        ? getCloudModelValue()
         : document.getElementById("model").value;
       const payload = {
         input_dir: document.getElementById("inputDir").value.trim(),
@@ -899,8 +1017,8 @@
         llm_provider: provider,
         model: selectedModel,
         translate_to_chinese: true,
-        cloud_service_name: document.getElementById("cloudServiceName").value.trim(),
-        cloud_model: document.getElementById("cloudModel").value.trim(),
+        cloud_service_name: getCloudServiceName(),
+        cloud_model: getCloudModelValue(),
         cloud_api_key: document.getElementById("cloudApiKey").value.trim(),
         cloud_base_url: document.getElementById("cloudBaseUrl").value.trim(),
         cloud_active: document.getElementById("cloudActive").checked,

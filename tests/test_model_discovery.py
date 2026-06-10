@@ -4,6 +4,7 @@ import urllib.error
 from pathlib import Path
 from unittest.mock import patch
 
+from chem_pdf_extractor.config import normalize_local_config
 from chem_pdf_extractor.llm import (
     build_openai_compatible_models_url,
     fetch_openai_compatible_models,
@@ -102,6 +103,27 @@ class ModelDiscoveryTest(unittest.TestCase):
         self.assertIn('"cloud_active": false', raw_text)
         self.assertNotIn('"llm_service_name": "silicon"', raw_text)
         self.assertNotIn('"cloud_active": true', raw_text)
+
+    def test_missing_service_name_defaults_to_openai_compatible(self):
+        payload = normalize_local_config({
+            "api_key": "TEST_KEY",
+            "base_url": "https://api.example.com/v1",
+            "model": "provider/model-name",
+            "cloud_active": True,
+        })
+
+        self.assertEqual(payload["cloud_service_name"], "openai_compatible")
+        self.assertEqual(payload["cloud_model"], "provider/model-name")
+
+    def test_existing_service_name_still_loads(self):
+        payload = normalize_local_config({
+            "llm_service_name": "legacy_service",
+            "api_key": "TEST_KEY",
+            "base_url": "https://api.example.com/v1",
+            "model": "provider/model-name",
+        })
+
+        self.assertEqual(payload["cloud_service_name"], "legacy_service")
 
 
 if __name__ == "__main__":

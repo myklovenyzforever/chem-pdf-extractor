@@ -150,7 +150,7 @@ The output preview uses synthetic data only and does not represent real publishe
 
 - LLM extraction results should be reviewed manually.
 - Complex scanned PDFs may require OCR or MinerU support.
-- MinerU is optional and is not installed by default. Use the Windows first-run launcher option `[3] mineru` only when the larger enhanced backend is needed.
+- MinerU is optional and is not installed by default. Use the Windows first-run launcher option `[3] mineru` only when the larger enhanced backend is needed. MinerU 3.x uses `mineru.exe` as the primary CLI; `magic-pdf` is only a legacy fallback.
 - The project does not include any built-in commercial API key.
 - Example data is synthetic and does not represent real published papers.
 - Python 3.11 is recommended for the broadest PDF-backend compatibility.

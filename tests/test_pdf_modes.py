@@ -1,11 +1,12 @@
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from chem_pdf_extractor.app import parse_args
 from chem_pdf_extractor.config import DEFAULT_PDF_MODE, PDF_MODE_CHOICES, RuntimeDeps
-from chem_pdf_extractor.pdf import read_pdf_as_markdown_with_mode
+from chem_pdf_extractor.pdf import mineru_command_candidates, read_pdf_as_markdown_with_mode
 
 
 class PdfModeTest(unittest.TestCase):
@@ -47,6 +48,30 @@ class PdfModeTest(unittest.TestCase):
         ):
             with self.assertRaisesRegex(RuntimeError, "MinerU PDF backend is optional"):
                 read_pdf_as_markdown_with_mode(Path("dummy.pdf"), "mineru", runtime)
+
+    def test_mineru_command_candidates_prefer_environment_command(self):
+        with patch.dict("os.environ", {"MINERU_COMMAND": "custom-mineru --flag"}, clear=False):
+            candidates = mineru_command_candidates()
+
+        self.assertEqual(candidates[0], ["custom-mineru", "--flag"])
+
+    def test_mineru_command_candidates_prefer_project_venv_mineru_exe(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            scripts_dir = root / ".venv" / "Scripts"
+            scripts_dir.mkdir(parents=True)
+            mineru_exe = scripts_dir / "mineru.exe"
+            mineru_exe.write_text("", encoding="utf-8")
+            python_exe = scripts_dir / "python.exe"
+
+            with patch.dict("os.environ", {}, clear=True):
+                with patch.object(sys, "executable", str(python_exe)):
+                    with patch("chem_pdf_extractor.pdf.PROJECT_ROOT", root):
+                        candidates = mineru_command_candidates()
+
+        self.assertEqual(candidates[0], [str(mineru_exe)])
+        self.assertIn(["mineru"], candidates)
+        self.assertIn(["magic-pdf"], candidates)
 
     def test_pypdf_text_existing_behavior_still_works(self):
         class FakePage:
