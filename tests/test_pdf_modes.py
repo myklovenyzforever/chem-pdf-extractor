@@ -55,7 +55,7 @@ class PdfModeTest(unittest.TestCase):
 
         self.assertEqual(candidates[0], ["custom-mineru", "--flag"])
 
-    def test_mineru_command_candidates_prefer_project_venv_mineru_exe(self):
+        def test_mineru_command_candidates_prefer_project_venv_mineru_exe(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             scripts_dir = root / ".venv" / "Scripts"
@@ -69,9 +69,16 @@ class PdfModeTest(unittest.TestCase):
                     with patch("chem_pdf_extractor.pdf.PROJECT_ROOT", root):
                         candidates = mineru_command_candidates()
 
-        self.assertEqual(candidates[0], [str(mineru_exe)])
+        first = Path(candidates[0][0])
+        self.assertEqual(first.name.lower(), "mineru.exe")
+        self.assertEqual(first.parent.name.lower(), "scripts")
+        self.assertEqual(first.parent.parent.name.lower(), ".venv")
+        self.assertTrue(first.exists())
+        self.assertTrue(first.samefile(mineru_exe))
+
         self.assertIn(["mineru"], candidates)
         self.assertIn(["magic-pdf"], candidates)
+        self.assertLess(candidates.index(["mineru"]), candidates.index(["magic-pdf"]))
 
     def test_pypdf_text_existing_behavior_still_works(self):
         class FakePage:
