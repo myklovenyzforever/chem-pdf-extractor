@@ -49,13 +49,13 @@ class PdfModeTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "MinerU PDF backend is optional"):
                 read_pdf_as_markdown_with_mode(Path("dummy.pdf"), "mineru", runtime)
 
-    def test_mineru_command_candidates_prefer_environment_command(self):
+        def test_mineru_command_candidates_prefer_environment_command(self):
         with patch.dict("os.environ", {"MINERU_COMMAND": "custom-mineru --flag"}, clear=False):
             candidates = mineru_command_candidates()
 
         self.assertEqual(candidates[0], ["custom-mineru", "--flag"])
 
-        def test_mineru_command_candidates_prefer_project_venv_mineru_exe(self):
+    def test_mineru_command_candidates_prefer_project_venv_mineru_exe(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             scripts_dir = root / ".venv" / "Scripts"
