@@ -52,8 +52,8 @@
       gap: 14px;
       align-items: start;
       margin-bottom: 12px;
-      height: auto;
-      overflow: visible;
+      height: min(760px, calc(100vh - 24px));
+      overflow: hidden;
     }
     .config-stack {
       display: flex;
@@ -146,8 +146,10 @@
     }
     .top-grid section, .config-stack section, .left-stack section { margin-bottom: 0; }
     .log-panel {
-      min-height: 100%;
+      height: 100%;
+      align-self: stretch;
       min-width: 0;
+      overflow: hidden;
     }
     .task-panel {
       flex: 0 0 auto;
@@ -382,14 +384,16 @@
     pre::-webkit-scrollbar-thumb { background: #7a7f87; border-radius: 999px; border: 2px solid #111827; }
     pre::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
     .log-panel pre {
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
       height: auto;
+      overflow: auto;
     }
     .small { color: var(--muted); font-size: 12px; line-height: 1.45; }
     @media (max-width: 980px) {
-      .top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); }
+      .top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); height: auto; overflow: visible; }
       .log-panel { grid-column: 1 / -1; }
+      .log-panel { height: 360px; }
     }
     @media (max-width: 760px) {
       body { overflow-x: auto; }
