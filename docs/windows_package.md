@@ -180,7 +180,7 @@ Try a smaller batch first. If optional PDF backends fail, rerun `Start-Chem-PDF-
 
 ### MinerU installation fails
 
-MinerU is optional and may require a larger download, more disk space, and more installation time. If MinerU installation fails, check `logs/install.log`, then rerun the launcher and choose option `[2] pymupdf4llm`.
+MinerU is optional and may require a larger download, more disk space, and more installation time. MinerU 3.x uses `mineru.exe` as the primary CLI; `magic-pdf` is only a legacy fallback. If MinerU installation fails, check `logs/install.log`. The launcher should let you retry MinerU installation, continue immediately with option `[2] pymupdf4llm`, or exit.
 
 ### Windows + Python 3.12 PDF backend issues
 
@@ -264,8 +264,9 @@ Test D: MinerU mode
 2. Confirm the launcher installs `requirements.txt`.
 3. Confirm the launcher installs `uv`.
 4. Confirm the launcher installs `requirements-mineru.txt` through `uv`.
-5. Confirm it starts with `--pdf-mode mineru`.
-6. If MinerU installation fails, confirm the error suggests option `[2] pymupdf4llm` and points to `logs/install.log`.
+5. Confirm `.venv\Scripts\mineru.exe` exists after installation.
+6. Confirm the launcher sets `MINERU_COMMAND` to `.venv\Scripts\mineru.exe` and starts with `--pdf-mode mineru`.
+7. If MinerU installation fails, confirm the launcher offers retry, continue with `[2] pymupdf4llm`, or exit, and points to `logs/install.log`.
 
 Test E: Relaunch
 

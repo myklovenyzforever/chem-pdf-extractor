@@ -6,6 +6,7 @@ import re
 import shlex
 import shutil
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -16,9 +17,8 @@ from .config import (
     MINERU_DEFAULT_FORMULA,
     MINERU_DEFAULT_METHOD,
     MINERU_DEFAULT_TABLE,
-    MINERU_COMMAND,
-    MINERU_EXE,
     MINERU_OUTPUT_ROOT,
+    PROJECT_ROOT,
     RuntimeDeps,
     load_pymupdf,
     load_pymupdf4llm,
@@ -83,10 +83,25 @@ def mineru_images_dir_from_markdown(markdown: str) -> Path | None:
 
 
 def mineru_command_candidates() -> list[list[str]]:
+    candidates: list[list[str]] = []
     raw_command = (os.environ.get("MINERU_COMMAND") or os.environ.get("MINERU_EXE") or "").strip()
     if raw_command:
-        return [shlex.split(raw_command)]
-    return [[str(MINERU_EXE)], ["mineru"], ["magic-pdf"]]
+        candidates.append(shlex.split(raw_command))
+
+    scripts_dir = Path(sys.executable).resolve().parent
+    candidates.append([str(scripts_dir / "mineru.exe")])
+    candidates.append([str(PROJECT_ROOT / ".venv" / "Scripts" / "mineru.exe")])
+    candidates.append(["mineru"])
+    candidates.append(["magic-pdf"])
+
+    unique: list[list[str]] = []
+    seen: set[str] = set()
+    for command in candidates:
+        key = "\0".join(command)
+        if key not in seen:
+            seen.add(key)
+            unique.append(command)
+    return unique
 
 
 def command_is_available(command: list[str]) -> bool:
@@ -151,11 +166,6 @@ def run_mineru_to_markdown(pdf_path: Path) -> str:
     if not available_commands:
         raise mineru_unavailable_error([" ".join(command) for command in commands])
     command_prefix = available_commands[0]
-    mineru_command = command_prefix[0]
-    if not MINERU_EXE.exists() and shutil.which(mineru_command) is None:
-        raise FileNotFoundError(
-            f"未找到 MinerU 可执行文件：{MINERU_EXE}。请确认 MinerU 已部署，或设置 MINERU_EXE 环境变量。"
-        )
     job_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{os.getpid()}_{abs(hash(str(pdf_path))) % 1000000:06d}"
     job_root = MINERU_OUTPUT_ROOT / job_id
     input_dir = job_root / "input"

@@ -26,6 +26,8 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         self.assertIn("Python.Python.3.11", content)
         self.assertIn("--pdf-mode", content)
         self.assertIn("--open-browser", content)
+        self.assertIn("MINERU_COMMAND", content)
+        self.assertIn("mineru.exe", content)
 
     def test_launcher_installs_expected_requirements_by_backend(self):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
@@ -36,6 +38,12 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         self.assertIn("pip\", \"install\", \"--upgrade\", \"uv", content)
         self.assertIn("uv", content)
         self.assertIn("MinerU installation failed", content)
+        self.assertIn("Start-Process", content)
+        self.assertIn("RedirectStandardOutput", content)
+        self.assertIn("RedirectStandardError", content)
+        self.assertIn("[1] Retry MinerU installation", content)
+        self.assertIn("[2] Continue now with pymupdf4llm", content)
+        self.assertIn("[3] Exit", content)
 
     def test_requirements_mineru_is_optional(self):
         content = (REPO_ROOT / "requirements-mineru.txt").read_text(encoding="utf-8")
