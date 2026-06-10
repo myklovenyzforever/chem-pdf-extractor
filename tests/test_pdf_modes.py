@@ -49,7 +49,7 @@ class PdfModeTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "MinerU PDF backend is optional"):
                 read_pdf_as_markdown_with_mode(Path("dummy.pdf"), "mineru", runtime)
 
-        def test_mineru_command_candidates_prefer_environment_command(self):
+    def test_mineru_command_candidates_prefer_environment_command(self):
         with patch.dict("os.environ", {"MINERU_COMMAND": "custom-mineru --flag"}, clear=False):
             candidates = mineru_command_candidates()
 
@@ -78,7 +78,9 @@ class PdfModeTest(unittest.TestCase):
 
         self.assertIn(["mineru"], candidates)
         self.assertIn(["magic-pdf"], candidates)
-        self.assertLess(candidates.index(["mineru"]), candidates.index(["magic-pdf"]))    def test_pypdf_text_existing_behavior_still_works(self):
+        self.assertLess(candidates.index(["mineru"]), candidates.index(["magic-pdf"]))
+
+    def test_pypdf_text_existing_behavior_still_works(self):
         class FakePage:
             def extract_text(self):
                 return "stable pypdf text"
@@ -106,4 +108,3 @@ class PdfModeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
