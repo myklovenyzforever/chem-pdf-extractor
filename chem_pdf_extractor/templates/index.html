@@ -389,11 +389,11 @@
             <div>
               <label data-i18n="pdf_mode">PDF 到 Markdown / 文本方式</label>
               <select id="pdfMode">
-                <option value="mineru" data-i18n="pdf_mode_mineru">MinerU pipeline Markdown（推荐：质量优先）</option>
-                <option value="auto" data-i18n="pdf_mode_auto">自动选择（先快后精）</option>
-                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm 高保真 Markdown</option>
+                <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf_text：轻量 fallback</option>
+                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm：推荐默认</option>
+                <option value="mineru" data-i18n="pdf_mode_mineru">mineru：复杂版面/表格/扫描件重后端</option>
+                <option value="auto" data-i18n="pdf_mode_auto">auto：按需尝试增强 fallback</option>
                 <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF 普通文本</option>
-                <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf 普通文本</option>
               </select>
             </div>
           </div>
@@ -522,11 +522,11 @@
         provider_ollama: "本地 Ollama",
         local_ollama_model: "本地 Ollama 模型",
         pdf_mode: "PDF 到 Markdown / 文本方式",
-        pdf_mode_mineru: "MinerU pipeline Markdown（推荐：质量优先）",
-        pdf_mode_auto: "自动选择（先快后精）",
-        pdf_mode_pymupdf4llm: "pymupdf4llm 高保真 Markdown",
+        pdf_mode_mineru: "mineru：重型增强后端，适合复杂版面/表格/扫描件",
+        pdf_mode_auto: "auto：按需尝试增强 fallback",
+        pdf_mode_pymupdf4llm: "pymupdf4llm：推荐默认，适合多数科研 PDF",
         pdf_mode_pymupdf_text: "PyMuPDF 普通文本",
-        pdf_mode_pypdf_text: "pypdf 普通文本",
+        pdf_mode_pypdf_text: "pypdf_text：轻量 fallback，安装最小",
         max_chars: "上传最大字符数（0 表示不截断）",
         llm_timeout: "LLM 超时秒数（0 表示不限制）",
         bad_row_percent: "错误百分比（低于此百分比判为坏数据）",
@@ -595,11 +595,11 @@
         provider_ollama: "Local Ollama",
         local_ollama_model: "Local Ollama Model",
         pdf_mode: "PDF to Markdown / Text Mode",
-        pdf_mode_mineru: "MinerU pipeline Markdown (recommended: quality first)",
-        pdf_mode_auto: "Auto Select (fast first, then precise)",
-        pdf_mode_pymupdf4llm: "pymupdf4llm high-fidelity Markdown",
+        pdf_mode_mineru: "mineru: heavy enhanced backend for complex layouts/tables/scanned PDFs",
+        pdf_mode_auto: "auto: try enhanced fallback when needed",
+        pdf_mode_pymupdf4llm: "pymupdf4llm: recommended default for most research PDFs",
         pdf_mode_pymupdf_text: "PyMuPDF plain text",
-        pdf_mode_pypdf_text: "pypdf plain text",
+        pdf_mode_pypdf_text: "pypdf_text: lightweight fallback, smallest install",
         max_chars: "Max Upload Characters (0 = no truncation)",
         llm_timeout: "LLM Timeout Seconds (0 = unlimited)",
         bad_row_percent: "Bad Data Threshold (below this fill percent)",
@@ -991,6 +991,7 @@
       document.getElementById("cloudBaseUrl").value = defaults.cloud_base_url;
       document.getElementById("cloudActive").checked = defaults.cloud_active !== false;
       document.getElementById("recursive").checked = defaults.recursive !== false;
+      document.getElementById("pdfMode").value = defaults.pdf_mode || "pymupdf4llm";
       document.getElementById("maxChars").value = defaults.max_chars;
       document.getElementById("numCtx").value = defaults.num_ctx;
       document.getElementById("llmTimeout").value = "0";

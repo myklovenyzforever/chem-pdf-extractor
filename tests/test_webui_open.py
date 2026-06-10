@@ -64,7 +64,12 @@ class WebUiOpenTest(unittest.TestCase):
             result = app_module.main()
 
         self.assertEqual(result, 0)
-        start_mock.assert_called_once_with(8766, auto_install=True, open_browser=True)
+        start_mock.assert_called_once_with(
+            8766,
+            auto_install=True,
+            open_browser=True,
+            initial_pdf_mode="pymupdf4llm",
+        )
 
 
 if __name__ == "__main__":

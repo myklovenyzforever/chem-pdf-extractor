@@ -20,6 +20,8 @@ from .config import (
     DEFAULT_MODEL,
     DEFAULT_NUM_CTX,
     DEFAULT_OLLAMA_BASE_URL,
+    DEFAULT_PDF_MODE,
+    PDF_MODE_CHOICES,
     BAD_ROW_MIN_FILL_RATE,
     RuntimeDeps,
     apply_cloud_config_defaults,
@@ -55,8 +57,9 @@ def render_html(defaults: dict[str, Any], default_fields: list[dict[str, Any]]) 
 
 
 class ChemExtractorApp:
-    def __init__(self, runtime: RuntimeDeps) -> None:
+    def __init__(self, runtime: RuntimeDeps, default_pdf_mode: str = DEFAULT_PDF_MODE) -> None:
         self.runtime = runtime
+        self.default_pdf_mode = default_pdf_mode if default_pdf_mode in PDF_MODE_CHOICES else DEFAULT_PDF_MODE
         self.state = JobState()
         self.server: ThreadingHTTPServer | None = None
 
@@ -99,6 +102,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 "recursive": True,
                 "max_chars": DEFAULT_MAX_CHARS,
                 "num_ctx": DEFAULT_NUM_CTX,
+                "pdf_mode": self.app.default_pdf_mode,
                 "bad_row_min_fill_percent": int(BAD_ROW_MIN_FILL_RATE * 100),
             }
             from .config import DEFAULT_FIELDS
@@ -177,7 +181,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                 config.setdefault("llm_provider", "cloud")
                 config.setdefault("model", DEFAULT_MODEL)
                 config.setdefault("translate_to_chinese", True)
-                config.setdefault("pdf_mode", "mineru")
+                config.setdefault("pdf_mode", self.app.default_pdf_mode)
+                if str(config.get("pdf_mode") or "") not in PDF_MODE_CHOICES:
+                    self.send_json({"ok": False, "error": f"Unsupported PDF mode: {config.get('pdf_mode')}"})
+                    return
                 config.setdefault("max_chars", DEFAULT_MAX_CHARS)
                 config.setdefault("num_ctx", DEFAULT_NUM_CTX)
                 config.setdefault("llm_timeout", 0)
@@ -257,7 +264,12 @@ def _run_extraction_job_with_logging(config: dict[str, Any], runtime: RuntimeDep
             pass
 
 
-def start_web_app(port: int, auto_install: bool, open_browser: bool = False) -> int:
+def start_web_app(
+    port: int,
+    auto_install: bool,
+    open_browser: bool = False,
+    initial_pdf_mode: str = DEFAULT_PDF_MODE,
+) -> int:
     from .config import ensure_dependencies, import_runtime_dependencies
     log_startup_event(mode="web", extra={"requested_port": port, "open_browser": open_browser})
     server: ThreadingHTTPServer | None = None
@@ -266,7 +278,7 @@ def start_web_app(port: int, auto_install: bool, open_browser: bool = False) -> 
         ensure_dependencies(auto_install=auto_install)
         append_diagnostic_log("startup.log", "importing runtime dependencies")
         runtime = import_runtime_dependencies()
-        app = ChemExtractorApp(runtime)
+        app = ChemExtractorApp(runtime, default_pdf_mode=initial_pdf_mode)
         actual_port = find_free_port(port)
         server = ThreadingHTTPServer(("127.0.0.1", actual_port), RequestHandler)
         app.server = server

@@ -1,11 +1,13 @@
 # Local runtime and user-only configuration
 bundled_runtime/
 YiLaiHuanJing/
+.runtime/
 运行依赖/
 config.local.json
 .env
 *.key
 *.token
+*.pem
 
 # User papers and generated runtime outputs
 logs/
@@ -24,6 +26,12 @@ processed_md/
 抽取缓存/
 提取失败源文件/
 .mineru_outputs/
+mineru_models/
+.models/
+.uv-cache/
+wheelhouse/
+*.whl
+*.tar.gz
 
 # Python
 __pycache__/
