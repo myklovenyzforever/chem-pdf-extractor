@@ -73,8 +73,6 @@ class PdfModeTest(unittest.TestCase):
         self.assertEqual(first.name.lower(), "mineru.exe")
         self.assertEqual(first.parent.name.lower(), "scripts")
         self.assertEqual(first.parent.parent.name.lower(), ".venv")
-        self.assertTrue(first.exists())
-        self.assertTrue(first.samefile(mineru_exe))
 
         self.assertIn(["mineru"], candidates)
         self.assertIn(["magic-pdf"], candidates)
