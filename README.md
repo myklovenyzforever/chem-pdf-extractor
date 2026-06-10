@@ -89,12 +89,24 @@ The GitHub source repository does not include `bundled_runtime/` or `YiLaiHuanJi
 
 The recommended Windows launcher name is `Start-Chem-PDF-Extractor.bat`.
 
+For an online first-run Windows release package, users can unzip the package and double-click `Start-Chem-PDF-Extractor.bat`. The launcher runs `install_and_start.ps1`, checks for Python 3.11, creates or reuses `.venv/`, asks the user to choose a PDF backend, installs the matching dependencies, starts the local Web UI, and opens `http://127.0.0.1:8766/`.
+
+Backend choices:
+
+- `pypdf_text`: smallest install, fastest installation, best fallback compatibility, weaker layout/table/multi-column handling.
+- `pymupdf4llm`: recommended default, balanced install size and extraction quality, suitable for most research PDFs.
+- `mineru`: optional enhanced backend, larger install size, slower first-time installation, suitable for complex layouts, tables, scanned PDFs, and high-performance PCs. It may require more disk space, memory, installation time, and external downloads.
+
+GitHub Download ZIP is a source package. It does not include Python, `.venv/`, installed dependencies, MinerU models, or a bundled runtime, but users can still run the first-run launcher online. A fully offline package is not provided by default because it would need bundled Python, wheel caches, MinerU dependencies/models, and larger runtime assets.
+
 Legacy names such as `YiJianQiDong.bat` and `YiLaiHuanJing/` are kept for compatibility with older local packages.
 
 The one-click package may include:
 
 - `run_chem_pdf_extractor.py`
 - `Start-Chem-PDF-Extractor.bat`
+- `install_and_start.ps1`
+- `requirements-mineru.txt`
 - `bundled_runtime/`
 - `YiJianQiDong.bat` as a legacy launcher
 - `YiLaiHuanJing/` as a legacy runtime directory
@@ -138,6 +150,7 @@ The output preview uses synthetic data only and does not represent real publishe
 
 - LLM extraction results should be reviewed manually.
 - Complex scanned PDFs may require OCR or MinerU support.
+- MinerU is optional and is not installed by default. Use the Windows first-run launcher option `[3] mineru` only when the larger enhanced backend is needed.
 - The project does not include any built-in commercial API key.
 - Example data is synthetic and does not represent real published papers.
 - Python 3.11 is recommended for the broadest PDF-backend compatibility.

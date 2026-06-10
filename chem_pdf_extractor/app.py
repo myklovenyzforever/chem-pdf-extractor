@@ -11,6 +11,8 @@ from .config import (
     DEFAULT_MODEL,
     DEFAULT_NUM_CTX,
     DEFAULT_OLLAMA_BASE_URL,
+    DEFAULT_PDF_MODE,
+    PDF_MODE_CHOICES,
     BAD_ROW_MIN_FILL_RATE,
     load_local_config,
 )
@@ -33,7 +35,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cloud-api-key", default="")
     parser.add_argument("--cloud-base-url", default=DEFAULT_CLOUD_BASE_URL)
     parser.add_argument("--cloud-active", action="store_true")
-    parser.add_argument("--pdf-mode", default="mineru", choices=["auto", "mineru", "pymupdf4llm", "pymupdf_text", "pypdf_text"])
+    parser.add_argument("--pdf-mode", default=DEFAULT_PDF_MODE, choices=PDF_MODE_CHOICES)
     parser.add_argument("--max-chars", type=int, default=DEFAULT_MAX_CHARS)
     parser.add_argument("--num-ctx", type=int, default=DEFAULT_NUM_CTX)
     parser.add_argument("--llm-timeout", type=int, default=0, help="0 表示不限制。")
@@ -91,7 +93,12 @@ def main() -> int:
     if args.cli:
         return run_cli(args)
     from .server import start_web_app
-    return start_web_app(args.port, auto_install=not args.no_auto_install, open_browser=args.open_browser)
+    return start_web_app(
+        args.port,
+        auto_install=not args.no_auto_install,
+        open_browser=args.open_browser,
+        initial_pdf_mode=args.pdf_mode,
+    )
 
 
 if __name__ == "__main__":

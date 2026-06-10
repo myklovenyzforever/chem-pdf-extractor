@@ -26,6 +26,8 @@ DEFAULT_CLOUD_MODEL = "provider/model-name"
 DEFAULT_CLOUD_BASE_URL = "https://api.example.com/v1"
 DEFAULT_CLOUD_API_KEY = ""
 LOCAL_CONFIG_NAME = "config.local.json"
+DEFAULT_PDF_MODE = "pymupdf4llm"
+PDF_MODE_CHOICES = ["auto", "pypdf_text", "pymupdf4llm", "pymupdf_text", "mineru"]
 PLACEHOLDER_CLOUD_BASE_URL_MARKERS = {"api.example.com"}
 PLACEHOLDER_CLOUD_MODELS = {"provider/model-name", "model-name", "your-model-name"}
 MAX_ARTIFACT_NAME_CHARS = 80
@@ -52,7 +54,8 @@ CLOUD_RETRY_BASE_DELAY_SECONDS = 2.0
 CLOUD_RETRY_MAX_DELAY_SECONDS = 20.0
 DEFAULT_CLOUD_MODEL_SUGGESTIONS = ["provider/model-name"]
 
-MINERU_EXE = Path(os.environ.get("MINERU_EXE", "mineru"))
+MINERU_COMMAND = os.environ.get("MINERU_COMMAND") or os.environ.get("MINERU_EXE") or "mineru"
+MINERU_EXE = Path(MINERU_COMMAND)
 MINERU_OUTPUT_ROOT = Path(os.environ.get("MINERU_OUTPUT_ROOT", str(PROJECT_ROOT / ".mineru_outputs")))
 MINERU_DEFAULT_BACKEND = os.environ.get("MINERU_BACKEND", "pipeline")
 MINERU_DEFAULT_METHOD = os.environ.get("MINERU_METHOD", "txt")
@@ -541,6 +544,7 @@ def candidate_pythons() -> list[Path]:
     candidates: list[Path] = []
     bundled_python = PROJECT_ROOT / BUNDLED_RUNTIME_DIR_NAME / "python" / "python.exe"
     candidates.append(bundled_python)
+    candidates.append(PROJECT_ROOT / ".venv" / "Scripts" / "python.exe")
     for runtime_dir_name in LEGACY_BUNDLED_RUNTIME_DIR_NAMES:
         candidates.append(PROJECT_ROOT / runtime_dir_name / "python" / "python.exe")
     env_python = os.environ.get("CHEM_PDF_EXTRACTOR_PYTHON") or os.environ.get("CHEM_EXTRACTOR_PYTHON")

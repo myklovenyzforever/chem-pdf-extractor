@@ -40,12 +40,12 @@ class EnglishEntrypointsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue("Chem-PDF-Extractor" in result.stdout or "--cli" in result.stdout)
 
-    def test_new_windows_launcher_exists_and_uses_module_entrypoint(self):
+    def test_new_windows_launcher_exists_and_delegates_to_first_run_script(self):
         content = (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8")
 
-        self.assertTrue("-m %APP_MODULE%" in content or "-m chem_pdf_extractor" in content)
-        self.assertIn("bundled_runtime", content)
-        self.assertIn("YiLaiHuanJing", content)
+        self.assertIn("install_and_start.ps1", content)
+        self.assertIn("powershell.exe", content)
+        self.assertIn("-ExecutionPolicy Bypass", content)
         self.assertIn("logs", content)
         self.assertIn("ERRORLEVEL", content)
         self.assertIn("pause", content.lower())

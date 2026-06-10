@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
+import shlex
 import shutil
 import subprocess
 from datetime import datetime
@@ -15,6 +16,7 @@ from .config import (
     MINERU_DEFAULT_FORMULA,
     MINERU_DEFAULT_METHOD,
     MINERU_DEFAULT_TABLE,
+    MINERU_COMMAND,
     MINERU_EXE,
     MINERU_OUTPUT_ROOT,
     RuntimeDeps,
@@ -80,6 +82,33 @@ def mineru_images_dir_from_markdown(markdown: str) -> Path | None:
     return None
 
 
+def mineru_command_candidates() -> list[list[str]]:
+    raw_command = (os.environ.get("MINERU_COMMAND") or os.environ.get("MINERU_EXE") or "").strip()
+    if raw_command:
+        return [shlex.split(raw_command)]
+    return [[str(MINERU_EXE)], ["mineru"], ["magic-pdf"]]
+
+
+def command_is_available(command: list[str]) -> bool:
+    if not command:
+        return False
+    executable = command[0]
+    if Path(executable).exists():
+        return True
+    return shutil.which(executable) is not None
+
+
+def mineru_unavailable_error(attempted: list[str], reason: str = "") -> RuntimeError:
+    attempted_text = ", ".join(attempted) if attempted else "mineru"
+    detail = f" Details: {reason}" if reason else ""
+    return RuntimeError(
+        "MinerU PDF backend is optional and currently unavailable or failed. "
+        "Rerun Start-Chem-PDF-Extractor.bat and choose option 3 to install MinerU, "
+        "or use option 2, pymupdf4llm, instead. "
+        f"Attempted command(s): {attempted_text}.{detail}"
+    )
+
+
 def save_markdown_artifacts(
     markdown: str,
     pdf_path: Path,
@@ -117,7 +146,12 @@ def markdown_needs_mineru(markdown: str) -> bool:
 
 
 def run_mineru_to_markdown(pdf_path: Path) -> str:
-    mineru_command = str(MINERU_EXE)
+    commands = mineru_command_candidates()
+    available_commands = [command for command in commands if command_is_available(command)]
+    if not available_commands:
+        raise mineru_unavailable_error([" ".join(command) for command in commands])
+    command_prefix = available_commands[0]
+    mineru_command = command_prefix[0]
     if not MINERU_EXE.exists() and shutil.which(mineru_command) is None:
         raise FileNotFoundError(
             f"未找到 MinerU 可执行文件：{MINERU_EXE}。请确认 MinerU 已部署，或设置 MINERU_EXE 环境变量。"
@@ -131,7 +165,7 @@ def run_mineru_to_markdown(pdf_path: Path) -> str:
     safe_input = input_dir / "input.pdf"
     shutil.copy2(pdf_path, safe_input)
     command = [
-        mineru_command, "-p", str(safe_input), "-o", str(output_dir),
+        *command_prefix, "-p", str(safe_input), "-o", str(output_dir),
         "-b", os.environ.get("MINERU_BACKEND", MINERU_DEFAULT_BACKEND),
         "-m", os.environ.get("MINERU_METHOD", MINERU_DEFAULT_METHOD),
     ]
@@ -264,19 +298,7 @@ def read_pdf_as_markdown_with_mode(pdf_path: Path, mode: str, runtime: RuntimeDe
         try:
             return run_mineru_to_markdown(pdf_path), "mineru"
         except Exception as mineru_error:
-            try:
-                fallback = load_pymupdf4llm(runtime).to_markdown(str(pdf_path))
-                return (
-                    "<!-- MinerU failed; fallback to pymupdf4llm. "
-                    f"error: {short_error(mineru_error)} -->\n\n{fallback}"
-                ), "pymupdf4llm"
-            except Exception as pymupdf4llm_error:
-                fallback = read_pdf_as_markdown_with_mode(pdf_path, "pypdf_text", runtime)[0]
-                return (
-                    "<!-- MinerU and pymupdf4llm failed; fallback to pypdf_text. "
-                    f"mineru_error: {short_error(mineru_error)}; "
-                    f"pymupdf4llm_error: {short_error(pymupdf4llm_error)} -->\n\n{fallback}"
-                ), "pypdf_text"
+            raise mineru_unavailable_error([], short_error(mineru_error)) from mineru_error
     if mode == "pymupdf4llm":
         return load_pymupdf4llm(runtime).to_markdown(str(pdf_path)), "pymupdf4llm"
     if mode == "pymupdf_text":

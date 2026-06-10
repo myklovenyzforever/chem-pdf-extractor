@@ -31,12 +31,15 @@ An example Windows package may look like this:
 ```text
 Chem-PDF-Extractor-Windows/
   Start-Chem-PDF-Extractor.bat
+  install_and_start.ps1
   run_chem_pdf_extractor.py
   requirements.txt
   requirements-core.txt
+  requirements-mineru.txt
   config.example.json
   README or quick-start note
-  bundled_runtime/
+  chem_pdf_extractor/
+  docs/windows_package.md
 ```
 
 Optional legacy compatibility files:
@@ -48,13 +51,59 @@ Optional legacy compatibility files:
 
 The exact structure may change, but the package should make it clear how the user starts the application and where local outputs are written.
 
+## Package types
+
+### A. GitHub Download ZIP
+
+This is a source package. It does not include Python, `.venv/`, installed dependencies, MinerU models, or a bundled runtime. Users can still run `Start-Chem-PDF-Extractor.bat`; the first-run launcher will install dependencies online when the network and Python installer are available.
+
+### B. Online first-run release package
+
+This is the recommended release packaging mode for now.
+
+User flow:
+
+1. Download and extract the release zip.
+2. Double-click `Start-Chem-PDF-Extractor.bat`.
+3. The launcher runs `install_and_start.ps1`.
+4. The launcher checks Python, creates `.venv/`, asks for a PDF backend choice, installs matching dependencies, starts the local Web UI, and opens the browser.
+
+### C. Fully offline package
+
+This is not implemented by default. A fully offline package would require bundling Python, wheelhouse files, MinerU dependencies/models, and possibly large runtime assets. It would be much larger and should not be committed to the repository.
+
+## PDF backend choices
+
+`pypdf_text`:
+
+- smallest install;
+- fastest installation;
+- best fallback compatibility;
+- weaker layout, table, and multi-column handling.
+
+`pymupdf4llm`:
+
+- recommended default;
+- balanced install size and extraction quality;
+- suitable for most research PDFs.
+
+`mineru`:
+
+- optional enhanced backend;
+- large install size;
+- slower first-time installation;
+- suitable for complex layouts, tables, scanned PDFs, and high-performance PCs;
+- may require more disk space, memory, installation time, and external downloads.
+
 ## Files that may be included
 
 - `run_chem_pdf_extractor.py`
 - `Start-Chem-PDF-Extractor.bat`
+- `install_and_start.ps1`
 - `YiJianQiDong.bat` as a legacy compatibility launcher
 - `requirements.txt`
 - `requirements-core.txt`
+- `requirements-mineru.txt`
 - `config.example.json`
 - `LICENSE`
 - `README` or a short quick-start note
@@ -80,6 +129,10 @@ The exact structure may change, but the package should make it clear how the use
 - bad-data records
 - `.env`
 - `.venv` if it contains local user state
+- `.runtime/`
+- `.mineru_outputs/`
+- `mineru_models/`
+- wheel caches or downloaded model caches
 - `__pycache__/`
 - `.pytest_cache/`
 - local absolute paths
@@ -106,11 +159,12 @@ Before creating a Windows package, check:
 1. Unzip the package to a simple path.
 2. Avoid paths with special characters if startup fails.
 3. Double-click `Start-Chem-PDF-Extractor.bat`.
-4. If using an older package, `YiJianQiDong.bat` may still be available as a legacy launcher.
-5. If the browser does not open automatically, copy the local URL printed in the terminal.
-6. Start with 3-5 PDFs before running a large batch.
-7. Enter API keys only in the local UI or local config.
-8. Do not share `config.local.json`.
+4. Choose a PDF backend in the PowerShell menu. Press Enter for `pymupdf4llm` unless a previous backend choice is shown.
+5. Let the launcher install dependencies and start the local Web UI.
+6. If the browser does not open automatically, copy the local URL printed in the terminal.
+7. Start with 3-5 PDFs before running a large batch.
+8. Enter API keys only in the local UI or local config.
+9. Do not share `config.local.json`.
 
 Windows environments vary. If the bundled package fails, users may still use the source installation workflow.
 
@@ -122,7 +176,11 @@ Copy the local URL printed in the terminal and open it manually.
 
 ### PDF parsing fails
 
-Try a smaller batch first. If optional PDF backends fail, use the core fallback route when available.
+Try a smaller batch first. If optional PDF backends fail, rerun `Start-Chem-PDF-Extractor.bat` and choose a different backend. Use option `[1] pypdf_text` for the smallest fallback install, option `[2] pymupdf4llm` for the recommended default, or option `[3] mineru` for the larger enhanced backend.
+
+### MinerU installation fails
+
+MinerU is optional and may require a larger download, more disk space, and more installation time. If MinerU installation fails, check `logs/install.log`, then rerun the launcher and choose option `[2] pymupdf4llm`.
 
 ### Windows + Python 3.12 PDF backend issues
 
@@ -149,6 +207,78 @@ When preparing a GitHub Release package:
 - Mention in the release notes that AI extraction results require manual verification.
 - Do not claim 100% extraction accuracy.
 - Do not claim the package contains built-in commercial API credits or keys.
+
+## Release checklist
+
+Before publishing the release zip:
+
+- Run `python -m py_compile run_chem_pdf_extractor.py`.
+- Run `python -m unittest discover -s tests -v`.
+- Create a clean copy of the repository.
+- Do not include `.git/`.
+- Do not include `.venv/`.
+- Do not include `.runtime/`.
+- Do not include `logs/`.
+- Do not include PDFs.
+- Do not include extracted outputs.
+- Do not include `config.local.json`.
+- Include `Start-Chem-PDF-Extractor.bat`.
+- Include `install_and_start.ps1`.
+- Include `requirements.txt`.
+- Include `requirements-core.txt`.
+- Include `requirements-mineru.txt`.
+- Include `chem_pdf_extractor/`.
+- Include `run_chem_pdf_extractor.py`.
+- Include `README.md`.
+- Include `docs/windows_package.md`.
+
+## Manual Windows test plan
+
+Test A: Fresh Windows machine with no Python
+
+1. Double-click `Start-Chem-PDF-Extractor.bat`.
+2. Confirm the launcher attempts Python 3.11 installation through winget.
+3. Confirm the launcher creates `.venv/`.
+4. Choose option `[2] pymupdf4llm`.
+5. Confirm dependencies install.
+6. Confirm the web app starts.
+7. Confirm the browser opens `http://127.0.0.1:8766/`.
+
+Test B: Windows machine with Python 3.11 installed
+
+1. Double-click `Start-Chem-PDF-Extractor.bat`.
+2. Confirm the launcher creates `.venv/`.
+3. Choose option `[1] pypdf_text`.
+4. Confirm it installs `requirements-core.txt`.
+5. Confirm it starts with `--pdf-mode pypdf_text`.
+
+Test C: Recommended mode
+
+1. Choose option `[2]` or press Enter when no previous backend is configured.
+2. Confirm it installs `requirements.txt`.
+3. Confirm it starts with `--pdf-mode pymupdf4llm`.
+
+Test D: MinerU mode
+
+1. Choose option `[3] mineru`.
+2. Confirm the launcher installs `requirements.txt`.
+3. Confirm the launcher installs `uv`.
+4. Confirm the launcher installs `requirements-mineru.txt` through `uv`.
+5. Confirm it starts with `--pdf-mode mineru`.
+6. If MinerU installation fails, confirm the error suggests option `[2] pymupdf4llm` and points to `logs/install.log`.
+
+Test E: Relaunch
+
+1. Relaunch `Start-Chem-PDF-Extractor.bat`.
+2. Confirm `.runtime/launcher_settings.json` remembers the previous backend.
+3. Press Enter to reuse the previous backend.
+4. Confirm choosing a different backend updates the saved setting.
+
+Test F: No secrets check
+
+1. Confirm no API keys are included.
+2. Confirm `config.local.json` is not included.
+3. Confirm PDFs, extracted outputs, `.venv/`, `.runtime/`, logs, cache folders, and runtime settings are not committed.
 
 ## 中文说明
 

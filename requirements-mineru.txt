@@ -1,0 +1,7 @@
+# Optional heavy PDF backend for MinerU mode.
+#
+# The Windows first-run launcher installs this file only when the user selects:
+#   [3] mineru
+#
+# MinerU is intentionally not part of requirements.txt or CI installs.
+mineru[all]
