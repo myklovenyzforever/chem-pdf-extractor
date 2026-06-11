@@ -138,7 +138,7 @@ The example data is synthetic and does not represent real published papers.
 
 ## Screenshots
 
-The current web interface screenshot and a synthetic Excel/CSV output preview are shown below.
+A Web UI screenshot and a synthetic Excel/CSV output preview are shown below. Screenshots may vary slightly between releases.
 
 ![Web UI](docs/screenshots/web-ui-zh+en.png)
 
@@ -241,7 +241,7 @@ python -m chem_pdf_extractor --cli --pdf-mode pypdf_text
 
 ## 截图
 
-当前网页界面截图和合成 Excel/CSV 输出预览如下。
+网页界面示例截图和合成 Excel/CSV 输出预览如下，截图可能随版本略有变化。
 
 ![网页界面](docs/screenshots/web-ui-zh+en.png)
 

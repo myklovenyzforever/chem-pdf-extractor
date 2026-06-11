@@ -1,5 +1,8 @@
 @echo off
+chcp 65001 >nul
 setlocal
+set "PYTHONUTF8=1"
+set "PYTHONIOENCODING=utf-8"
 
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
