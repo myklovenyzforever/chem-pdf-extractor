@@ -215,7 +215,7 @@ function Get-ExistingRuntimePython {
     (Join-Path $ProjectRoot "bundled_runtime\python\python.exe"),
     (Join-Path $ProjectRoot ".venv\Scripts\python.exe"),
     (Join-Path $ProjectRoot "YiLaiHuanJing\python\python.exe"),
-    (Join-Path $ProjectRoot "杩愯渚濊禆\python\python.exe")
+    (Join-Path $ProjectRoot "运行依赖\python\python.exe")
   )
 
   foreach ($candidate in $candidates) {

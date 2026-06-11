@@ -46,10 +46,11 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
 
         self.assertNotIn("鏉╂劘", content)
+        self.assertNotIn("杩愯", content)
         self.assertIn("bundled_runtime", content)
         self.assertIn(".venv\\Scripts\\python.exe", content)
         self.assertIn("YiLaiHuanJing", content)
-        self.assertIn("杩愯渚濊禆", content)
+        self.assertIn("运行依赖", content)
 
     def test_launcher_installs_expected_requirements_by_backend(self):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
