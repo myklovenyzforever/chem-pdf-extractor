@@ -1,5 +1,34 @@
 # Changelog
 
+## v0.2.1 - Windows launcher UTF-8 and release metadata patch
+
+- Fixed Windows launcher UTF-8 console setup to reduce Chinese output and path mojibake in CMD / PowerShell.
+- Set `PYTHONUTF8` and `PYTHONIOENCODING` in the Windows batch launcher.
+- Set PowerShell console input/output encoding to UTF-8 on a best-effort basis.
+- Replaced a mojibake legacy runtime path candidate with the correct Chinese path.
+- Updated package metadata to `0.2.1`.
+- Kept backend extraction, MinerU behavior, cloud API behavior, and Web UI behavior unchanged.
+
+## v0.2.0 - Windows first-run launcher, optional MinerU, and improved Web UI
+
+- Added a Windows first-run launcher using `Start-Chem-PDF-Extractor.bat` and `install_and_start.ps1`.
+- The launcher can create or reuse `.venv/`, install dependencies, start the local Web UI, and open the browser.
+- Added backend selection for `pypdf_text`, `pymupdf4llm`, and optional `mineru`.
+- Added optional MinerU support for complex layouts, tables, scanned PDFs, and high-performance Windows machines.
+- Updated MinerU command discovery to prefer `.venv\Scripts\mineru.exe`, with `magic-pdf` kept only as a legacy fallback.
+- Added safer MinerU installation fallback behavior: retry, continue with `pymupdf4llm`, or exit.
+- Added OpenAI-compatible cloud model discovery through the provider `/models` endpoint when supported.
+- Replaced the cloud model datalist with a real model dropdown plus manual model-name fallback.
+- Moved advanced LLM service-name settings out of the normal UI while preserving config compatibility.
+- Improved Cloud/Ollama UI behavior so Ollama-only fields are hidden in Cloud mode.
+- Made PDF Mode visible and full-width for both Cloud and Ollama workflows.
+- Simplified the Cloud API Config panel and removed the misleading local `Refresh Models` button from the cloud panel.
+- Added a three-column Web UI workbench layout.
+- Fixed Run Logs so long logs scroll inside the log panel instead of stretching the whole page.
+- Preserved log auto-scroll behavior when the user is already near the bottom.
+- Updated Windows package documentation and safety guidance.
+- Added or updated lightweight tests for launcher behavior, MinerU command detection, cloud model UI behavior, and Web UI layout behavior.
+
 ## v0.1.2 - Windows compatibility and release cleanup
 
 - Kept a lightweight script launcher after modularization.

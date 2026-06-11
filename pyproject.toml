@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chem-pdf-extractor"
-version = "0.1.2"
+version = "0.2.1"
 description = "Extract structured experimental data from scientific PDF papers for chemical engineering and related research."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,7 +14,7 @@ authors = [
 ]
 keywords = ["pdf", "chemistry", "chemical-engineering", "llm", "literature-review", "data-extraction"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
+  "Development Status :: 4 - Beta",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
   "Programming Language :: Python :: 3",

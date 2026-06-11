@@ -1,5 +1,14 @@
 $ErrorActionPreference = "Stop"
 
+try {
+  $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+  [Console]::OutputEncoding = $utf8NoBom
+  [Console]::InputEncoding = $utf8NoBom
+  $OutputEncoding = $utf8NoBom
+} catch {
+  # Console encoding setup is best-effort only.
+}
+
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -LiteralPath $ProjectRoot
 
@@ -13,6 +22,7 @@ New-Item -ItemType Directory -Force -Path $LogsDir | Out-Null
 New-Item -ItemType Directory -Force -Path $RuntimeDir | Out-Null
 
 $env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
 $env:CHEM_PDF_EXTRACTOR_LOG_DIR = $LogsDir
 
 function Write-LauncherLog {

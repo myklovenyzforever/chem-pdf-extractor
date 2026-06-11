@@ -13,6 +13,19 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         self.assertIn("-ExecutionPolicy Bypass", content)
         self.assertIn("pause", content.lower())
 
+    def test_windows_launchers_configure_utf8_console(self):
+        bat = (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8")
+        ps1 = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
+
+        self.assertIn("chcp 65001", bat)
+        self.assertIn('set "PYTHONUTF8=1"', bat)
+        self.assertIn('set "PYTHONIOENCODING=utf-8"', bat)
+
+        self.assertIn("[Console]::OutputEncoding", ps1)
+        self.assertIn("[Console]::InputEncoding", ps1)
+        self.assertIn("$OutputEncoding", ps1)
+        self.assertIn('$env:PYTHONIOENCODING = "utf-8"', ps1)
+
     def test_powershell_launcher_has_backend_menu_and_runtime_flow(self):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
 
@@ -28,6 +41,15 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         self.assertIn("--open-browser", content)
         self.assertIn("MINERU_COMMAND", content)
         self.assertIn("mineru.exe", content)
+
+    def test_powershell_launcher_runtime_candidates_are_not_mojibake(self):
+        content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
+
+        self.assertNotIn("鏉╂劘", content)
+        self.assertIn("bundled_runtime", content)
+        self.assertIn(".venv\\Scripts\\python.exe", content)
+        self.assertIn("YiLaiHuanJing", content)
+        self.assertIn("杩愯渚濊禆", content)
 
     def test_launcher_installs_expected_requirements_by_backend(self):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
