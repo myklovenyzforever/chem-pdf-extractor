@@ -84,6 +84,10 @@ class JobState:
         self.done = 0
         self.success = 0
         self.failed = 0
+        self.extracted_rows = 0
+        self.suspicious_rows = 0
+        self.bad_rows = 0
+        self.cache_hits = 0
         self.current_file = ""
         self.message = "等待任务"
         self.started_at = ""
@@ -102,6 +106,10 @@ class JobState:
             self.done = 0
             self.success = 0
             self.failed = 0
+            self.extracted_rows = 0
+            self.suspicious_rows = 0
+            self.bad_rows = 0
+            self.cache_hits = 0
             self.current_file = ""
             self.message = "任务启动中"
             self.started_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -130,6 +138,10 @@ class JobState:
                 "done": self.done,
                 "success": self.success,
                 "failed": self.failed,
+                "extracted_rows": self.extracted_rows,
+                "suspicious_rows": self.suspicious_rows,
+                "bad_rows": self.bad_rows,
+                "cache_hits": self.cache_hits,
                 "percent": percent,
                 "current_file": self.current_file,
                 "message": self.message,
@@ -162,6 +174,14 @@ def state_update(state: JobState, **kwargs: Any) -> None:
     with state.lock:
         for key, value in kwargs.items():
             setattr(state, key, value)
+
+
+def state_increment(state: JobState, **kwargs: int) -> None:
+    with state.lock:
+        for key, amount in kwargs.items():
+            if amount <= 0:
+                continue
+            setattr(state, key, int(getattr(state, key, 0)) + amount)
 
 
 def wait_while_paused(
@@ -362,6 +382,7 @@ def process_pdf(
     if cached_rows is not None:
         add_stat(stage_stats, "extract_cache_hit")
         if state is not None:
+            state_increment(state, cache_hits=1)
             state.add_log(f"复用抽取缓存：{pdf_path.name}（{len(cached_rows)} 条记录）")
         add_source_metadata(
             cached_rows, pdf_path=pdf_path, provider=provider,
@@ -543,9 +564,13 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
         loaded_partial_count = len(rows)
         if rows:
             rows = filter_bad_data_rows(rows, fields, error_log_path, default_pdf_path=partial_jsonl_path, state=state, log_prefix="断点结果", min_fill_rate=bad_row_min_fill_rate)
+            partial_bad_count = loaded_partial_count - len(rows)
+            if partial_bad_count:
+                state_increment(state, bad_rows=partial_bad_count)
             if len(rows) != loaded_partial_count:
                 write_jsonl(partial_jsonl_path, rows)
             processed_paths = processed_paths_from_rows(rows)
+            state_update(state, extracted_rows=len(rows))
         completed_paths = {str(path.resolve()).casefold() for path in pdf_files} & processed_paths
         if rows:
             state.add_log(f"检测到断点结果：已载入 {len(rows)} 条记录，跳过 {len(completed_paths)} 个已完成 PDF。")
@@ -603,6 +628,9 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
                         state.add_log(f"中文翻译失败，保留原文：{pdf_path.name}")
                 extracted_count = len(pdf_rows)
                 pdf_rows = filter_bad_data_rows(pdf_rows, fields, error_log_path, default_pdf_path=pdf_path, state=state, log_prefix=pdf_path.name, min_fill_rate=bad_row_min_fill_rate)
+                bad_count = extracted_count - len(pdf_rows)
+                if bad_count:
+                    state_increment(state, bad_rows=bad_count)
                 if not pdf_rows:
                     state_update(state, failed=state.snapshot()["failed"] + 1)
                     state.add_log(
@@ -613,8 +641,10 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
                 suspicious_count = log_suspicious_rows(pdf_rows, fields, suspicious_jsonl_path, default_pdf_path=pdf_path)
                 if suspicious_count:
                     add_stat(stage_stats, "suspicious_rows", suspicious_count)
+                    state_increment(state, suspicious_rows=suspicious_count)
                     state.add_log(f"可疑数据：{pdf_path.name}（{suspicious_count} 条，详见 {SUSPICIOUS_ROWS_EXCEL_NAME}）")
                 rows.extend(pdf_rows)
+                state_increment(state, extracted_rows=len(pdf_rows))
                 for row in pdf_rows:
                     append_jsonl(partial_jsonl_path, row)
                 state_update(state, success=state.snapshot()["success"] + 1)

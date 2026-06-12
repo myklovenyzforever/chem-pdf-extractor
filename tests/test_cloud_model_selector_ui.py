@@ -55,35 +55,104 @@ class CloudModelSelectorUiTest(unittest.TestCase):
     def test_workbench_layout_bounds_desktop_height_without_stretching_task_panel(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
         top_grid = css_block(template, ".top-grid")
+        left_stack = css_block(template, ".left-stack")
+        config_stack = css_block(template, ".config-stack")
         task_panel = css_block(template, ".task-panel")
-        progress_panel = css_block(template, "\n    .progress-panel")
+        progress_panel = css_block(template, ".progress-panel")
 
-        self.assertIn("align-items: start", top_grid)
-        self.assertIn("height: min(760px, calc(100vh - 24px))", top_grid)
-        self.assertIn("overflow: hidden", top_grid)
-        self.assertNotIn("align-items: stretch", top_grid)
-        self.assertIn("flex: 0 0 auto", task_panel)
+        self.assertIn("align-items: stretch", top_grid)
+        self.assertIn("min-height: min(760px, calc(100vh - 24px))", top_grid)
+        self.assertIn("overflow: visible", top_grid)
+        self.assertIn("min-height: min(760px, calc(100vh - 24px))", left_stack)
+        self.assertIn("min-height: min(760px, calc(100vh - 24px))", config_stack)
+        self.assertIn("flex: 1 1 auto", task_panel)
         self.assertIn("overflow: visible", task_panel)
         self.assertNotIn("flex: 1 1 0", task_panel)
-        self.assertIn("flex: 0 0 auto", progress_panel)
+        self.assertIn("flex: 1 1 auto", progress_panel)
+        self.assertIn("overflow: visible", progress_panel)
+
+    def test_task_statistics_section_exists_and_is_bilingual(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('id="taskStatistics"', template)
+        self.assertIn('data-i18n="task_statistics"', template)
+        self.assertIn("Task Statistics", template)
+        self.assertIn("\u7edf\u8ba1\u4fe1\u606f", template)
+        self.assertIn("extractedRows", template)
+        self.assertIn("suspiciousRows", template)
+        self.assertIn("badRows", template)
+        self.assertIn("cacheHits", template)
+
+    def test_task_statistics_does_not_render_api_key_or_paths(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+        start = template.index('id="taskStatistics"')
+        end = template.index('<div class="config-stack">', start)
+        statistics_markup = template[start:end]
+
+        self.assertNotIn("cloudApiKey", statistics_markup)
+        self.assertNotIn("YOUR_API_KEY_HERE", statistics_markup)
+        self.assertNotIn("cloudBaseUrl", statistics_markup)
+        self.assertNotIn("inputDir", statistics_markup)
+        self.assertNotIn("outputPath", statistics_markup)
+
+    def test_task_statistics_updates_from_backend_status(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        self.assertIn("function updateTaskStatistics(data)", template)
+        self.assertIn("data.extracted_rows", template)
+        self.assertIn("data.suspicious_rows", template)
+        self.assertIn("data.bad_rows", template)
+        self.assertIn("data.cache_hits", template)
+        self.assertIn("updateTaskStatistics(data)", template)
+        self.assertNotIn("updateTaskReadiness", template)
+
+    def test_progress_panel_is_single_compact_card_with_ratio(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('id="progressRatio"', template)
+        self.assertIn("progress-top-row", template)
+        self.assertIn('data-i18n="stat_done"', template)
+        self.assertIn('data-i18n="stat_total"', template)
+        self.assertIn('data-i18n="stat_success"', template)
+        self.assertIn('data-i18n="stat_failed"', template)
+        self.assertIn('data-i18n="status_label"', template)
+        self.assertIn('data-i18n="current_file_label"', template)
+        self.assertIn('data-i18n="output_label"', template)
+        self.assertNotIn("progress-status-card", template)
+        self.assertNotIn("task-statistics-card", template)
+        self.assertNotIn("progress-subsection", template)
 
     def test_log_panel_pre_scrolls_internally(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
         log_panel = css_block(template, ".log-panel")
         log_pre = css_block(template, ".log-panel pre")
 
-        self.assertIn("height: 100%", log_panel)
+        self.assertIn("height: min(760px, calc(100vh - 24px))", log_panel)
         self.assertIn("overflow: hidden", log_panel)
         self.assertIn("flex: 1 1 auto", log_pre)
         self.assertIn("min-height: 0", log_pre)
         self.assertIn("height: auto", log_pre)
         self.assertIn("overflow: auto", log_pre)
         self.assertNotIn("height: 320px", log_pre)
+        self.assertIn("function updateLogPanel(lines)", template)
+        self.assertIn("wasNearBottom", template)
+        self.assertIn('t("empty_logs")', template)
+        self.assertIn("No run logs yet. Logs will appear here after a task starts.", template)
+        self.assertIn("\u6682\u65e0\u8fd0\u884c\u65e5\u5fd7", template)
+
+    def test_left_and_middle_columns_do_not_trap_internal_scroll(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        for selector in [".left-stack", ".task-panel", ".config-stack", ".api-panel", ".progress-panel"]:
+            block = css_block(template, selector)
+            self.assertNotIn("overflow-y: auto", block)
+            self.assertNotIn("overflow: auto", block)
+            self.assertNotIn("overflow: hidden", block)
 
     def test_narrow_layout_uses_auto_height_and_fixed_log_area(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
-        self.assertIn(".top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); height: auto; overflow: visible; }", template)
+        self.assertIn(".top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); min-height: 0; overflow: visible; }", template)
         self.assertIn(".log-panel { height: 360px; }", template)
 
     def test_cloud_mode_hides_only_ollama_fields(self):

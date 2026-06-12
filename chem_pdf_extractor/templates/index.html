@@ -50,17 +50,17 @@
       display: grid;
       grid-template-columns: minmax(0, 3fr) minmax(0, 3fr) minmax(0, 4fr);
       gap: 14px;
-      align-items: start;
+      align-items: stretch;
       margin-bottom: 12px;
-      height: min(760px, calc(100vh - 24px));
-      overflow: hidden;
+      min-height: min(760px, calc(100vh - 24px));
+      overflow: visible;
     }
     .config-stack {
       display: flex;
       flex-direction: column;
       gap: 12px;
       min-width: 0;
-      height: auto;
+      min-height: min(760px, calc(100vh - 24px));
       overflow: visible;
     }
     .left-stack {
@@ -68,7 +68,7 @@
       flex-direction: column;
       gap: 12px;
       min-width: 0;
-      height: auto;
+      min-height: min(760px, calc(100vh - 24px));
       overflow: visible;
     }
     .app-logo {
@@ -146,13 +146,13 @@
     }
     .top-grid section, .config-stack section, .left-stack section { margin-bottom: 0; }
     .log-panel {
-      height: 100%;
+      height: min(760px, calc(100vh - 24px));
       align-self: stretch;
       min-width: 0;
       overflow: hidden;
     }
     .task-panel {
-      flex: 0 0 auto;
+      flex: 1 1 auto;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -161,15 +161,19 @@
       padding: 12px 14px;
     }
     .task-panel > .small { margin-top: 8px; }
-    .api-panel, .progress-panel { min-height: 0; min-width: 0; }
+    .api-panel { min-height: 0; min-width: 0; }
     .api-panel {
       flex: 0 0 auto;
       overflow: visible;
     }
     .progress-panel {
-      flex: 0 0 auto;
+      min-height: 0;
+      min-width: 0;
+      flex: 1 1 auto;
       display: flex;
       flex-direction: column;
+      gap: 10px;
+      overflow: visible;
     }
     .log-panel {
       display: flex;
@@ -329,6 +333,19 @@
     td.remove button { min-width: 50px; padding-left: 8px; padding-right: 8px; }
     .progress-wrap { height: 14px; background: #e4e9f1; border-radius: 999px; overflow: hidden; border: 1px solid #d4dce8; }
     .progress-bar { height: 100%; width: 0%; background: var(--blue); transition: width .25s ease; }
+    .progress-top-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .progress-ratio {
+      color: #10213f;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -340,7 +357,7 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 10px;
-      background: var(--panel-soft);
+      background: #fff;
       box-shadow: none;
       display: flex;
       align-items: center;
@@ -363,6 +380,65 @@
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .task-statistics {
+      margin-top: 12px;
+      flex: 1 1 auto;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      padding: 12px;
+    }
+    .task-statistics h3 {
+      margin: 0;
+      color: #10213f;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .mini-stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px;
+      min-width: 0;
+    }
+    .mini-stat b {
+      display: block;
+      color: #10213f;
+      font-size: 18px;
+      line-height: 1;
+      margin-bottom: 5px;
+    }
+    .mini-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .status-row {
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+    }
+    .status-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
       white-space: nowrap;
     }
     pre {
@@ -389,19 +465,26 @@
       height: auto;
       overflow: auto;
     }
+    .log-panel pre.empty-log {
+      color: #94a3b8;
+    }
     .small { color: var(--muted); font-size: 12px; line-height: 1.45; }
     @media (max-width: 980px) {
-      .top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); height: auto; overflow: visible; }
+      .top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); min-height: 0; overflow: visible; }
+      .left-stack, .config-stack { min-height: 0; overflow: visible; }
+      .task-panel, .progress-panel { flex: 0 0 auto; overflow: visible; }
+      .task-statistics { flex: 0 0 auto; min-height: 0; }
       .log-panel { grid-column: 1 / -1; }
       .log-panel { height: 360px; }
     }
     @media (max-width: 760px) {
       body { overflow-x: auto; }
       main { overflow-x: visible; }
-      .top-grid { grid-template-columns: 1fr; height: auto; min-height: 0; overflow: visible; }
+      .top-grid { grid-template-columns: 1fr; min-height: 0; overflow: visible; }
       .task-grid, .api-grid, .cloud-model-row { grid-template-columns: 1fr; }
       .app-header { flex-wrap: wrap; }
       .stats { grid-template-columns: repeat(2, 1fr); }
+      .progress-top-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -484,6 +567,17 @@
               <button class="danger" id="stopBtn" onclick="stopJob()" data-i18n="stop">Stop</button>
             </div>
           </div>
+          <div class="task-statistics" id="taskStatistics">
+            <h3 data-i18n="task_statistics">Task Statistics</h3>
+            <div class="mini-stats">
+              <div class="mini-stat"><b id="extractedRows">0</b><span data-i18n="stat_extracted_rows">Extracted rows</span></div>
+              <div class="mini-stat"><b id="successfulPdfs">0</b><span data-i18n="stat_successful_pdfs">Successful PDFs</span></div>
+              <div class="mini-stat"><b id="failedPdfs">0</b><span data-i18n="stat_failed_pdfs">Failed PDFs</span></div>
+              <div class="mini-stat"><b id="suspiciousRows">0</b><span data-i18n="stat_suspicious_rows">Suspicious rows</span></div>
+              <div class="mini-stat"><b id="badRows">0</b><span data-i18n="stat_bad_rows">Bad rows</span></div>
+              <div class="mini-stat"><b id="cacheHits">0</b><span data-i18n="stat_cache_hits">Cache hits</span></div>
+            </div>
+          </div>
         </section>
       </div>
 
@@ -526,25 +620,28 @@
         </section>
 
         <section class="progress-panel">
-          <h2 data-i18n="progress">进度</h2>
-          <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
+          <h2 data-i18n="progress">Progress</h2>
+          <div class="progress-top-row">
+            <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
+            <div id="progressRatio" class="progress-ratio">Done 0 / 0 = 0%</div>
+          </div>
           <div class="stats">
-            <div class="stat"><b id="done">0</b><span data-i18n="stat_done">已处理</span></div>
-            <div class="stat"><b id="total">0</b><span data-i18n="stat_total">总数</span></div>
-            <div class="stat"><b id="success">0</b><span data-i18n="stat_success">成功</span></div>
-            <div class="stat"><b id="failed">0</b><span data-i18n="stat_failed">失败</span></div>
+            <div class="stat"><b id="done">0</b><span data-i18n="stat_done">Done</span></div>
+            <div class="stat"><b id="total">0</b><span data-i18n="stat_total">Total</span></div>
+            <div class="stat"><b id="success">0</b><span data-i18n="stat_success">Success</span></div>
+            <div class="stat"><b id="failed">0</b><span data-i18n="stat_failed">Failed</span></div>
           </div>
           <div class="status-box">
-            <div id="message" class="status-line" data-i18n="status_waiting">等待任务</div>
-            <div id="currentFile" class="status-line"></div>
-            <div id="outputInfo" class="status-line"></div>
+            <div class="status-row"><span class="status-label" data-i18n="status_label">Status</span><span id="message" class="status-line" data-i18n="status_waiting">Waiting</span></div>
+            <div class="status-row"><span class="status-label" data-i18n="current_file_label">Current file</span><span id="currentFile" class="status-line"></span></div>
+            <div class="status-row"><span class="status-label" data-i18n="output_label">Output</span><span id="outputInfo" class="status-line"></span></div>
           </div>
         </section>
       </div>
 
         <section class="log-panel">
           <h2 data-i18n="logs">运行日志</h2>
-          <pre id="logs"></pre>
+          <pre id="logs" class="empty-log" data-has-logs="false">No run logs yet. Logs will appear here after a task starts.</pre>
         </section>
     </div>
 
@@ -577,6 +674,18 @@
     const i18n = {
       zh: {
         task_settings: "任务设置",
+        task_statistics: "统计信息",
+        stat_extracted_rows: "已抽取记录",
+        stat_successful_pdfs: "成功文献",
+        stat_failed_pdfs: "失败文献",
+        stat_suspicious_rows: "可疑数据",
+        stat_bad_rows: "坏数据",
+        stat_cache_hits: "缓存复用",
+        progress_ratio_done: "已处理",
+        status_label: "当前状态",
+        current_file_label: "当前文件",
+        output_label: "输出",
+        empty_logs: "暂无运行日志，任务开始后将在这里显示。",
         input_dir: "PDF 输入目录",
         output_path: "Excel 输出路径",
         llm_provider: "LLM 提供方",
@@ -656,6 +765,18 @@
       },
       en: {
         task_settings: "Task Settings",
+        task_statistics: "Task Statistics",
+        stat_extracted_rows: "Extracted rows",
+        stat_successful_pdfs: "Successful PDFs",
+        stat_failed_pdfs: "Failed PDFs",
+        stat_suspicious_rows: "Suspicious rows",
+        stat_bad_rows: "Bad rows",
+        stat_cache_hits: "Cache hits",
+        progress_ratio_done: "Done",
+        status_label: "Status",
+        current_file_label: "Current file",
+        output_label: "Output",
+        empty_logs: "No run logs yet. Logs will appear here after a task starts.",
         input_dir: "PDF Input Folder",
         output_path: "Excel Output Path",
         llm_provider: "LLM Provider",
@@ -735,6 +856,8 @@
       }
     };
     let currentLang = localStorage.getItem("chemPdfExtractorLang") || "zh";
+    let latestLogLines = [];
+    let latestStatusData = {done: 0, total: 0, percent: 0};
 
     function t(key) {
       return (i18n[currentLang] && i18n[currentLang][key]) || i18n.zh[key] || key;
@@ -797,6 +920,8 @@
       const manualOption = document.querySelector("#cloudModelSelect option[value='__manual__']");
       if (manualOption) manualOption.textContent = t("manual_model_option");
       syncCloudModelValue();
+      updateProgressRatio(latestStatusData.done, latestStatusData.total, latestStatusData.percent);
+      updateLogPanel(latestLogLines);
     }
 
     function setLanguage(lang) {
@@ -864,6 +989,34 @@
         description: row.querySelector(".desc").value.trim()
       })).filter(item => item.label)
         .map(({label, requirement, description}) => ({label, requirement, description}));
+    }
+
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function numberValue(value) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function updateProgressRatio(done, total, percent) {
+      latestStatusData = {done, total, percent};
+      const safeDone = numberValue(done);
+      const safeTotal = numberValue(total);
+      const safePercent = Number.isFinite(Number(percent)) ? Number(percent) : (safeTotal ? safeDone / safeTotal * 100 : 0);
+      const percentText = safePercent.toFixed(1).replace(/\.0$/, "");
+      setText("progressRatio", `${t("progress_ratio_done")} ${safeDone} / ${safeTotal} = ${percentText}%`);
+    }
+
+    function updateTaskStatistics(data) {
+      setText("extractedRows", numberValue(data.extracted_rows || 0));
+      setText("successfulPdfs", numberValue(data.success || 0));
+      setText("failedPdfs", numberValue(data.failed || 0));
+      setText("suspiciousRows", numberValue(data.suspicious_rows || 0));
+      setText("badRows", numberValue(data.bad_rows || 0));
+      setText("cacheHits", numberValue(data.cache_hits || 0));
     }
 
     async function loadModels() {
@@ -1068,12 +1221,16 @@
         return;
       }
 
-      const wasEmpty = !logsEl.textContent;
+      latestLogLines = Array.isArray(lines) ? lines : [];
+      const hasLogs = latestLogLines.length > 0;
+      const wasEmpty = logsEl.dataset.hasLogs !== "true";
       const wasNearBottom = logsEl.scrollTop + logsEl.clientHeight >= logsEl.scrollHeight - 24;
-      const nextText = (lines || []).join("\n");
+      const nextText = hasLogs ? latestLogLines.join("\n") : t("empty_logs");
 
       if (logsEl.textContent !== nextText) {
         logsEl.textContent = nextText;
+        logsEl.dataset.hasLogs = hasLogs ? "true" : "false";
+        logsEl.classList.toggle("empty-log", !hasLogs);
         if (wasEmpty || wasNearBottom) {
           logsEl.scrollTop = logsEl.scrollHeight;
         }
@@ -1089,9 +1246,11 @@
         document.getElementById("total").textContent = data.total || 0;
         document.getElementById("success").textContent = data.success || 0;
         document.getElementById("failed").textContent = data.failed || 0;
+        updateProgressRatio(data.done || 0, data.total || 0, data.percent || 0);
+        updateTaskStatistics(data);
         document.getElementById("message").textContent = localizedStatusMessage(data.message);
-        document.getElementById("currentFile").textContent = data.current_file ? t("prefix_current_file") + data.current_file : "";
-        document.getElementById("outputInfo").textContent = data.output_path ? t("prefix_output") + data.output_path + " | " + t("prefix_error_log") + data.error_log_path : "";
+        document.getElementById("currentFile").textContent = data.current_file || "-";
+        document.getElementById("outputInfo").textContent = data.output_path ? data.output_path + " | " + t("prefix_error_log") + data.error_log_path : "-";
         updateLogPanel(data.logs || []);
         document.getElementById("startBtn").disabled = !!data.running;
         document.getElementById("stopBtn").disabled = !data.running;
