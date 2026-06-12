@@ -17,6 +17,7 @@
       --green: #0f8a5f;
       --red: #c2410c;
       --focus: rgba(31, 111, 235, .18);
+      --workbench-height: min(760px, calc(100vh - 24px));
     }
     * { box-sizing: border-box; }
     body {
@@ -50,7 +51,7 @@
       display: grid;
       grid-template-columns: minmax(0, 3fr) minmax(0, 3fr) minmax(0, 4fr);
       gap: 14px;
-      align-items: start;
+      align-items: stretch;
       margin-bottom: 12px;
       overflow: visible;
     }
@@ -59,7 +60,7 @@
       flex-direction: column;
       gap: 12px;
       min-width: 0;
-      height: auto;
+      height: var(--workbench-height);
       overflow: visible;
     }
     .left-stack {
@@ -67,7 +68,7 @@
       flex-direction: column;
       gap: 12px;
       min-width: 0;
-      height: auto;
+      height: var(--workbench-height);
       overflow: visible;
     }
     .app-logo {
@@ -145,8 +146,8 @@
     }
     .top-grid section, .config-stack section, .left-stack section { margin-bottom: 0; }
     .log-panel {
-      height: min(760px, calc(100vh - 24px));
-      align-self: start;
+      height: var(--workbench-height);
+      align-self: stretch;
       min-width: 0;
       overflow: hidden;
     }
@@ -157,7 +158,7 @@
       min-height: 0;
       min-width: 0;
       overflow: visible;
-      padding: 12px 14px;
+      padding: 10px 12px;
     }
     .task-panel > .small { margin-top: 8px; }
     .api-panel, .progress-panel { min-height: 0; min-width: 0; }
@@ -166,9 +167,10 @@
       overflow: visible;
     }
     .progress-panel {
-      flex: 0 0 auto;
+      flex: 1 1 auto;
       display: flex;
       flex-direction: column;
+      overflow: visible;
     }
     .log-panel {
       display: flex;
@@ -328,11 +330,24 @@
     td.remove button { min-width: 50px; padding-left: 8px; padding-right: 8px; }
     .progress-wrap { height: 14px; background: #e4e9f1; border-radius: 999px; overflow: hidden; border: 1px solid #d4dce8; }
     .progress-bar { height: 100%; width: 0%; background: var(--blue); transition: width .25s ease; }
+    .progress-top-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .progress-ratio {
+      color: #10213f;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
     .stats {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
-      margin: 12px 0;
+      margin: 10px 0;
     }
     .progress-panel .stats { grid-template-columns: repeat(2, 1fr); }
     .stat {
@@ -364,6 +379,42 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .task-stats-panel {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: visible;
+      padding: 10px 12px;
+    }
+    .task-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+    .task-stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      padding: 7px 8px;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 8px;
+    }
+    .task-stat span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .task-stat b {
+      color: #10213f;
+      font-size: 18px;
+      line-height: 1;
+    }
     pre {
       height: 320px;
       overflow: auto;
@@ -391,6 +442,8 @@
     .small { color: var(--muted); font-size: 12px; line-height: 1.45; }
     @media (max-width: 980px) {
       .top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); height: auto; overflow: visible; }
+      .left-stack, .config-stack { height: auto; }
+      .task-stats-panel { flex: 0 0 auto; }
       .log-panel { grid-column: 1 / -1; }
       .log-panel { height: 360px; }
     }
@@ -484,6 +537,16 @@
             </div>
           </div>
         </section>
+        <section class="task-stats-panel">
+          <h2 data-i18n="statistics">Statistics</h2>
+          <div class="task-stats-grid">
+            <div class="task-stat"><span data-i18n="stat_extracted_rows">Extracted rows</span><b id="extractedRows">0</b></div>
+            <div class="task-stat"><span data-i18n="stat_successful_pdfs">Successful PDFs</span><b id="successfulPdfs">0</b></div>
+            <div class="task-stat"><span data-i18n="stat_failed_pdfs">Failed PDFs</span><b id="failedPdfs">0</b></div>
+            <div class="task-stat"><span data-i18n="stat_suspicious_bad_rows">Suspicious / bad</span><b id="suspiciousBadRows">0 / 0</b></div>
+            <div class="task-stat"><span data-i18n="stat_cache_hits">Cache hits</span><b id="cacheHits">0</b></div>
+          </div>
+        </section>
       </div>
 
       <div class="config-stack">
@@ -526,7 +589,10 @@
 
         <section class="progress-panel">
           <h2 data-i18n="progress">进度</h2>
-          <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
+          <div class="progress-top-row">
+            <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
+            <div id="progressRatio" class="progress-ratio">Done 0 / 0 = 0%</div>
+          </div>
           <div class="stats">
             <div class="stat"><b id="done">0</b><span data-i18n="stat_done">已处理</span></div>
             <div class="stat"><b id="total">0</b><span data-i18n="stat_total">总数</span></div>
@@ -576,8 +642,15 @@
     const i18n = {
       zh: {
         task_settings: "任务设置",
-        input_dir: "PDF 输入目录",
-        output_path: "Excel 输出路径",
+        statistics: "统计信息",
+        stat_extracted_rows: "已抽取数据",
+        stat_successful_pdfs: "成功文献",
+        stat_failed_pdfs: "失败文献",
+        stat_suspicious_bad_rows: "可疑/坏数据",
+        stat_cache_hits: "缓存复用",
+        progress_ratio_done: "已处理",
+        input_dir: "PDF 目录",
+        output_path: "输出路径",
         llm_provider: "LLM 提供方",
         provider_cloud: "云端 OpenAI-compatible API",
         provider_ollama: "本地 Ollama",
@@ -589,9 +662,9 @@
         pdf_mode_pymupdf_text: "PyMuPDF text",
         pdf_mode_pypdf_text: "pypdf_text",
         pdf_mode_help: "默认使用 pymupdf4llm；复杂版面、表格或扫描件可选 MinerU。",
-        max_chars: "上传最大字符数（0 表示不截断）",
-        llm_timeout: "LLM 超时秒数（0 表示不限制）",
-        bad_row_percent: "错误百分比（低于此百分比判为坏数据）",
+        max_chars: "最大字符数（0 不截断）",
+        llm_timeout: "超时秒数（0 不限制）",
+        bad_row_percent: "坏数据阈值（%）",
         ollama_url: "Ollama 地址",
         recursive: "递归处理子文件夹",
         auto_fallback: "模型失败时尝试备选模型",
@@ -599,7 +672,7 @@
         pause: "暂停任务",
         resume: "继续任务",
         stop: "停止任务",
-        api_config: "编辑 LLM API 配置",
+        api_config: "LLM API 配置",
         service_name: "LLM 服务名称",
         placeholder_service: "openai_compatible",
         model_name: "模型名称",
@@ -655,10 +728,17 @@
       },
       en: {
         task_settings: "Task Settings",
-        input_dir: "PDF Input Folder",
-        output_path: "Excel Output Path",
+        statistics: "Statistics",
+        stat_extracted_rows: "Extracted rows",
+        stat_successful_pdfs: "Successful PDFs",
+        stat_failed_pdfs: "Failed PDFs",
+        stat_suspicious_bad_rows: "Suspicious / bad",
+        stat_cache_hits: "Cache hits",
+        progress_ratio_done: "Done",
+        input_dir: "PDF Folder",
+        output_path: "Output Path",
         llm_provider: "LLM Provider",
-        provider_cloud: "Cloud OpenAI-compatible API",
+        provider_cloud: "Cloud API",
         provider_ollama: "Local Ollama",
         local_ollama_model: "Local Ollama Model",
         pdf_mode: "PDF Mode",
@@ -668,17 +748,17 @@
         pdf_mode_pymupdf_text: "PyMuPDF text",
         pdf_mode_pypdf_text: "pypdf_text",
         pdf_mode_help: "pymupdf4llm is the default. Use MinerU for complex layouts, tables, or scanned PDFs.",
-        max_chars: "Max Upload Characters (0 = no truncation)",
-        llm_timeout: "LLM Timeout Seconds (0 = unlimited)",
-        bad_row_percent: "Bad Data Threshold (below this fill percent)",
+        max_chars: "Max chars (0 = no limit)",
+        llm_timeout: "Timeout (0 = no limit)",
+        bad_row_percent: "Bad row threshold (%)",
         ollama_url: "Ollama URL",
-        recursive: "Process Subfolders Recursively",
-        auto_fallback: "Try backup model when model fails",
+        recursive: "Recursive",
+        auto_fallback: "Try backup model",
         start: "Start",
         pause: "Pause",
         resume: "Resume",
         stop: "Stop",
-        api_config: "Edit LLM API Config",
+        api_config: "LLM API Config",
         service_name: "LLM Service Name",
         placeholder_service: "openai_compatible",
         model_name: "Model Name",
@@ -734,6 +814,7 @@
       }
     };
     let currentLang = localStorage.getItem("chemPdfExtractorLang") || "zh";
+    let latestStatusData = {done: 0, total: 0, percent: 0};
 
     function t(key) {
       return (i18n[currentLang] && i18n[currentLang][key]) || i18n.zh[key] || key;
@@ -796,6 +877,7 @@
       const manualOption = document.querySelector("#cloudModelSelect option[value='__manual__']");
       if (manualOption) manualOption.textContent = t("manual_model_option");
       syncCloudModelValue();
+      updateProgressRatio(latestStatusData.done, latestStatusData.total, latestStatusData.percent);
     }
 
     function setLanguage(lang) {
@@ -1061,6 +1143,33 @@
       pollStatus();
     }
 
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function numberValue(value) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function updateProgressRatio(done, total, percent) {
+      latestStatusData = {done, total, percent};
+      const safeDone = numberValue(done);
+      const safeTotal = numberValue(total);
+      const safePercent = Number.isFinite(Number(percent)) ? Number(percent) : (safeTotal ? safeDone / safeTotal * 100 : 0);
+      const percentText = safePercent.toFixed(1).replace(/\.0$/, "");
+      setText("progressRatio", `${t("progress_ratio_done")} ${safeDone} / ${safeTotal} = ${percentText}%`);
+    }
+
+    function updateTaskStatistics(data) {
+      setText("extractedRows", numberValue(data.extracted_rows || 0));
+      setText("successfulPdfs", numberValue(data.success || 0));
+      setText("failedPdfs", numberValue(data.failed || 0));
+      setText("suspiciousBadRows", `${numberValue(data.suspicious_rows || 0)} / ${numberValue(data.bad_rows || 0)}`);
+      setText("cacheHits", numberValue(data.cache_hits || 0));
+    }
+
     function updateLogPanel(lines) {
       const logsEl = document.getElementById("logs");
       if (!logsEl) {
@@ -1088,6 +1197,8 @@
         document.getElementById("total").textContent = data.total || 0;
         document.getElementById("success").textContent = data.success || 0;
         document.getElementById("failed").textContent = data.failed || 0;
+        updateProgressRatio(data.done || 0, data.total || 0, data.percent || 0);
+        updateTaskStatistics(data);
         document.getElementById("message").textContent = localizedStatusMessage(data.message);
         document.getElementById("currentFile").textContent = data.current_file ? t("prefix_current_file") + data.current_file : "";
         document.getElementById("outputInfo").textContent = data.output_path ? t("prefix_output") + data.output_path + " | " + t("prefix_error_log") + data.error_log_path : "";

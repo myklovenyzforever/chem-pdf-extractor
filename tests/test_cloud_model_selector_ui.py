@@ -52,43 +52,62 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertIn('<div class="form-field full-span">', template)
         self.assertIn('data-i18n="pdf_mode_mineru">MinerU</option>', template)
 
-    def test_workbench_layout_bounds_desktop_height_without_stretching_task_panel(self):
+    def test_workbench_layout_uses_aligned_desktop_height_without_left_middle_scroll(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
         top_grid = css_block(template, ".top-grid")
+        left_stack = css_block(template, ".left-stack")
+        config_stack = css_block(template, ".config-stack")
+        log_panel = css_block(template, ".log-panel")
         task_panel = css_block(template, ".task-panel")
         progress_panel = css_block(template, "\n    .progress-panel")
 
-        self.assertIn("align-items: start", top_grid)
-        self.assertNotIn("height: min(760px, calc(100vh - 24px))", top_grid)
+        self.assertIn("--workbench-height: min(760px, calc(100vh - 24px))", template)
+        self.assertIn("align-items: stretch", top_grid)
         self.assertIn("overflow: visible", top_grid)
-        self.assertNotIn("align-items: stretch", top_grid)
+        self.assertIn("height: var(--workbench-height)", left_stack)
+        self.assertIn("height: var(--workbench-height)", config_stack)
+        self.assertIn("height: var(--workbench-height)", log_panel)
         self.assertIn("flex: 0 0 auto", task_panel)
         self.assertIn("overflow: visible", task_panel)
         self.assertNotIn("overflow-y: auto", task_panel)
         self.assertNotIn("flex: 1 1 0", task_panel)
-        self.assertIn("flex: 0 0 auto", progress_panel)
+        self.assertIn("flex: 1 1 auto", progress_panel)
 
-    def test_classic_layout_does_not_include_task_statistics_block(self):
+    def test_statistics_panel_exists_and_uses_backend_status_fields(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
-        self.assertNotIn("Task Statistics", template)
-        self.assertNotIn("\u7edf\u8ba1\u4fe1\u606f", template)
-        self.assertNotIn("task_statistics", template)
-        self.assertNotIn("extracted_rows", template)
-        self.assertNotIn("suspicious_rows", template)
-        self.assertNotIn("bad_rows", template)
-        self.assertNotIn("cache_hits", template)
-        self.assertNotIn("extractedRows", template)
-        self.assertNotIn("suspiciousRows", template)
-        self.assertNotIn("badRows", template)
-        self.assertNotIn("cacheHits", template)
+        self.assertIn('class="task-stats-panel"', template)
+        self.assertIn("Statistics", template)
+        self.assertIn("\u7edf\u8ba1\u4fe1\u606f", template)
+        self.assertIn("extracted_rows", template)
+        self.assertIn("suspicious_rows", template)
+        self.assertIn("bad_rows", template)
+        self.assertIn("cache_hits", template)
+        self.assertIn("extractedRows", template)
+        self.assertIn("suspiciousBadRows", template)
+        self.assertIn("cacheHits", template)
+
+    def test_progress_panel_has_ratio_and_core_stats(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('id="progressRatio"', template)
+        self.assertIn("progress-top-row", template)
+        self.assertIn("progress_ratio_done", template)
+        self.assertIn("Done", template)
+        self.assertIn("/", template)
+        self.assertIn("=", template)
+        self.assertIn('id="done"', template)
+        self.assertIn('id="total"', template)
+        self.assertIn('id="success"', template)
+        self.assertIn('id="failed"', template)
+        self.assertIn("updateProgressRatio(data.done || 0, data.total || 0, data.percent || 0)", template)
 
     def test_log_panel_pre_scrolls_internally(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
         log_panel = css_block(template, ".log-panel")
         log_pre = css_block(template, ".log-panel pre")
 
-        self.assertIn("height: min(760px, calc(100vh - 24px))", log_panel)
+        self.assertIn("height: var(--workbench-height)", log_panel)
         self.assertIn("overflow: hidden", log_panel)
         self.assertIn("flex: 1 1 auto", log_pre)
         self.assertIn("min-height: 0", log_pre)
@@ -105,7 +124,7 @@ class CloudModelSelectorUiTest(unittest.TestCase):
     def test_left_and_middle_columns_do_not_use_internal_scrollbars(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
-        for selector in [".left-stack", ".task-panel", ".config-stack", ".api-panel", ".progress-panel"]:
+        for selector in [".left-stack", ".task-panel", ".task-stats-panel", ".config-stack", ".api-panel", ".progress-panel"]:
             block = css_block(template, selector)
             self.assertNotIn("overflow-y: auto", block)
             self.assertNotIn("overflow: auto", block)
