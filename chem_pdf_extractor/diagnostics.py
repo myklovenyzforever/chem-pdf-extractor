@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import platform
-import re
 import sys
 import traceback
 from datetime import datetime
@@ -10,10 +9,10 @@ from pathlib import Path
 from typing import Any
 
 from .config import PROJECT_ROOT
+from .security import redact_sensitive_obj, redact_sensitive_text
 from .text_safety import json_dumps_utf8, utf8_safe_text
 
 _INSTALLED_EXCEPTHOOK = False
-_API_VALUE_RE = re.compile(r"\b(?:sk|tp)-[A-Za-z0-9_\-]{8,}\b")
 _SECRET_KEYWORDS = ("api_key", "apikey", "api-key", "token", "password", "secret", "key")
 _SECRET_FLAGS = {"--cloud-api-key", "--api-key", "--key"}
 
@@ -28,16 +27,6 @@ def diagnostics_log_dir() -> Path:
 def diagnostic_log_path(name: str) -> Path:
     file_name = Path(str(name or "diagnostic.log")).name or "diagnostic.log"
     return diagnostics_log_dir() / file_name
-
-
-def redact_sensitive_text(text: str) -> str:
-    redacted = _API_VALUE_RE.sub("<redacted>", text)
-    redacted = re.sub(
-        r"(?i)(api[_-]?key|token|password|secret|key)(\s*[:=]\s*)([^\s,;]+)",
-        r"\1\2<redacted>",
-        redacted,
-    )
-    return redacted
 
 
 def sanitize_argv(argv: list[str] | None = None) -> list[str]:
@@ -95,7 +84,7 @@ def log_startup_event(mode: str, extra: dict[str, Any] | None = None) -> None:
         "sensitive_env": _sensitive_env_keys(),
     }
     if extra:
-        payload["extra"] = extra
+        payload["extra"] = redact_sensitive_obj(extra)
     append_diagnostic_log("startup.log", json_dumps_utf8(payload, sort_keys=True))
 
 
@@ -108,8 +97,8 @@ def log_exception(exc: BaseException, context: str = "") -> None:
         payload = {
             "context": context,
             "exception_type": type(exc).__name__,
-            "exception_message": str(exc),
-            "traceback": "".join(traceback.format_exception(type(exc), exc, exc.__traceback__)),
+            "exception_message": redact_sensitive_text(str(exc)),
+            "traceback": redact_sensitive_text("".join(traceback.format_exception(type(exc), exc, exc.__traceback__))),
         }
         append_diagnostic_log("crash.log", json_dumps_utf8(payload, sort_keys=True))
     except Exception:

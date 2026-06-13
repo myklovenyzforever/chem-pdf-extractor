@@ -129,8 +129,8 @@ class CloudConfigSafetyTest(unittest.TestCase):
         template = (ROOT / "chem_pdf_extractor" / "templates" / "index.html").read_text(encoding="utf-8")
         server = (ROOT / "chem_pdf_extractor" / "server.py").read_text(encoding="utf-8")
 
-        self.assertIn('fetch("/api/cloud-models"', template)
-        self.assertNotIn('fetch("/api/models", {', template)
+        self.assertIn('apiFetch("/api/cloud-models"', template)
+        self.assertNotIn('apiFetch("/api/models", {', template)
         self.assertIn("GET /api/models is for local Ollama model discovery.", server)
         self.assertIn("POST /api/cloud-models is the preferred OpenAI-compatible model discovery endpoint.", server)
         self.assertIn("POST /api/models is kept as a compatibility alias", server)

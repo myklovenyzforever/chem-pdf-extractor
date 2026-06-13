@@ -3,6 +3,7 @@ from __future__ import annotations
 import html as html_lib
 import json
 import os
+import secrets
 import socket
 import threading
 import urllib.parse
@@ -29,12 +30,14 @@ from .config import (
     default_output_path,
     load_local_config,
     mask_api_key,
+    public_local_config,
     save_local_config,
     validate_cloud_start_config,
 )
 from .diagnostics import append_diagnostic_log, log_exception, log_startup_event
 from .extractor import JobState, run_extraction_job, state_update
 from .llm import choose_model, fetch_openai_compatible_models, get_ollama_models
+from .security import redact_sensitive_text
 from .text_safety import json_dumps_utf8
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -56,12 +59,51 @@ def render_html(defaults: dict[str, Any], default_fields: list[dict[str, Any]]) 
     return html
 
 
+def allowed_ui_origins(port: int) -> set[str]:
+    return {f"http://127.0.0.1:{port}", f"http://localhost:{port}"}
+
+
+def is_loopback_client(address: Any) -> bool:
+    host = str(address[0] if isinstance(address, tuple) and address else address)
+    return host in {"127.0.0.1", "::1", "localhost"}
+
+
+def is_allowed_origin_header(value: str | None, port: int) -> bool:
+    if not value:
+        return True
+    cleaned = value.strip().rstrip("/")
+    return cleaned in allowed_ui_origins(port)
+
+
+def is_allowed_referer_header(value: str | None, port: int) -> bool:
+    if not value:
+        return True
+    return any(value.strip().startswith(origin + "/") or value.strip() == origin for origin in allowed_ui_origins(port))
+
+
+def validate_local_api_request(
+    *, token: str | None, expected_token: str, client_address: Any,
+    origin: str | None, referer: str | None, port: int,
+) -> bool:
+    if not expected_token or not secrets.compare_digest(str(token or ""), expected_token):
+        return False
+    if not is_loopback_client(client_address):
+        return False
+    if not is_allowed_origin_header(origin, port):
+        return False
+    if not is_allowed_referer_header(referer, port):
+        return False
+    return True
+
+
 class ChemExtractorApp:
     def __init__(self, runtime: RuntimeDeps, default_pdf_mode: str = DEFAULT_PDF_MODE) -> None:
         self.runtime = runtime
         self.default_pdf_mode = default_pdf_mode if default_pdf_mode in PDF_MODE_CHOICES else DEFAULT_PDF_MODE
         self.state = JobState()
         self.server: ThreadingHTTPServer | None = None
+        self.ui_token = secrets.token_urlsafe(32)
+        self.port = 0
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -70,11 +112,36 @@ class RequestHandler(BaseHTTPRequestHandler):
     def log_message(self, format: str, *args: Any) -> None:
         return
 
+    def send_common_security_headers(self, *, html: bool = False) -> None:
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Cache-Control", "no-store")
+        if html:
+            self.send_header(
+                "Content-Security-Policy",
+                "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+                "script-src 'self' 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'self'",
+            )
+
+    def protected_api_request_is_valid(self) -> bool:
+        return validate_local_api_request(
+            token=self.headers.get("X-Chem-PDF-Extractor-Token"),
+            expected_token=self.app.ui_token,
+            client_address=self.client_address,
+            origin=self.headers.get("Origin"),
+            referer=self.headers.get("Referer"),
+            port=self.app.port,
+        )
+
+    def reject_forbidden(self) -> None:
+        self.send_json({"ok": False, "error": "forbidden"}, status=403)
+
     def send_json(self, payload: dict[str, Any], status: int = 200) -> None:
         data = json_dumps_utf8(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(data)))
+        self.send_common_security_headers()
         self.end_headers()
         self.wfile.write(data)
 
@@ -99,6 +166,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 "cloud_api_key": "",
                 "cloud_base_url": local_config.get("cloud_base_url") or os.environ.get("CHEM_PDF_EXTRACTOR_BASE_URL") or DEFAULT_CLOUD_BASE_URL,
                 "cloud_active": local_config.get("cloud_active", False),
+                "copy_failed_sources": local_config.get("copy_failed_sources", False),
+                "ui_token": self.app.ui_token,
                 "recursive": True,
                 "max_chars": DEFAULT_MAX_CHARS,
                 "num_ctx": DEFAULT_NUM_CTX,
@@ -111,8 +180,13 @@ class RequestHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(data)))
+            self.send_common_security_headers(html=True)
             self.end_headers()
             self.wfile.write(data)
+            return
+
+        if parsed.path.startswith("/api/") and not self.protected_api_request_is_valid():
+            self.reject_forbidden()
             return
 
         if parsed.path == "/api/status":
@@ -127,11 +201,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                 models = get_ollama_models(base_url)
                 self.send_json({"ok": True, "models": models, "default_model": choose_model(DEFAULT_MODEL, models)})
             except Exception as exc:
-                self.send_json({"ok": False, "error": str(exc), "models": []}, status=200)
+                self.send_json({"ok": False, "error": redact_sensitive_text(str(exc)), "models": []}, status=200)
             return
 
         if parsed.path == "/api/config":
-            self.send_json({"ok": True, "config": load_local_config()})
+            self.send_json({"ok": True, "config": public_local_config()})
             return
 
         if parsed.path == "/api/init-config":
@@ -144,16 +218,22 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path.startswith("/api/") and not self.protected_api_request_is_valid():
+            self.reject_forbidden()
+            return
         if parsed.path == "/api/config":
             try:
                 config = self.read_json()
-                if not str(config.get("api_key") or config.get("cloud_api_key") or "").strip():
+                if bool(config.get("clear_cloud_api_key", False)):
+                    config["api_key"] = ""
+                    config["cloud_api_key"] = ""
+                elif not str(config.get("api_key") or config.get("cloud_api_key") or "").strip():
                     existing = load_local_config()
                     config["api_key"] = existing.get("cloud_api_key", "")
                 save_local_config(config)
                 self.send_json({"ok": True})
             except Exception as exc:
-                self.send_json({"ok": False, "error": str(exc)})
+                self.send_json({"ok": False, "error": redact_sensitive_text(str(exc))})
             return
 
         if parsed.path in {"/api/cloud-models", "/api/models"}:
@@ -167,7 +247,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 default_model = DEFAULT_CLOUD_MODEL if DEFAULT_CLOUD_MODEL in models else models[0]
                 self.send_json({"ok": True, "models": models, "default_model": default_model})
             except Exception as exc:
-                self.send_json({"ok": False, "error": str(exc), "models": []}, status=200)
+                self.send_json({"ok": False, "error": redact_sensitive_text(str(exc)), "models": []}, status=200)
             return
 
         if parsed.path == "/api/start":
@@ -210,7 +290,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 thread.start()
                 self.send_json({"ok": True})
             except Exception as exc:
-                self.send_json({"ok": False, "error": str(exc)})
+                self.send_json({"ok": False, "error": redact_sensitive_text(str(exc))})
             return
 
         if parsed.path == "/api/stop":
@@ -280,6 +360,7 @@ def start_web_app(
         runtime = import_runtime_dependencies()
         app = ChemExtractorApp(runtime, default_pdf_mode=initial_pdf_mode)
         actual_port = find_free_port(port)
+        app.port = actual_port
         server = ThreadingHTTPServer(("127.0.0.1", actual_port), RequestHandler)
         app.server = server
         RequestHandler.app = app

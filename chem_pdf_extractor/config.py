@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import importlib
 import json
@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+import urllib.parse
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -255,6 +256,7 @@ def normalize_local_config(raw: dict[str, Any] | None) -> dict[str, Any]:
         "cloud_base_url": str(raw.get("cloud_base_url") or raw.get("base_url") or DEFAULT_CLOUD_BASE_URL).strip(),
         "cloud_model": str(raw.get("cloud_model") or raw.get("model") or DEFAULT_CLOUD_MODEL).strip(),
         "cloud_active": _bool_config_value(raw.get("cloud_active"), False),
+        "copy_failed_sources": _bool_config_value(raw.get("copy_failed_sources"), False),
     }
 
 
@@ -280,12 +282,27 @@ def save_local_config(config: dict[str, Any]) -> Path:
         "base_url": normalized["cloud_base_url"],
         "model": normalized["cloud_model"],
         "cloud_active": normalized["cloud_active"],
+        "copy_failed_sources": normalized["copy_failed_sources"],
     }
     path = local_config_path()
     with path.open("w", encoding="utf-8") as handle:
         json.dump(payload, handle, ensure_ascii=False, indent=2)
         handle.write("\n")
     return path
+
+
+def public_local_config() -> dict[str, Any]:
+    config = load_local_config()
+    api_key = str(config.get("cloud_api_key") or "").strip()
+    return {
+        "cloud_service_name": config.get("cloud_service_name") or DEFAULT_CLOUD_SERVICE_NAME,
+        "cloud_base_url": config.get("cloud_base_url") or DEFAULT_CLOUD_BASE_URL,
+        "cloud_model": config.get("cloud_model") or DEFAULT_CLOUD_MODEL,
+        "cloud_active": bool(config.get("cloud_active", False)),
+        "has_cloud_api_key": bool(api_key),
+        "cloud_api_key_prefix": mask_api_key(api_key),
+        "copy_failed_sources": bool(config.get("copy_failed_sources", False)),
+    }
 
 
 def apply_cloud_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
@@ -297,6 +314,7 @@ def apply_cloud_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
         "cloud_base_url": local_config.get("cloud_base_url") or os.environ.get("CHEM_PDF_EXTRACTOR_BASE_URL") or DEFAULT_CLOUD_BASE_URL,
         "cloud_api_key": local_config.get("cloud_api_key") or env_api_key or DEFAULT_CLOUD_API_KEY,
         "cloud_active": local_config.get("cloud_active", False),
+        "copy_failed_sources": local_config.get("copy_failed_sources", False),
     }
     for key, value in defaults.items():
         if key == "cloud_active":
@@ -304,6 +322,31 @@ def apply_cloud_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
         elif not str(config.get(key) or "").strip():
             config[key] = value
     return config
+
+
+def validate_cloud_base_url_security(base_url: str) -> str | None:
+    raw = str(base_url or "").strip()
+    if not raw:
+        return "Please enter an OpenAI-compatible Base URL."
+    parsed = urllib.parse.urlsplit(raw)
+    if not parsed.scheme or not parsed.netloc:
+        return "Please enter a valid OpenAI-compatible Base URL."
+    if parsed.username or parsed.password:
+        return "Base URL must not include username/password credentials."
+    if parsed.query or parsed.fragment:
+        return "Base URL must not include query string or fragment."
+    lowered = raw.rstrip("/").lower()
+    if any(marker in lowered for marker in PLACEHOLDER_CLOUD_BASE_URL_MARKERS):
+        return "Please enter a real OpenAI-compatible Base URL."
+    scheme = parsed.scheme.lower()
+    host = (parsed.hostname or "").lower()
+    if scheme == "https":
+        return None
+    if scheme == "http" and host in {"127.0.0.1", "localhost", "::1"}:
+        return None
+    if scheme == "http":
+        return "For cloud providers, use HTTPS Base URL. Plain HTTP is allowed only for localhost."
+    return "Unsupported Base URL scheme. Use HTTPS for cloud providers."
 
 
 def validate_cloud_start_config(config: dict[str, Any]) -> str | None:
@@ -317,9 +360,9 @@ def validate_cloud_start_config(config: dict[str, Any]) -> str | None:
     base_url = str(config.get("cloud_base_url") or config.get("base_url") or "").strip()
     if not base_url:
         return "请填写 OpenAI-compatible Base URL。"
-    lowered_base_url = base_url.rstrip("/").lower()
-    if any(marker in lowered_base_url for marker in PLACEHOLDER_CLOUD_BASE_URL_MARKERS):
-        return "请填写真实的 OpenAI-compatible Base URL。"
+    base_url_error = validate_cloud_base_url_security(base_url)
+    if base_url_error:
+        return base_url_error
 
     model = str(config.get("cloud_model") or config.get("model") or "").strip()
     if not model:

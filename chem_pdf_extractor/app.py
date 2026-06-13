@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--recursive", dest="recursive", action="store_true")
     parser.add_argument("--no-recursive", dest="recursive", action="store_false")
     parser.add_argument("--auto-fallback", action="store_true")
+    parser.add_argument("--copy-failed-sources", action="store_true", help="Copy failed source PDFs for debugging.")
     parser.add_argument("--no-auto-install", action="store_true")
     return parser.parse_args()
 
@@ -80,6 +81,7 @@ def run_cli(args: argparse.Namespace) -> int:
         "ollama_base_url": args.ollama_base_url,
         "recursive": args.recursive,
         "auto_fallback": args.auto_fallback,
+        "copy_failed_sources": args.copy_failed_sources,
         "fields": DEFAULT_FIELDS,
     }
     run_extraction_job(config, runtime, state)

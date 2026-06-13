@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -525,7 +525,9 @@
           <div class="checks">
             <label><input id="recursive" type="checkbox" /> <span data-i18n="recursive">Process Subfolders Recursively</span></label>
             <label><input id="autoFallback" type="checkbox" /> <span data-i18n="auto_fallback">Try backup model when model fails</span></label>
+            <label><input id="copyFailedSources" type="checkbox" /> <span data-i18n="copy_failed_sources">Copy failed source PDFs for debugging</span></label>
           </div>
+          <p class="field-help" data-i18n="copy_failed_sources_help">May duplicate private or copyrighted PDFs. Leave off unless needed.</p>
           <div class="actions">
             <div class="action-row">
               <button class="primary" id="startBtn" onclick="startJob()" data-i18n="start">Start</button>
@@ -639,6 +641,7 @@
   <script>
     const defaultFields = __DEFAULT_FIELDS_JSON__;
     const defaults = __DEFAULT_CONFIG_JSON__;
+    const apiToken = defaults.ui_token || "";
     const i18n = {
       zh: {
         task_settings: "任务设置",
@@ -668,6 +671,8 @@
         ollama_url: "Ollama 地址",
         recursive: "递归处理子文件夹",
         auto_fallback: "模型失败时尝试备选模型",
+        copy_failed_sources: "复制失败源 PDF 以便排查",
+        copy_failed_sources_help: "可能复制私有或受版权保护的 PDF；除非需要排查，否则保持关闭。",
         start: "开始处理",
         pause: "暂停任务",
         resume: "继续任务",
@@ -754,6 +759,8 @@
         ollama_url: "Ollama URL",
         recursive: "Recursive",
         auto_fallback: "Try backup model",
+        copy_failed_sources: "Copy failed source PDFs for debugging",
+        copy_failed_sources_help: "May duplicate private or copyrighted PDFs. Leave off unless needed.",
         start: "Start",
         pause: "Pause",
         resume: "Resume",
@@ -815,6 +822,16 @@
     };
     let currentLang = localStorage.getItem("chemPdfExtractorLang") || "zh";
     let latestStatusData = {done: 0, total: 0, percent: 0};
+
+    function apiHeaders(extra = {}) {
+      return Object.assign({"X-Chem-PDF-Extractor-Token": apiToken}, extra);
+    }
+
+    function apiFetch(url, options = {}) {
+      const nextOptions = Object.assign({}, options);
+      nextOptions.headers = apiHeaders(nextOptions.headers || {});
+      return fetch(url, nextOptions);
+    }
 
     function t(key) {
       return (i18n[currentLang] && i18n[currentLang][key]) || i18n.zh[key] || key;
@@ -952,7 +969,7 @@
       const select = document.getElementById("model");
       select.innerHTML = "";
       try {
-        const res = await fetch("/api/models?base_url=" + encodeURIComponent(baseUrl));
+        const res = await apiFetch("/api/models?base_url=" + encodeURIComponent(baseUrl));
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || t("error_model_read"));
         data.models.forEach(name => {
@@ -1041,7 +1058,7 @@
         return;
       }
       try {
-        const res = await fetch("/api/cloud-models", {
+        const res = await apiFetch("/api/cloud-models", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify({base_url: baseUrl, api_key: apiKey})
@@ -1065,10 +1082,11 @@
         api_key: document.getElementById("cloudApiKey").value.trim(),
         base_url: document.getElementById("cloudBaseUrl").value.trim(),
         model: getCloudModelValue(),
-        cloud_active: document.getElementById("cloudActive").checked
+        cloud_active: document.getElementById("cloudActive").checked,
+        copy_failed_sources: document.getElementById("copyFailedSources").checked
       };
       try {
-        const res = await fetch("/api/config", {
+        const res = await apiFetch("/api/config", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(payload)
@@ -1120,26 +1138,27 @@
         ollama_base_url: document.getElementById("ollamaBaseUrl").value.trim(),
         recursive: document.getElementById("recursive").checked,
         auto_fallback: document.getElementById("autoFallback").checked,
+        copy_failed_sources: document.getElementById("copyFailedSources").checked,
         fields: collectFields()
       };
-      const res = await fetch("/api/start", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)});
+      const res = await apiFetch("/api/start", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload)});
       const data = await res.json();
       if (!data.ok) alert(data.error || t("alert_start_failed"));
       pollStatus();
     }
 
     async function stopJob() {
-      await fetch("/api/stop", {method: "POST"});
+      await apiFetch("/api/stop", {method: "POST"});
       pollStatus();
     }
 
     async function pauseJob() {
-      await fetch("/api/pause", {method: "POST"});
+      await apiFetch("/api/pause", {method: "POST"});
       pollStatus();
     }
 
     async function resumeJob() {
-      await fetch("/api/resume", {method: "POST"});
+      await apiFetch("/api/resume", {method: "POST"});
       pollStatus();
     }
 
@@ -1190,7 +1209,7 @@
 
     async function pollStatus() {
       try {
-        const res = await fetch("/api/status");
+        const res = await apiFetch("/api/status");
         const data = await res.json();
         document.getElementById("progressBar").style.width = (data.percent || 0) + "%";
         document.getElementById("done").textContent = data.done || 0;
@@ -1220,7 +1239,7 @@
       document.getElementById("cloudServiceName").value = defaults.cloud_service_name;
       fillCloudModelSuggestions(defaults.cloud_model_suggestions || [], defaults.cloud_model);
       document.getElementById("cloudApiKey").value = "";
-      fetch("/api/init-config").then(r => r.json()).then(d => {
+      apiFetch("/api/init-config").then(r => r.json()).then(d => {
         if (d.ok && d.cloud_api_key_prefix) {
           document.getElementById("cloudApiKey").placeholder = d.cloud_api_key_prefix;
         }
@@ -1228,6 +1247,7 @@
       document.getElementById("cloudBaseUrl").value = defaults.cloud_base_url;
       document.getElementById("cloudActive").checked = defaults.cloud_active !== false;
       document.getElementById("recursive").checked = defaults.recursive !== false;
+      document.getElementById("copyFailedSources").checked = defaults.copy_failed_sources === true;
       document.getElementById("pdfMode").value = defaults.pdf_mode || "pymupdf4llm";
       document.getElementById("maxChars").value = defaults.max_chars;
       document.getElementById("numCtx").value = defaults.num_ctx;
@@ -1241,6 +1261,6 @@
       setInterval(pollStatus, 1000);
     }
     init();
-  </script>
+</script>
 </body>
 </html>
