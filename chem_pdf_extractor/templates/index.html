@@ -125,6 +125,22 @@
       color: #fff;
       border-color: var(--blue);
     }
+    .workflow-guide {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin: -2px 0 7px;
+    }
+    .workflow-guide span {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+      padding: 4px 7px;
+      white-space: nowrap;
+    }
     section {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -293,6 +309,45 @@
       font-size: 12px;
       line-height: 1.35;
     }
+    .compact-input-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px;
+      align-items: center;
+    }
+    .char-presets, .log-filters, .field-template-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .log-filters { margin: 0 0 6px; }
+    .char-presets button, .log-filters button {
+      min-height: 28px;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+    .log-filters button.active {
+      color: #fff;
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+    .cloud-test-status.status-success { color: var(--green); }
+    .cloud-test-status.status-partial { color: #9a5b00; }
+    .cloud-test-status.status-failed { color: var(--red); }
+    .fields-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .field-template-row select {
+      width: auto;
+      min-width: 220px;
+    }
+    .field-template-row label { margin: 0; }
     .cloud-model-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -363,11 +418,11 @@
     .stat b { display: block; flex: 0 0 auto; font-size: 24px; line-height: 1; color: #10213f; }
     .stat span { color: var(--muted); font-size: 13px; line-height: 1.2; }
     .status-box {
-      min-height: 82px;
-      max-height: 82px;
+      min-height: 86px;
+      max-height: 86px;
       margin-top: 8px;
       display: grid;
-      grid-template-rows: repeat(3, 1fr);
+      grid-template-rows: repeat(4, 1fr);
       align-content: start;
     }
     .status-line {
@@ -464,12 +519,19 @@
         <div class="app-header">
           <div class="app-logo">Chem-PDF-Extractor</div>
           <div class="lang-switch" aria-label="Language switch">
-            <button type="button" id="langZh" onclick="setLanguage('zh')">中文</button>
-            <button type="button" id="langEn" onclick="setLanguage('en')">EN</button>
+            <button type="button" id="langZh" onclick="setLanguage('zh')" aria-pressed="false">中文</button>
+            <button type="button" id="langEn" onclick="setLanguage('en')" aria-pressed="false">EN</button>
           </div>
         </div>
         <section class="task-panel">
           <h2 data-i18n="task_settings">Task Settings</h2>
+          <div class="workflow-guide" aria-label="First-use workflow">
+            <span data-i18n="guide_api">1 API / Ollama</span>
+            <span data-i18n="guide_folder">2 PDF Folder</span>
+            <span data-i18n="guide_pdf_mode">3 PDF Mode</span>
+            <span data-i18n="guide_test">4 Test PDFs</span>
+            <span data-i18n="guide_review">5 Review Rows</span>
+          </div>
           <div class="task-grid">
             <div class="form-field full-span">
               <label data-i18n="input_dir">PDF Input Folder</label>
@@ -479,7 +541,7 @@
               <label data-i18n="output_path">Excel Output Path</label>
               <input id="outputPath" />
             </div>
-            <div class="form-field full-span">
+            <div class="form-field">
               <label data-i18n="llm_provider">LLM Provider</label>
               <select id="llmProvider" onchange="onProviderChange()">
                 <option value="cloud" data-i18n="provider_cloud">Cloud OpenAI-compatible API</option>
@@ -490,20 +552,28 @@
               <label data-i18n="local_ollama_model">Local Ollama Model</label>
               <select id="model"></select>
             </div>
-            <div class="form-field full-span">
+            <div class="form-field">
               <label data-i18n="pdf_mode">PDF Mode</label>
-              <select id="pdfMode">
-                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm</option>
-                <option value="mineru" data-i18n="pdf_mode_mineru">MinerU</option>
-                <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf_text</option>
-                <option value="auto" data-i18n="pdf_mode_auto">auto</option>
-                <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF text</option>
+              <select id="pdfMode" onchange="updatePdfModeHelp()">
+                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm (recommended)</option>
+                <option value="mineru" data-i18n="pdf_mode_mineru">MinerU (complex/heavy)</option>
+                <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf_text (light fallback)</option>
+                <option value="auto" data-i18n="pdf_mode_auto">auto (verify results)</option>
+                <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF text (fast text)</option>
               </select>
-              <p class="field-help" data-i18n="pdf_mode_help">Use MinerU for complex layouts; pymupdf4llm remains the default.</p>
+              <p class="field-help" id="pdfModeHelp" data-i18n="pdf_mode_help_pymupdf4llm">Recommended for most papers.</p>
             </div>
             <div class="form-field">
               <label data-i18n="max_chars">Max Upload Characters (0 = no truncation)</label>
-              <input id="maxChars" type="number" value="0" min="0" />
+              <div class="compact-input-row">
+                <input id="maxChars" type="number" value="0" min="0" />
+                <div class="char-presets" aria-label="Max character presets">
+                  <button type="button" onclick="setMaxCharsPreset(40000)" data-i18n="preset_40k">40k</button>
+                  <button type="button" onclick="setMaxCharsPreset(80000)" data-i18n="preset_80k">80k</button>
+                  <button type="button" onclick="setMaxCharsPreset(120000)" data-i18n="preset_120k">120k</button>
+                </div>
+              </div>
+              <p class="field-help" data-i18n="max_chars_help">0 = no limit; may be slower/costlier and exceed model context.</p>
             </div>
             <div class="form-field ollama-only">
               <label>Ollama num_ctx</label>
@@ -529,14 +599,10 @@
           </div>
           <p class="field-help" data-i18n="copy_failed_sources_help">May duplicate private or copyrighted PDFs. Leave off unless needed.</p>
           <div class="actions">
-            <div class="action-row">
-              <button class="primary" id="startBtn" onclick="startJob()" data-i18n="start">Start</button>
-            </div>
-            <div class="action-row">
-              <button id="pauseBtn" onclick="pauseJob()" data-i18n="pause">Pause</button>
-              <button id="resumeBtn" onclick="resumeJob()" data-i18n="resume">Resume</button>
-              <button class="danger" id="stopBtn" onclick="stopJob()" data-i18n="stop">Stop</button>
-            </div>
+            <button class="primary" id="startBtn" onclick="startJob()" data-i18n="start">Start</button>
+            <button id="pauseBtn" onclick="pauseJob()" data-i18n="pause">Pause</button>
+            <button id="resumeBtn" onclick="resumeJob()" data-i18n="resume">Resume</button>
+            <button class="danger" id="stopBtn" onclick="stopJob()" data-i18n="stop">Stop</button>
           </div>
         </section>
         <section class="task-stats-panel">
@@ -579,7 +645,9 @@
               <label><input id="cloudActive" type="checkbox" /> <span data-i18n="cloud_active">Activate this config</span></label>
             </div>
             <button id="saveConfigBtn" type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">Save Config</button>
+            <button id="testCloudApiBtn" type="button" onclick="testCloudApi()" data-i18n="test_api">Test API</button>
           </div>
+          <p id="cloudTestStatus" class="field-help cloud-test-status" aria-live="polite" data-i18n="api_test_idle">Test connection before a large batch.</p>
           <details class="advanced-config">
             <summary data-i18n="advanced_settings">Advanced settings</summary>
             <label data-i18n="service_name">LLM Service Name</label>
@@ -602,7 +670,8 @@
             <div class="stat"><b id="failed">0</b><span data-i18n="stat_failed">失败</span></div>
           </div>
           <div class="status-box">
-            <div id="message" class="status-line" data-i18n="status_waiting">等待任务</div>
+            <div id="message" class="status-line" aria-live="polite" data-i18n="status_waiting">等待任务</div>
+            <div id="nextAction" class="status-line" aria-live="polite" data-i18n="next_action_waiting">Next action: choose input/output and click Start.</div>
             <div id="currentFile" class="status-line"></div>
             <div id="outputInfo" class="status-line"></div>
           </div>
@@ -611,12 +680,33 @@
 
         <section class="log-panel">
           <h2 data-i18n="logs">运行日志</h2>
+          <div class="log-filters" role="group" aria-label="Log filters">
+            <button type="button" class="active" data-log-filter="all" onclick="setLogFilter('all')" data-i18n="log_filter_all">All</button>
+            <button type="button" data-log-filter="success" onclick="setLogFilter('success')" data-i18n="log_filter_success">Success</button>
+            <button type="button" data-log-filter="warning" onclick="setLogFilter('warning')" data-i18n="log_filter_warning">Warning</button>
+            <button type="button" data-log-filter="error" onclick="setLogFilter('error')" data-i18n="log_filter_error">Error</button>
+            <button type="button" data-log-filter="api" onclick="setLogFilter('api')" data-i18n="log_filter_api">API</button>
+            <button type="button" data-log-filter="paths" onclick="setLogFilter('paths')" data-i18n="log_filter_paths">Paths</button>
+          </div>
           <pre id="logs"></pre>
         </section>
     </div>
 
         <section class="fields-panel">
           <h2 data-i18n="fields">抽取字段</h2>
+          <div class="fields-toolbar">
+            <div class="field-template-row">
+              <label for="fieldTemplateSelect" data-i18n="field_template">Template</label>
+              <select id="fieldTemplateSelect">
+                <option value="current_default" data-i18n="template_current_default">Current default</option>
+                <option value="catalysis" data-i18n="template_catalysis">Catalysis</option>
+                <option value="materials" data-i18n="template_materials">Materials synthesis</option>
+                <option value="environmental" data-i18n="template_environmental">Environmental degradation</option>
+                <option value="electrochemistry" data-i18n="template_electrochemistry">Electrochemistry</option>
+              </select>
+              <button type="button" id="applyFieldTemplateBtn" onclick="applyFieldTemplate()" data-i18n="apply_template">Apply template</button>
+            </div>
+          </div>
           <table>
             <colgroup>
               <col class="field-name-col" />
@@ -645,6 +735,11 @@
     const i18n = {
       zh: {
         task_settings: "任务设置",
+        guide_api: "1 配置 API / Ollama",
+        guide_folder: "2 选择 PDF 目录",
+        guide_pdf_mode: "3 选择解析方式",
+        guide_test: "4 先测几篇",
+        guide_review: "5 复核可疑/坏行",
         statistics: "统计信息",
         stat_extracted_rows: "已抽取数据",
         stat_successful_pdfs: "成功文献",
@@ -659,20 +754,29 @@
         provider_ollama: "本地 Ollama",
         local_ollama_model: "本地 Ollama 模型",
         pdf_mode: "PDF 解析方式",
-        pdf_mode_mineru: "MinerU",
-        pdf_mode_auto: "auto",
-        pdf_mode_pymupdf4llm: "pymupdf4llm",
-        pdf_mode_pymupdf_text: "PyMuPDF text",
-        pdf_mode_pypdf_text: "pypdf_text",
+        pdf_mode_mineru: "MinerU（复杂/较重）",
+        pdf_mode_auto: "auto（自动尝试）",
+        pdf_mode_pymupdf4llm: "pymupdf4llm（多数论文推荐）",
+        pdf_mode_pymupdf_text: "PyMuPDF text（快速纯文本）",
+        pdf_mode_pypdf_text: "pypdf_text（轻量后备）",
         pdf_mode_help: "默认使用 pymupdf4llm；复杂版面、表格或扫描件可选 MinerU。",
-        max_chars: "最大字符数（0 不截断）",
+        pdf_mode_help_pymupdf4llm: "多数论文推荐，兼顾结构和速度。",
+        pdf_mode_help_mineru: "复杂表格/版面/类扫描 PDF 更合适，但安装和首次运行可能较慢较重。",
+        pdf_mode_help_pypdf_text: "轻量后备，安装简单，但表格和多栏效果较弱。",
+        pdf_mode_help_auto: "自动尝试选择解析方式，但结果仍需人工核验。",
+        pdf_mode_help_pymupdf_text: "快速纯文本后备，适合排版简单的 PDF。",
+        max_chars: "最大字符数（0 不限制）",
+        preset_40k: "40k",
+        preset_80k: "80k",
+        preset_120k: "120k",
+        max_chars_help: "0 = 不限制，可能更慢、更贵或超出模型上下文；建议 40k/80k/120k。",
         llm_timeout: "超时秒数（0 不限制）",
         bad_row_percent: "坏数据阈值（%）",
         ollama_url: "Ollama 地址",
         recursive: "递归处理子文件夹",
         auto_fallback: "模型失败时尝试备选模型",
         copy_failed_sources: "复制失败源 PDF 以便排查",
-        copy_failed_sources_help: "可能复制私有或受版权保护的 PDF；除非需要排查，否则保持关闭。",
+        copy_failed_sources_help: "可能复制私有或受版权保护的 PDF；除非调试，否则保持关闭。",
         start: "开始处理",
         pause: "暂停任务",
         resume: "继续任务",
@@ -682,6 +786,12 @@
         placeholder_service: "openai_compatible",
         model_name: "模型名称",
         load_cloud_models: "获取模型列表",
+        test_api: "测试 API",
+        api_test_idle: "批量处理前可先测试连接。",
+        api_test_testing: "正在测试 API...",
+        api_test_success: "成功：连接可用，模型返回了有效响应。",
+        api_test_partial: "部分成功：连接可用，但模型列表不可用，可手动填写模型。",
+        api_test_failed: "失败：",
         manual_model_option: "手动输入模型名",
         placeholder_custom_model: "provider/model-name",
         cloud_model_help: "选择已获取模型；不支持 /models 时可手动输入。",
@@ -697,8 +807,28 @@
         stat_success: "成功",
         stat_failed: "失败",
         status_waiting: "等待任务",
+        next_action_waiting: "下一步：选择输入/输出后点击开始。",
+        next_action_running: "下一步：等待处理；需要时可暂停。",
+        next_action_paused: "下一步：可继续或停止。",
+        next_action_done: "下一步：打开输出 Excel 并复核抽取结果。",
+        next_action_done_failed: "下一步：查看错误日志和失败 PDF。",
+        next_action_review_rows: "下一步：先复核可疑/坏数据文件。",
         logs: "运行日志",
+        log_filter_all: "全部",
+        log_filter_success: "成功",
+        log_filter_warning: "警告",
+        log_filter_error: "错误",
+        log_filter_api: "API",
+        log_filter_paths: "路径",
         fields: "抽取字段",
+        field_template: "字段模板",
+        template_current_default: "当前默认",
+        template_catalysis: "催化反应",
+        template_materials: "材料合成",
+        template_environmental: "环境降解",
+        template_electrochemistry: "电化学",
+        apply_template: "应用模板",
+        field_template_confirm: "应用模板会替换当前未保存的字段编辑，确定继续吗？",
         field_name: "字段名",
         requirement: "要求",
         field_desc: "字段说明",
@@ -717,6 +847,7 @@
         error_model_read: "模型读取失败",
         error_ollama_read: "无法读取 Ollama 模型：",
         alert_fill_cloud: "请先填写 LLM BASE URL 和 LLM API KEY。",
+        alert_fill_cloud_test: "请先填写 Base URL、API key 和模型名。",
         error_cloud_read: "云端模型读取失败",
         alert_cloud_read_done: "已读取云端模型：",
         alert_cloud_read_unit: " 个。",
@@ -733,6 +864,11 @@
       },
       en: {
         task_settings: "Task Settings",
+        guide_api: "1 API / Ollama",
+        guide_folder: "2 PDF folder",
+        guide_pdf_mode: "3 PDF mode",
+        guide_test: "4 Test PDFs",
+        guide_review: "5 Review rows",
         statistics: "Statistics",
         stat_extracted_rows: "Extracted rows",
         stat_successful_pdfs: "Successful PDFs",
@@ -747,20 +883,29 @@
         provider_ollama: "Local Ollama",
         local_ollama_model: "Local Ollama Model",
         pdf_mode: "PDF Mode",
-        pdf_mode_mineru: "MinerU",
-        pdf_mode_auto: "auto",
-        pdf_mode_pymupdf4llm: "pymupdf4llm",
-        pdf_mode_pymupdf_text: "PyMuPDF text",
-        pdf_mode_pypdf_text: "pypdf_text",
+        pdf_mode_mineru: "MinerU (complex/heavy)",
+        pdf_mode_auto: "auto (verify results)",
+        pdf_mode_pymupdf4llm: "pymupdf4llm (recommended)",
+        pdf_mode_pymupdf_text: "PyMuPDF text (fast text)",
+        pdf_mode_pypdf_text: "pypdf_text (light fallback)",
         pdf_mode_help: "pymupdf4llm is the default. Use MinerU for complex layouts, tables, or scanned PDFs.",
+        pdf_mode_help_pymupdf4llm: "Recommended for most papers.",
+        pdf_mode_help_mineru: "Better for complex tables/layouts/scanned-like PDFs; setup may be slow or heavy.",
+        pdf_mode_help_pypdf_text: "Lightweight fallback, weaker for tables and multi-column layouts.",
+        pdf_mode_help_auto: "Tries to choose automatically, but verify results.",
+        pdf_mode_help_pymupdf_text: "Fast plain-text fallback for simple PDFs.",
         max_chars: "Max chars (0 = no limit)",
+        preset_40k: "40k",
+        preset_80k: "80k",
+        preset_120k: "120k",
+        max_chars_help: "0 = no limit; may be slower/costlier and exceed model context. Try 40k/80k/120k.",
         llm_timeout: "Timeout (0 = no limit)",
         bad_row_percent: "Bad row threshold (%)",
         ollama_url: "Ollama URL",
         recursive: "Recursive",
         auto_fallback: "Try backup model",
         copy_failed_sources: "Copy failed source PDFs for debugging",
-        copy_failed_sources_help: "May duplicate private or copyrighted PDFs. Leave off unless needed.",
+        copy_failed_sources_help: "May duplicate private or copyrighted PDFs. Keep off unless debugging.",
         start: "Start",
         pause: "Pause",
         resume: "Resume",
@@ -770,6 +915,12 @@
         placeholder_service: "openai_compatible",
         model_name: "Model Name",
         load_cloud_models: "Fetch models",
+        test_api: "Test API",
+        api_test_idle: "Test connection before a large batch.",
+        api_test_testing: "Testing API...",
+        api_test_success: "Success: connection works and model returned valid response.",
+        api_test_partial: "Partial: connection works, but model list is unavailable; manual model may be needed.",
+        api_test_failed: "Failed: ",
         manual_model_option: "Manual input",
         placeholder_custom_model: "provider/model-name",
         cloud_model_help: "Choose a fetched model, or enter one manually if /models is unavailable.",
@@ -785,8 +936,28 @@
         stat_success: "Success",
         stat_failed: "Failed",
         status_waiting: "Waiting",
+        next_action_waiting: "Next action: choose input/output and click Start.",
+        next_action_running: "Next action: wait, or pause if needed.",
+        next_action_paused: "Next action: resume or stop.",
+        next_action_done: "Next action: open the output Excel and review rows.",
+        next_action_done_failed: "Next action: check error log and failed PDFs.",
+        next_action_review_rows: "Next action: review suspicious/bad files first.",
         logs: "Run Logs",
+        log_filter_all: "All",
+        log_filter_success: "Success",
+        log_filter_warning: "Warning",
+        log_filter_error: "Error",
+        log_filter_api: "API",
+        log_filter_paths: "Paths",
         fields: "Extraction Fields",
+        field_template: "Template",
+        template_current_default: "Current default",
+        template_catalysis: "Catalysis",
+        template_materials: "Materials synthesis",
+        template_environmental: "Environmental degradation",
+        template_electrochemistry: "Electrochemistry",
+        apply_template: "Apply template",
+        field_template_confirm: "Applying a template replaces current unsaved field edits. Continue?",
         field_name: "Field Name",
         requirement: "Requirement",
         field_desc: "Field Description",
@@ -805,6 +976,7 @@
         error_model_read: "Failed to read model list",
         error_ollama_read: "Unable to read Ollama models: ",
         alert_fill_cloud: "Please fill in LLM BASE URL and LLM API KEY first.",
+        alert_fill_cloud_test: "Please fill in Base URL, API key, and model first.",
         error_cloud_read: "Failed to read cloud models",
         alert_cloud_read_done: "Cloud models loaded: ",
         alert_cloud_read_unit: ".",
@@ -820,8 +992,65 @@
         error_local_service: "Unable to connect to local service."
       }
     };
+    const pdfModeHelpKeys = {
+      pymupdf4llm: "pdf_mode_help_pymupdf4llm",
+      mineru: "pdf_mode_help_mineru",
+      pypdf_text: "pdf_mode_help_pypdf_text",
+      auto: "pdf_mode_help_auto",
+      pymupdf_text: "pdf_mode_help_pymupdf_text"
+    };
+    const fieldTemplates = {
+      catalysis: [
+        {label: "feedstock", requirement: "required", description: "Main reactant or feedstock name; keep original wording when uncertain."},
+        {label: "catalyst", requirement: "required", description: "Catalyst name, composition, loading, support, or sample code."},
+        {label: "reaction_temperature_c", requirement: "required", description: "Reaction temperature in Celsius; convert units only when clear."},
+        {label: "reaction_pressure_mpa", requirement: "recommended", description: "Reaction pressure in MPa; preserve source unit if conversion is unclear."},
+        {label: "reactor_type", requirement: "recommended", description: "Reactor or cell type, such as fixed bed, batch, flow, or autoclave."},
+        {label: "conversion_percent", requirement: "required", description: "Feedstock conversion percentage."},
+        {label: "selectivity_percent", requirement: "required", description: "Target product selectivity percentage."},
+        {label: "yield_percent", requirement: "recommended", description: "Target product yield percentage when reported."},
+        {label: "source_evidence", requirement: "optional", description: "Short excerpt supporting the extracted row."}
+      ],
+      materials: [
+        {label: "material_name", requirement: "required", description: "Synthesized material, sample name, or composition."},
+        {label: "precursor", requirement: "required", description: "Chemical precursors or starting materials."},
+        {label: "synthesis_method", requirement: "required", description: "Synthesis route such as hydrothermal, sol-gel, calcination, or electrodeposition."},
+        {label: "solvent", requirement: "recommended", description: "Solvent or reaction medium."},
+        {label: "synthesis_temperature_c", requirement: "recommended", description: "Synthesis temperature in Celsius."},
+        {label: "synthesis_time_h", requirement: "recommended", description: "Reaction, aging, or calcination time in hours."},
+        {label: "atmosphere", requirement: "optional", description: "Gas atmosphere or ambient condition."},
+        {label: "post_treatment", requirement: "optional", description: "Washing, drying, calcination, reduction, or activation step."},
+        {label: "reported_property", requirement: "recommended", description: "Key reported material property and value."}
+      ],
+      environmental: [
+        {label: "pollutant", requirement: "required", description: "Target pollutant or contaminant."},
+        {label: "treatment_material", requirement: "required", description: "Catalyst, adsorbent, membrane, electrode, or treatment material."},
+        {label: "process_type", requirement: "required", description: "Photocatalysis, adsorption, oxidation, electrochemical treatment, or biodegradation."},
+        {label: "initial_concentration", requirement: "recommended", description: "Initial pollutant concentration with unit."},
+        {label: "ph", requirement: "recommended", description: "Solution pH or pH range."},
+        {label: "oxidant_or_light", requirement: "optional", description: "Oxidant, irradiation source, wavelength, or light intensity."},
+        {label: "reaction_time_min", requirement: "recommended", description: "Treatment or degradation time in minutes."},
+        {label: "removal_efficiency_percent", requirement: "required", description: "Removal or degradation efficiency percentage."},
+        {label: "rate_constant", requirement: "optional", description: "Reported kinetic constant and unit."}
+      ],
+      electrochemistry: [
+        {label: "electrode_material", requirement: "required", description: "Electrode, catalyst, or active material."},
+        {label: "electrolyte", requirement: "required", description: "Electrolyte composition and concentration."},
+        {label: "cell_configuration", requirement: "recommended", description: "Cell type, counter/reference electrode, separator, or device format."},
+        {label: "current_density", requirement: "recommended", description: "Current density with unit."},
+        {label: "voltage_range", requirement: "recommended", description: "Voltage or potential window with reference if given."},
+        {label: "specific_capacity", requirement: "recommended", description: "Capacity, capacitance, or activity metric with unit."},
+        {label: "cycle_number", requirement: "optional", description: "Cycle count or test duration."},
+        {label: "retention_percent", requirement: "optional", description: "Capacity/activity retention percentage."},
+        {label: "coulombic_efficiency_percent", requirement: "optional", description: "Coulombic efficiency percentage when reported."}
+      ]
+    };
     let currentLang = localStorage.getItem("chemPdfExtractorLang") || "zh";
     let latestStatusData = {done: 0, total: 0, percent: 0};
+    let latestStatusSnapshot = {};
+    let latestLogLines = [];
+    let activeLogFilter = "all";
+    let cloudTestState = {type: "idle", messageKey: "api_test_idle", detail: ""};
 
     function apiHeaders(extra = {}) {
       return Object.assign({"X-Chem-PDF-Extractor-Token": apiToken}, extra);
@@ -835,6 +1064,107 @@
 
     function t(key) {
       return (i18n[currentLang] && i18n[currentLang][key]) || i18n.zh[key] || key;
+    }
+
+    function updatePdfModeHelp() {
+      const select = document.getElementById("pdfMode");
+      const help = document.getElementById("pdfModeHelp");
+      if (!select || !help) return;
+      help.textContent = t(pdfModeHelpKeys[select.value] || "pdf_mode_help_pymupdf4llm");
+    }
+
+    function setMaxCharsPreset(value) {
+      const input = document.getElementById("maxChars");
+      if (input) input.value = String(value);
+    }
+
+    function renderCloudTestStatus() {
+      const el = document.getElementById("cloudTestStatus");
+      if (!el) return;
+      el.classList.remove("status-success", "status-partial", "status-failed");
+      if (cloudTestState.type && cloudTestState.type !== "idle") {
+        el.classList.add("status-" + cloudTestState.type);
+      }
+      el.textContent = t(cloudTestState.messageKey) + (cloudTestState.detail || "");
+    }
+
+    function setCloudTestStatus(type, messageKey, detail = "") {
+      cloudTestState = {type, messageKey, detail};
+      renderCloudTestStatus();
+    }
+
+    function cloneFields(fields) {
+      return (fields || []).map(field => ({
+        label: field.label || "",
+        requirement: field.requirement || "optional",
+        description: field.description || "",
+        type: field.type || undefined
+      }));
+    }
+
+    function replaceFields(fields) {
+      const body = document.getElementById("fieldsBody");
+      body.innerHTML = "";
+      cloneFields(fields).forEach(addField);
+    }
+
+    function applyFieldTemplate() {
+      const select = document.getElementById("fieldTemplateSelect");
+      const key = select ? select.value : "current_default";
+      const fields = key === "current_default" ? defaultFields : (fieldTemplates[key] || defaultFields);
+      if (!confirm(t("field_template_confirm"))) return;
+      replaceFields(fields);
+    }
+
+    function logFilterTerms(filter) {
+      return {
+        success: ["success", "completed", "exported", "成功", "完成", "导出"],
+        warning: ["warning", "suspicious", "bad row", "警告", "可疑", "坏数据"],
+        error: ["error", "failed", "traceback", "exception", "错误", "失败", "异常"],
+        api: ["api", "model", "cloud", "base url", "模型", "云端"],
+        paths: ["path", "output", "file", "pdf", "路径", "输出", "文件"]
+      }[filter] || [];
+    }
+
+    function lineMatchesFilter(line, filter) {
+      if (filter === "all") return true;
+      const text = String(line || "").toLowerCase();
+      return logFilterTerms(filter).some(term => text.includes(term.toLowerCase()));
+    }
+
+    function updateLogFilterButtons() {
+      document.querySelectorAll("[data-log-filter]").forEach(button => {
+        const active = button.dataset.logFilter === activeLogFilter;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+
+    function setLogFilter(filter) {
+      activeLogFilter = filter || "all";
+      updateLogFilterButtons();
+      renderLogPanel();
+    }
+
+    function nextActionKey(data) {
+      const snapshot = data || {};
+      if (snapshot.running && snapshot.pause_requested) return "next_action_paused";
+      if (snapshot.running) return "next_action_running";
+      const total = numberValue(snapshot.total || 0);
+      const done = numberValue(snapshot.done || 0);
+      if (total > 0 && done >= total) {
+        if (numberValue(snapshot.suspicious_rows || 0) > 0 || numberValue(snapshot.bad_rows || 0) > 0) {
+          return "next_action_review_rows";
+        }
+        if (numberValue(snapshot.failed || 0) > 0) return "next_action_done_failed";
+        return "next_action_done";
+      }
+      return "next_action_waiting";
+    }
+
+    function updateNextAction(data) {
+      latestStatusSnapshot = data || latestStatusSnapshot || {};
+      setText("nextAction", t(nextActionKey(latestStatusSnapshot)));
     }
 
     function localizedStatusMessage(message) {
@@ -890,11 +1220,17 @@
       });
       document.getElementById("langZh").classList.toggle("active", currentLang === "zh");
       document.getElementById("langEn").classList.toggle("active", currentLang === "en");
+      document.getElementById("langZh").setAttribute("aria-pressed", currentLang === "zh" ? "true" : "false");
+      document.getElementById("langEn").setAttribute("aria-pressed", currentLang === "en" ? "true" : "false");
       applyFieldLanguage();
       const manualOption = document.querySelector("#cloudModelSelect option[value='__manual__']");
       if (manualOption) manualOption.textContent = t("manual_model_option");
       syncCloudModelValue();
+      updatePdfModeHelp();
+      renderCloudTestStatus();
+      updateLogFilterButtons();
       updateProgressRatio(latestStatusData.done, latestStatusData.total, latestStatusData.percent);
+      updateNextAction(latestStatusSnapshot);
     }
 
     function setLanguage(lang) {
@@ -950,9 +1286,7 @@
     }
 
     function resetFields() {
-      const body = document.getElementById("fieldsBody");
-      body.innerHTML = "";
-      defaultFields.forEach(addField);
+      replaceFields(defaultFields);
     }
 
     function collectFields() {
@@ -1076,6 +1410,36 @@
       }
     }
 
+    async function testCloudApi() {
+      const baseUrl = document.getElementById("cloudBaseUrl").value.trim();
+      const apiKey = document.getElementById("cloudApiKey").value.trim();
+      const model = getCloudModelValue();
+      if (!baseUrl || !apiKey || !model) {
+        setCloudTestStatus("failed", "api_test_failed", t("alert_fill_cloud_test"));
+        return;
+      }
+      setCloudTestStatus("partial", "api_test_testing");
+      try {
+        const res = await apiFetch("/api/cloud-test", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({base_url: baseUrl, api_key: apiKey, model})
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+          setCloudTestStatus("success", "api_test_success");
+          return;
+        }
+        if (data.status === "partial") {
+          setCloudTestStatus("partial", "api_test_partial");
+          return;
+        }
+        setCloudTestStatus("failed", "api_test_failed", data.error || data.message || t("error_cloud_read"));
+      } catch (err) {
+        setCloudTestStatus("failed", "api_test_failed", err.message || t("error_cloud_read"));
+      }
+    }
+
     async function saveLocalConfig() {
       const payload = {
         llm_service_name: getCloudServiceName(),
@@ -1189,7 +1553,7 @@
       setText("cacheHits", numberValue(data.cache_hits || 0));
     }
 
-    function updateLogPanel(lines) {
+    function renderLogPanel() {
       const logsEl = document.getElementById("logs");
       if (!logsEl) {
         return;
@@ -1197,7 +1561,7 @@
 
       const wasEmpty = !logsEl.textContent;
       const wasNearBottom = logsEl.scrollTop + logsEl.clientHeight >= logsEl.scrollHeight - 24;
-      const nextText = (lines || []).join("\n");
+      const nextText = latestLogLines.filter(line => lineMatchesFilter(line, activeLogFilter)).join("\n");
 
       if (logsEl.textContent !== nextText) {
         logsEl.textContent = nextText;
@@ -1205,6 +1569,11 @@
           logsEl.scrollTop = logsEl.scrollHeight;
         }
       }
+    }
+
+    function updateLogPanel(lines) {
+      latestLogLines = lines || [];
+      renderLogPanel();
     }
 
     async function pollStatus() {
@@ -1218,6 +1587,7 @@
         document.getElementById("failed").textContent = data.failed || 0;
         updateProgressRatio(data.done || 0, data.total || 0, data.percent || 0);
         updateTaskStatistics(data);
+        updateNextAction(data);
         document.getElementById("message").textContent = localizedStatusMessage(data.message);
         document.getElementById("currentFile").textContent = data.current_file ? t("prefix_current_file") + data.current_file : "";
         document.getElementById("outputInfo").textContent = data.output_path ? t("prefix_output") + data.output_path + " | " + t("prefix_error_log") + data.error_log_path : "";
@@ -1228,6 +1598,7 @@
         document.getElementById("resumeBtn").disabled = !data.running || !data.pause_requested;
       } catch (err) {
         document.getElementById("message").textContent = t("error_local_service");
+        updateNextAction({});
       }
     }
 

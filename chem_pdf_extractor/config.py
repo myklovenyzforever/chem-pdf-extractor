@@ -31,6 +31,14 @@ DEFAULT_PDF_MODE = "pymupdf4llm"
 PDF_MODE_CHOICES = ["auto", "pypdf_text", "pymupdf4llm", "pymupdf_text", "mineru"]
 PLACEHOLDER_CLOUD_BASE_URL_MARKERS = {"api.example.com"}
 PLACEHOLDER_CLOUD_MODELS = {"provider/model-name", "model-name", "your-model-name"}
+PLACEHOLDER_CLOUD_API_KEYS = {
+    "your_api_key_here",
+    "your_api_key",
+    "api_key_here",
+    "your-key-here",
+    "your-api-key",
+    "sk-your-api-key",
+}
 MAX_ARTIFACT_NAME_CHARS = 80
 OUTPUT_EXCEL_NAME = "提取结果.xlsx"
 ERROR_LOG_NAME = "错误日志.txt"
@@ -370,6 +378,37 @@ def validate_cloud_start_config(config: dict[str, Any]) -> str | None:
     if model.lower() in PLACEHOLDER_CLOUD_MODELS:
         return "请填写或选择真实的云端模型名称。"
 
+    return None
+
+
+def is_placeholder_cloud_api_key(api_key: str) -> bool:
+    lowered = str(api_key or "").strip().lower()
+    compact = re.sub(r"[\s_]+", "_", lowered)
+    if compact in PLACEHOLDER_CLOUD_API_KEYS:
+        return True
+    dashed = re.sub(r"[\s_]+", "-", lowered)
+    if dashed in PLACEHOLDER_CLOUD_API_KEYS:
+        return True
+    return "your" in lowered and "key" in lowered
+
+
+def validate_cloud_test_config(config: dict[str, Any]) -> str | None:
+    api_key = str(config.get("cloud_api_key") or config.get("api_key") or "").strip()
+    if not api_key:
+        return "Please enter an LLM API key."
+    if is_placeholder_cloud_api_key(api_key):
+        return "Please enter a real LLM API key."
+
+    base_url = str(config.get("cloud_base_url") or config.get("base_url") or "").strip()
+    base_url_error = validate_cloud_base_url_security(base_url)
+    if base_url_error:
+        return base_url_error
+
+    model = str(config.get("cloud_model") or config.get("model") or "").strip()
+    if not model:
+        return "Please enter a model name."
+    if model.lower() in PLACEHOLDER_CLOUD_MODELS:
+        return "Please enter a real model name."
     return None
 
 

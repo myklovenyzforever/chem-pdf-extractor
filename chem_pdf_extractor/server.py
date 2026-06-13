@@ -32,11 +32,12 @@ from .config import (
     mask_api_key,
     public_local_config,
     save_local_config,
+    validate_cloud_test_config,
     validate_cloud_start_config,
 )
 from .diagnostics import append_diagnostic_log, log_exception, log_startup_event
 from .extractor import JobState, run_extraction_job, state_update
-from .llm import choose_model, fetch_openai_compatible_models, get_ollama_models
+from .llm import choose_model, fetch_openai_compatible_models, get_ollama_models, test_openai_compatible_chat
 from .security import redact_sensitive_text
 from .text_safety import json_dumps_utf8
 
@@ -94,6 +95,49 @@ def validate_local_api_request(
     if not is_allowed_referer_header(referer, port):
         return False
     return True
+
+
+def sanitize_cloud_test_error(error: Any, api_key: str = "") -> str:
+    text = redact_sensitive_text(str(error))
+    raw_key = str(api_key or "").strip()
+    if raw_key:
+        text = text.replace(raw_key, "<redacted>")
+    return text
+
+
+def run_cloud_api_test(config: dict[str, Any]) -> dict[str, Any]:
+    api_key = str(config.get("api_key") or config.get("cloud_api_key") or "").strip()
+    payload = {
+        "api_key": api_key,
+        "base_url": str(config.get("base_url") or config.get("cloud_base_url") or "").strip(),
+        "model": str(config.get("model") or config.get("cloud_model") or "").strip(),
+    }
+    validation_error = validate_cloud_test_config(payload)
+    if validation_error:
+        return {"ok": False, "status": "failed", "error": sanitize_cloud_test_error(validation_error, api_key)}
+
+    try:
+        test_openai_compatible_chat(payload["base_url"], api_key, payload["model"], timeout=10.0)
+    except Exception as exc:
+        return {"ok": False, "status": "failed", "error": sanitize_cloud_test_error(exc, api_key)}
+
+    try:
+        models = fetch_openai_compatible_models(payload["base_url"], api_key, timeout=5.0)
+    except Exception as exc:
+        return {
+            "ok": True,
+            "status": "partial",
+            "message": "Connection works, but model list is unavailable; manual model may be needed.",
+            "detail": sanitize_cloud_test_error(exc, api_key),
+        }
+
+    return {
+        "ok": True,
+        "status": "success",
+        "message": "Connection works and model returned valid response.",
+        "models_available": True,
+        "model_count": len(models),
+    }
 
 
 class ChemExtractorApp:
@@ -234,6 +278,13 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self.send_json({"ok": True})
             except Exception as exc:
                 self.send_json({"ok": False, "error": redact_sensitive_text(str(exc))})
+            return
+
+        if parsed.path == "/api/cloud-test":
+            try:
+                self.send_json(run_cloud_api_test(self.read_json()))
+            except Exception as exc:
+                self.send_json({"ok": False, "status": "failed", "error": redact_sensitive_text(str(exc))})
             return
 
         if parsed.path in {"/api/cloud-models", "/api/models"}:
