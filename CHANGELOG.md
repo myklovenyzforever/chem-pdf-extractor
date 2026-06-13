@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.2.2 - Web UI layout and statistics polish
+
+- Refined the Web UI into a fixed-height, bottom-aligned three-column desktop workbench.
+- Restored the intended dashboard structure after layout experimentation:
+  - left column: Task Settings and Statistics;
+  - middle column: LLM API Config and compact Progress;
+  - right column: Run Logs.
+- Kept Run Logs as the only main internally scrollable panel so long logs do not stretch the whole page.
+- Added task statistics counters for extracted rows, suspicious rows, bad rows, and cache hits.
+- Changed the Progress panel to a compact progress bar with ratio text such as `Done 0 / 0 = 0%`.
+- Added and updated lightweight tests for layout behavior, task statistics, log scrolling, and Cloud/Ollama UI display logic.
+- Kept Windows launcher behavior, release metadata structure, requirements files, MinerU behavior, PDF conversion behavior, LLM prompts, OpenAI-compatible cloud API behavior, and local Ollama behavior unchanged.
+
 ## v0.2.1 - Windows launcher UTF-8 and release metadata patch
 
 - Fixed Windows launcher UTF-8 console setup to reduce Chinese output and path mojibake in CMD / PowerShell.

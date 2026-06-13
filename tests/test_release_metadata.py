@@ -6,17 +6,19 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReleaseMetadataTest(unittest.TestCase):
-    def test_pyproject_uses_v021_beta_metadata(self):
+    def test_pyproject_uses_v022_beta_metadata(self):
         content = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
-        self.assertIn('version = "0.2.1"', content)
+        self.assertIn('version = "0.2.2"', content)
         self.assertIn("Development Status :: 4 - Beta", content)
 
-    def test_changelog_contains_v020_and_v021_release_notes(self):
+    def test_changelog_contains_v020_v021_and_v022_release_notes(self):
         content = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
+        self.assertIn("## v0.2.2", content)
         self.assertIn("## v0.2.1", content)
         self.assertIn("## v0.2.0", content)
+        self.assertIn("Web UI layout and statistics polish", content)
         self.assertIn("Windows first-run launcher", content)
         self.assertIn("optional MinerU", content)
         self.assertTrue(
