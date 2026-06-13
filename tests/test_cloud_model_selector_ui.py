@@ -48,9 +48,10 @@ class CloudModelSelectorUiTest(unittest.TestCase):
 
         self.assertIn('class="task-grid"', template)
         self.assertIn('class="api-grid"', template)
-        self.assertIn('data-i18n="pdf_mode_help"', template)
+        self.assertIn('id="pdfModeHelp"', template)
+        self.assertIn('pdf_mode_help_mineru', template)
         self.assertIn('<div class="form-field full-span">', template)
-        self.assertIn('data-i18n="pdf_mode_mineru">MinerU</option>', template)
+        self.assertIn('value="mineru" data-i18n="pdf_mode_mineru"', template)
 
     def test_workbench_layout_uses_aligned_desktop_height_without_left_middle_scroll(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")

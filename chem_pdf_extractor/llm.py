@@ -212,6 +212,54 @@ def cloud_chat_completion(
     raise RuntimeError(f"云端 API 请求失败：{short_error(last_exc) if last_exc else 'unknown error'}")
 
 
+def test_openai_compatible_chat(base_url: str, api_key: str, model: str, timeout: float = 10.0) -> dict[str, Any]:
+    base_url_error = validate_cloud_base_url_security(base_url)
+    if base_url_error:
+        raise RuntimeError(base_url_error)
+    if not str(api_key or "").strip():
+        raise RuntimeError("LLM API KEY is empty.")
+    if not str(model or "").strip():
+        raise RuntimeError("LLM model is empty.")
+
+    body = {
+        "model": str(model).strip(),
+        "messages": [
+            {"role": "system", "content": "Return only a compact JSON object."},
+            {"role": "user", "content": 'Return exactly {"ok": true, "status": "ok"}.'},
+        ],
+        "temperature": 0,
+        "max_tokens": 40,
+        "response_format": {"type": "json_object"},
+    }
+    request = urllib.request.Request(
+        str(base_url).strip().rstrip("/") + "/chat/completions",
+        data=json_dumps_utf8(body).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8", errors="replace"))
+        content = payload["choices"][0]["message"]["content"]
+        parsed = extract_json_object(message_content(content))
+        if parsed.get("ok") is True or str(parsed.get("status") or "").strip().lower() in {"ok", "success"}:
+            return parsed
+        raise ValueError("Test response JSON did not include ok/status.")
+    except urllib.error.HTTPError as exc:
+        body_text = ""
+        try:
+            body_text = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            pass
+        raise RuntimeError(f"Cloud API HTTP {exc.code}: {redact_sensitive_text(tail_text(body_text))}") from exc
+    except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
+        raise RuntimeError(f"Cloud API test failed: {redact_sensitive_text(short_error(exc))}") from exc
+
+
 def translate_item_batch_to_chinese_cloud(
     base_url: str, api_key: str, model: str,
     items: list[dict[str, str]], llm_timeout: int,
