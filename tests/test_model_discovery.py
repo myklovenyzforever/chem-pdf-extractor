@@ -46,10 +46,10 @@ class ModelDiscoveryTest(unittest.TestCase):
             return FakeResponse({"data": [{"id": "model-a"}, {"id": "model-b"}]})
 
         with patch("chem_pdf_extractor.llm.urllib.request.urlopen", fake_urlopen):
-            models = fetch_openai_compatible_models("https://api.example.com/v1", "TEST_KEY", timeout=3)
+            models = fetch_openai_compatible_models("https://api.real-provider.test/v1", "TEST_KEY", timeout=3)
 
         self.assertEqual(models, ["model-a", "model-b"])
-        self.assertEqual(requests[0][0], "https://api.example.com/v1/models")
+        self.assertEqual(requests[0][0], "https://api.real-provider.test/v1/models")
         self.assertEqual(requests[0][1], "Bearer TEST_KEY")
         self.assertEqual(requests[0][2], 3)
 
@@ -58,7 +58,7 @@ class ModelDiscoveryTest(unittest.TestCase):
             return FakeResponse({"data": [{"id": "model-a"}, {"id": "model-a"}, {"id": "model-b"}]})
 
         with patch("chem_pdf_extractor.llm.urllib.request.urlopen", fake_urlopen):
-            models = fetch_openai_compatible_models("https://api.example.com/v1/", "TEST_KEY")
+            models = fetch_openai_compatible_models("https://api.real-provider.test/v1/", "TEST_KEY")
 
         self.assertEqual(models, ["model-a", "model-b"])
 
@@ -68,7 +68,7 @@ class ModelDiscoveryTest(unittest.TestCase):
 
         with patch("chem_pdf_extractor.llm.urllib.request.urlopen", fake_urlopen):
             with self.assertRaisesRegex(RuntimeError, "Failed to fetch models"):
-                fetch_openai_compatible_models("https://api.example.com/v1", "TEST_KEY")
+                fetch_openai_compatible_models("https://api.real-provider.test/v1", "TEST_KEY")
 
     def test_fetch_models_error_does_not_include_api_key(self):
         secret = "SECRET_TEST_KEY"
@@ -78,7 +78,7 @@ class ModelDiscoveryTest(unittest.TestCase):
 
         with patch("chem_pdf_extractor.llm.urllib.request.urlopen", fake_urlopen):
             with self.assertRaises(RuntimeError) as context:
-                fetch_openai_compatible_models("https://api.example.com/v1", secret)
+                fetch_openai_compatible_models("https://api.real-provider.test/v1", secret)
 
         self.assertNotIn(secret, str(context.exception))
 

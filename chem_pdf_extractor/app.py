@@ -30,10 +30,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--llm-provider", default="cloud", choices=["ollama", "cloud"])
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--no-translate-to-chinese", action="store_true")
-    parser.add_argument("--cloud-service-name", default=DEFAULT_CLOUD_SERVICE_NAME)
-    parser.add_argument("--cloud-model", default=DEFAULT_CLOUD_MODEL)
+    parser.add_argument("--cloud-service-name", default=None)
+    parser.add_argument("--cloud-model", default=None)
     parser.add_argument("--cloud-api-key", default="")
-    parser.add_argument("--cloud-base-url", default=DEFAULT_CLOUD_BASE_URL)
+    parser.add_argument("--cloud-base-url", default=None)
     parser.add_argument("--cloud-active", action="store_true")
     parser.add_argument("--pdf-mode", default=DEFAULT_PDF_MODE, choices=PDF_MODE_CHOICES)
     parser.add_argument("--max-chars", type=int, default=DEFAULT_MAX_CHARS)
@@ -45,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--recursive", dest="recursive", action="store_true")
     parser.add_argument("--no-recursive", dest="recursive", action="store_false")
     parser.add_argument("--auto-fallback", action="store_true")
+    parser.add_argument("--copy-failed-sources", action="store_true", help="Copy failed source PDFs for debugging.")
     parser.add_argument("--no-auto-install", action="store_true")
     return parser.parse_args()
 
@@ -57,20 +58,24 @@ def run_cli(args: argparse.Namespace) -> int:
     runtime = import_runtime_dependencies()
     state = JobState()
     local_cloud_config = load_local_config()
+    cloud_service_name = args.cloud_service_name or local_cloud_config.get("cloud_service_name") or DEFAULT_CLOUD_SERVICE_NAME
+    cloud_model = args.cloud_model or local_cloud_config.get("cloud_model") or DEFAULT_CLOUD_MODEL
+    cloud_base_url = args.cloud_base_url or local_cloud_config.get("cloud_base_url") or DEFAULT_CLOUD_BASE_URL
+    selected_model = cloud_model if args.llm_provider == "cloud" and args.model == DEFAULT_MODEL else args.model
     config = {
         "input_dir": args.input_dir or str(default_input_dir()),
         "output_path": args.output or str(default_output_path()),
         "llm_provider": args.llm_provider,
-        "model": args.cloud_model if args.llm_provider == "cloud" and args.model == DEFAULT_MODEL else args.model,
+        "model": selected_model,
         "translate_to_chinese": not args.no_translate_to_chinese,
-        "cloud_service_name": args.cloud_service_name or local_cloud_config.get("cloud_service_name") or DEFAULT_CLOUD_SERVICE_NAME,
-        "cloud_model": args.cloud_model or local_cloud_config.get("cloud_model") or DEFAULT_CLOUD_MODEL,
+        "cloud_service_name": cloud_service_name,
+        "cloud_model": cloud_model,
         "cloud_api_key": (
             args.cloud_api_key
             or local_cloud_config.get("cloud_api_key")
             or ""
         ),
-        "cloud_base_url": args.cloud_base_url or local_cloud_config.get("cloud_base_url") or DEFAULT_CLOUD_BASE_URL,
+        "cloud_base_url": cloud_base_url,
         "cloud_active": args.cloud_active or args.llm_provider == "cloud",
         "pdf_mode": args.pdf_mode,
         "max_chars": args.max_chars,
@@ -80,6 +85,7 @@ def run_cli(args: argparse.Namespace) -> int:
         "ollama_base_url": args.ollama_base_url,
         "recursive": args.recursive,
         "auto_fallback": args.auto_fallback,
+        "copy_failed_sources": args.copy_failed_sources,
         "fields": DEFAULT_FIELDS,
     }
     run_extraction_job(config, runtime, state)

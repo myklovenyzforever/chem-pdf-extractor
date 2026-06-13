@@ -30,6 +30,26 @@ Security and privacy issues may include:
 - examples containing copyrighted papers or unpublished data;
 - unsafe handling of local files or outputs.
 
+## Local Web UI and API keys
+
+The Web UI is intended for local loopback use only. Do not expose it to a LAN, public server, shared workstation, or remote environment where other users can reach the local service.
+
+Cloud API keys should be treated as secrets. The application should not return full API keys through local configuration APIs, and logs or diagnostics should redact common API key, bearer-token, password, token, and secret patterns before writing user-visible files.
+
+Cloud Base URLs should be checked before sending API keys. Use HTTPS for cloud providers. Plain HTTP should be used only for localhost-style local services.
+
+## Spreadsheet export safety
+
+Excel and CSV outputs may be opened in spreadsheet software that interprets values beginning with formula characters. Exported spreadsheet cells should sanitize formula-like values to reduce spreadsheet formula-injection risk.
+
+Sanitization is a defense-in-depth measure, not a guarantee. Users should still review exported files before sharing them or opening them in sensitive environments.
+
+## Failed source PDF copies
+
+Copying failed source PDFs for debugging can duplicate private PDFs, unpublished manuscripts, copyrighted papers, or confidential industrial data. This behavior should remain opt-in and should be enabled only when the user needs local debugging copies.
+
+Do not upload copied failed-source folders to public issues or pull requests unless the files are public-domain, synthetic, or otherwise permission-safe.
+
 ## Safe reporting checklist
 
 Before reporting, please check:

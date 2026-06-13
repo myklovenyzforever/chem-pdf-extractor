@@ -71,6 +71,7 @@ from .quality import (
     quality_retry_hint,
     translate_rows_to_chinese,
 )
+from .security import redact_sensitive_text
 from .text_safety import json_dumps_utf8, utf8_safe_obj
 
 
@@ -120,7 +121,7 @@ class JobState:
             self.logs = []
 
     def add_log(self, message: str) -> None:
-        line = f"[{datetime.now().strftime('%H:%M:%S')}] {message}"
+        line = f"[{datetime.now().strftime('%H:%M:%S')}] {redact_sensitive_text(str(message))}"
         print(line)
         append_diagnostic_log("task.log", line)
         with self.lock:
@@ -280,22 +281,27 @@ def add_source_metadata(
 
 def log_error(error_log_path: Path, pdf_path: Path, stage: str, exc: BaseException) -> None:
     error_log_path.parent.mkdir(parents=True, exist_ok=True)
+    safe_short_error = redact_sensitive_text(short_error(exc))
+    safe_repr = redact_sensitive_text(repr(exc))
+    safe_traceback = redact_sensitive_text(traceback.format_exc())
+    safe_pdf_name = redact_sensitive_text(pdf_path.name)
+    safe_pdf_path = redact_sensitive_text(str(pdf_path))
     append_jsonl(
         error_log_path.with_name(ERROR_STATS_JSONL_NAME),
         {
             "时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "源文件名": pdf_path.name, "源文件路径": str(pdf_path),
+            "源文件名": safe_pdf_name, "源文件路径": safe_pdf_path,
             "失败环节": stage, "错误类型": type(exc).__name__,
-            "错误原因": short_error(exc),
+            "错误原因": safe_short_error,
         },
     )
     with error_log_path.open("a", encoding="utf-8") as handle:
         handle.write("=" * 80 + "\n")
         handle.write(f"time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        handle.write(f"file: {pdf_path}\n")
+        handle.write(f"file: {safe_pdf_path}\n")
         handle.write(f"stage: {stage}\n")
-        handle.write(f"error: {repr(exc)}\n")
-        handle.write(traceback.format_exc())
+        handle.write(f"error: {safe_repr}\n")
+        handle.write(safe_traceback)
         handle.write("\n")
 
 
@@ -320,11 +326,17 @@ def copy_failed_source(pdf_path: Path, input_dir: Path) -> Path:
 def record_failure(
     *, error_log_path: Path, pdf_path: Path, input_dir: Path,
     stage: str, exc: BaseException, state: JobState | None = None,
+    copy_failed_sources: bool = False,
 ) -> None:
     log_error(error_log_path, pdf_path, stage, exc)
-    copied_path = copy_failed_source(pdf_path, input_dir)
+    copied_path: Path | None = None
+    if copy_failed_sources:
+        copied_path = copy_failed_source(pdf_path, input_dir)
     if state is not None:
-        state.add_log(f"失败环节：{stage}；原因：{short_error(exc)}；失败源文件已复制：{copied_path}")
+        if copied_path is not None:
+            state.add_log(f"失败环节：{stage}；原因：{short_error(exc)}；失败源文件已复制：{copied_path}")
+        else:
+            state.add_log(f"失败环节：{stage}；原因：{short_error(exc)}；失败源文件复制未启用")
 
 
 def process_pdf(
@@ -356,7 +368,11 @@ def process_pdf(
         try:
             markdown, actual_pdf_mode = read_pdf_as_markdown_with_mode(pdf_path, str(config["pdf_mode"]), runtime)
         except Exception as exc:
-            record_failure(error_log_path=error_log_path, pdf_path=pdf_path, input_dir=input_dir, stage="pdf_to_markdown", exc=exc, state=state)
+            record_failure(
+                error_log_path=error_log_path, pdf_path=pdf_path, input_dir=input_dir,
+                stage="pdf_to_markdown", exc=exc, state=state,
+                copy_failed_sources=bool(config.get("copy_failed_sources", False)),
+            )
             return None
         add_stat(stage_stats, "pdf_to_md", time.perf_counter() - convert_started)
         source_images_dir = mineru_images_dir_from_markdown(markdown)
@@ -425,7 +441,11 @@ def process_pdf(
             save_extraction_cache(cache_path, rows)
             return rows
         except Exception as exc:
-            record_failure(error_log_path=error_log_path, pdf_path=pdf_path, input_dir=input_dir, stage="cloud_llm_extraction", exc=exc, state=state)
+            record_failure(
+                error_log_path=error_log_path, pdf_path=pdf_path, input_dir=input_dir,
+                stage="cloud_llm_extraction", exc=exc, state=state,
+                copy_failed_sources=bool(config.get("copy_failed_sources", False)),
+            )
             return None
 
     for model_name, chain in chains or []:
@@ -472,7 +492,11 @@ def process_pdf(
                 break
 
     if last_exc is not None:
-        record_failure(error_log_path=error_log_path, pdf_path=pdf_path, input_dir=input_dir, stage="llm_extraction", exc=last_exc, state=state)
+        record_failure(
+            error_log_path=error_log_path, pdf_path=pdf_path, input_dir=input_dir,
+            stage="llm_extraction", exc=last_exc, state=state,
+            copy_failed_sources=bool(config.get("copy_failed_sources", False)),
+        )
     return None
 
 
@@ -585,7 +609,10 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
         state.add_log(f"PDF 转换方式：{config['pdf_mode']}")
         state.add_log(f"坏数据阈值：填写率低于 {bad_row_min_fill_rate:.0%} 删除")
         state.add_log(f"MD 保存目录：{input_dir / MARKDOWN_DIR_NAME}")
-        state.add_log(f"失败源文件目录：{input_dir / FAILED_SOURCES_DIR_NAME}")
+        if bool(config.get("copy_failed_sources", False)):
+            state.add_log(f"失败源文件复制已启用：{input_dir / FAILED_SOURCES_DIR_NAME}（可能包含私有或受版权保护的 PDF）")
+        else:
+            state.add_log("失败源文件复制未启用；仅记录错误日志。")
         state.add_log(
             f"Field count: user={len(user_fields)}, review_aid={len(REVIEW_AID_FIELD_LABELS)}, "
             f"model_total={len(fields)}"

@@ -19,7 +19,9 @@ from .config import (
     requirement_label,
     requirement_rule,
     short_error,
+    validate_cloud_base_url_security,
 )
+from .security import redact_sensitive_text
 from .text_safety import json_dumps_utf8
 
 
@@ -164,6 +166,9 @@ def cloud_chat_completion(
     base_url: str, api_key: str, model: str,
     messages: list[dict[str, str]], llm_timeout: int,
 ) -> str:
+    base_url_error = validate_cloud_base_url_security(base_url)
+    if base_url_error:
+        raise RuntimeError(base_url_error)
     url = base_url.rstrip("/") + "/chat/completions"
     last_exc: BaseException | None = None
     for attempt in range(CLOUD_RETRY_COUNT):
@@ -197,7 +202,7 @@ def cloud_chat_completion(
                     body_text = exc.read().decode("utf-8", errors="replace")
                 except Exception:
                     pass
-                raise RuntimeError(f"云端 API HTTP {exc.code}: {tail_text(body_text)}") from exc
+                raise RuntimeError(f"云端 API HTTP {exc.code}: {redact_sensitive_text(tail_text(body_text))}") from exc
         except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, KeyError) as exc:
             last_exc = exc
             if attempt >= CLOUD_RETRY_COUNT - 1:
@@ -266,6 +271,9 @@ def fetch_openai_compatible_models(base_url: str, api_key: str, timeout: float =
         raise RuntimeError("LLM BASE URL is empty.")
     if not str(api_key or "").strip():
         raise RuntimeError("LLM API KEY is empty.")
+    base_url_error = validate_cloud_base_url_security(base_url)
+    if base_url_error:
+        raise RuntimeError(base_url_error)
     url = build_openai_compatible_models_url(base_url)
     request = urllib.request.Request(
         url,

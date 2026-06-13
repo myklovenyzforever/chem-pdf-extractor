@@ -83,6 +83,15 @@ $env:CHEM_PDF_EXTRACTOR_BASE_URL="https://api.example.com/v1"
 $env:CHEM_PDF_EXTRACTOR_MODEL="provider/model-name"
 ```
 
+## Local Security Notes
+
+- The Web UI is intended for local use on `127.0.0.1` / `localhost`. Do not expose it to a LAN, public server, or shared remote environment.
+- Cloud API keys should be treated as secrets. The local config API reports only whether a key exists and does not return the full key.
+- Cloud Base URLs are checked before API keys are sent. Use HTTPS for cloud providers; plain HTTP is accepted only for localhost.
+- Excel and CSV exports sanitize formula-like cell values to reduce spreadsheet formula-injection risk.
+- Failed source PDF copying is disabled by default. Enable it only when debugging, because it may duplicate private, copyrighted, unpublished, or confidential PDFs.
+- Logs and diagnostics redact common API key, token, bearer-token, password, and secret patterns, but users should still review files before sharing them publicly.
+
 ## One-click Windows Package
 
 The GitHub source repository does not include `bundled_runtime/` or `YiLaiHuanJing/`. A bundled Windows package may be provided through GitHub Releases for non-programming users.
