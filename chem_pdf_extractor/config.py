@@ -250,8 +250,9 @@ def script_dir() -> Path:
 
 
 def default_input_dir() -> Path:
-    nearby = script_dir() / "input_pdfs"
-    return nearby if nearby.exists() else script_dir()
+    path = script_dir() / "input_pdfs"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def default_output_path() -> Path:

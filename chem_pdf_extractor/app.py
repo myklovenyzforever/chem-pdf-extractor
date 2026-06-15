@@ -54,7 +54,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--cli", action="store_true", help="Run command-line extraction instead of starting the Web UI.")
     parser.add_argument("--port", type=int, default=8766, help="Web UI port when not using --cli. Default: 8766.")
     parser.add_argument("--open-browser", action="store_true", help="Open the local Web UI in a browser after startup.")
-    parser.add_argument("--input-dir", default=None, help="PDF input directory for --cli runs. Defaults to input_pdfs/ or the project folder.")
+    parser.add_argument("--input-dir", default=None, help="PDF input directory for --cli runs. Defaults to input_pdfs/.")
     parser.add_argument("--output", default=None, help="Output .xlsx path or output directory for --cli runs.")
     parser.add_argument(
         "--llm-provider",

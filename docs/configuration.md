@@ -42,6 +42,13 @@ CLI provider notes:
 - `--model` selects the Ollama model in local mode. In cloud mode, prefer `--cloud-model`; `--model` is accepted only as a legacy cloud model alias when `--cloud-model` is not provided.
 - If you do not want any cloud processing, use `--llm-provider ollama` and avoid saved cloud translation configuration.
 
+Input PDF discovery:
+
+- The default source PDF folder is `input_pdfs/` at the project root.
+- Put user source PDFs in `input_pdfs/`, or pass `--input-dir <folder>` / choose a folder in the Web UI.
+- `examples/demo_literature_batch/` contains synthetic example PDFs for docs and tests; they are not default extraction input.
+- `.mineru_outputs/` contains generated MinerU artifacts and is excluded from source PDF discovery.
+
 Python 3.11 is recommended for the broadest PDF-backend compatibility. On some Windows + Python 3.12 environments, `pymupdf4llm` / `pymupdf` may fail during install or import. These packages are optional lazy-loaded PDF backends, so startup does not require importing them.
 
 `max_chars` defaults to `80000`. This is the recommended/default extraction text budget. Set it to `40000` for smaller/cheaper runs, `120000` for larger-context models, or `0` only when you intentionally want no truncation.
