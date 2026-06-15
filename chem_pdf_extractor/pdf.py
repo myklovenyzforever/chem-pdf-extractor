@@ -263,17 +263,71 @@ def truncate_text(text: str, max_chars: int) -> tuple[str, bool]:
 
 def list_pdf_files(input_dir: Path, recursive: bool) -> list[Path]:
     from .config import CACHE_DIR_NAME, FAILED_SOURCES_DIR_NAME
-    pattern = "**/*.pdf" if recursive else "*.pdf"
-    excluded_dirs = {MARKDOWN_DIR_NAME, FAILED_SOURCES_DIR_NAME, CACHE_DIR_NAME}
-    pdf_files = []
-    for path in input_dir.glob(pattern):
+
+    excluded_dirs = {
+        ".git",
+        ".mineru_outputs",
+        ".venv",
+        "__pycache__",
+        "build",
+        "dist",
+        "logs",
+        MARKDOWN_DIR_NAME,
+        FAILED_SOURCES_DIR_NAME,
+        CACHE_DIR_NAME,
+    }
+    excluded_dir_keys = {name.casefold() for name in excluded_dirs}
+
+    try:
+        input_dir_resolved = input_dir.resolve()
+    except OSError:
+        input_dir_resolved = input_dir
+    try:
+        project_root_resolved = PROJECT_ROOT.resolve()
+    except OSError:
+        project_root_resolved = PROJECT_ROOT
+    scanning_project_root = input_dir_resolved == project_root_resolved
+
+    def excluded_relative_parts(parts: tuple[str, ...]) -> bool:
+        part_keys = {part.casefold() for part in parts}
+        if part_keys & excluded_dir_keys:
+            return True
+        return scanning_project_root and bool(parts) and parts[0].casefold() == "examples"
+
+    def keep_pdf(path: Path) -> bool:
         try:
-            relative_parts = path.relative_to(input_dir).parts
+            relative_parts = path.relative_to(input_dir).parts[:-1]
         except ValueError:
-            relative_parts = path.parts
-        if any(part in excluded_dirs for part in relative_parts):
-            continue
-        pdf_files.append(path)
+            relative_parts = path.parts[:-1]
+        return not excluded_relative_parts(relative_parts)
+
+    if not recursive:
+        return sorted(
+            [path for path in input_dir.glob("*.pdf") if path.is_file() and keep_pdf(path)],
+            key=lambda path: str(path).casefold(),
+        )
+
+    pdf_files = []
+    for current_dir, dir_names, file_names in os.walk(input_dir):
+        current_path = Path(current_dir)
+        kept_dirs = []
+        for dir_name in dir_names:
+            child = current_path / dir_name
+            try:
+                child_parts = child.relative_to(input_dir).parts
+            except ValueError:
+                child_parts = child.parts
+            if excluded_relative_parts(child_parts):
+                continue
+            kept_dirs.append(dir_name)
+        dir_names[:] = kept_dirs
+
+        for file_name in file_names:
+            if Path(file_name).suffix.casefold() != ".pdf":
+                continue
+            path = current_path / file_name
+            if path.is_file() and keep_pdf(path):
+                pdf_files.append(path)
     return sorted(pdf_files, key=lambda path: str(path).casefold())
 
 

@@ -63,6 +63,8 @@ python -m chem_pdf_extractor
 
 By default, the program prints the local Web UI URL in the terminal and does not open the browser automatically. Copy the printed URL into your browser, select a PDF folder, configure extraction fields, and start processing. Test with 3-5 PDFs before running a large batch.
 
+The default source PDF folder is `input_pdfs/` at the project root. Put your source PDFs there, or explicitly choose another input folder in the Web UI or CLI. The synthetic PDFs under `examples/demo_literature_batch/` are examples/tests and are not default extraction input. MinerU-generated files under `.mineru_outputs/` are generated artifacts and are excluded from source PDF discovery.
+
 If you want the program to open the browser automatically, run:
 
 ```powershell
