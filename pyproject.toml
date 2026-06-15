@@ -41,8 +41,14 @@ pdf = [
 ]
 test = ["pytest>=8"]
 
+[project.scripts]
+chem-pdf-extractor = "chem_pdf_extractor.entrypoint:run"
+
 [tool.setuptools]
 py-modules = ["run_chem_pdf_extractor"]
 
 [tool.setuptools.packages.find]
 include = ["chem_pdf_extractor*"]
+
+[tool.setuptools.package-data]
+chem_pdf_extractor = ["templates/index.html"]

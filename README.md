@@ -64,7 +64,15 @@ Alternative script entry:
 python run_chem_pdf_extractor.py
 ```
 
-The module entry point remains the recommended way to run the project.
+When installed from a built wheel, the `chem-pdf-extractor` console script is also available. The module entry point remains the recommended way to run the project from a source checkout.
+
+Maintainers who are verifying a release can install with `constraints.txt` to avoid unreviewed major dependency jumps:
+
+```powershell
+python -m pip install -r requirements.txt -c constraints.txt
+```
+
+Normal source users can continue using `requirements.txt` or `requirements-core.txt` directly.
 
 ## Configuration
 

@@ -1,0 +1,20 @@
+# Release verification constraints.
+#
+# Normal development and source users can install with requirements.txt or
+# requirements-core.txt directly. Maintainers may add this file during release
+# checks to avoid unreviewed major-version jumps while still allowing compatible
+# patch/minor updates:
+#
+#   python -m pip install -r requirements.txt -c constraints.txt
+#
+# Refresh these upper bounds after testing the project with newer major versions.
+
+pypdf<7
+pymupdf4llm<1
+pymupdf<2
+langchain<1
+langchain-core<1
+langchain-ollama<1
+pydantic<3
+pandas<3
+openpyxl<4
