@@ -19,6 +19,8 @@ This roadmap focuses on practical improvements for literature review workflows, 
 - Add lightweight domain knowledge context support.
 - Improve prompt workflow for scientific extraction tasks.
 - Add better guidance for choosing PDF conversion modes.
+- Explore a small, provider-neutral malformed cloud-output repair/retry step
+  after the current validation and normalization path is stable.
 - Improve table extraction and post-processing for common scientific paper layouts.
 - Add more tests for CLI behavior, PDF backend fallback behavior, and output validation.
 

@@ -87,7 +87,7 @@ test and fixture contract, not as a statistical performance claim.
   using the same synthetic/public-safe cases.
 - Add stronger provenance/page/table hint evaluation against human-checked
   synthetic or public-safe cases.
-- Add malformed output recovery evaluation once structured output hardening is
-  implemented.
+- Add malformed output repair/retry evaluation after the current structured
+  output validation path has more public-safe coverage.
 - Expand from smoke tests to a larger public-safe benchmark set before making
   any accuracy claims.

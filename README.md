@@ -29,6 +29,7 @@ Experimental information in scientific papers is often scattered across paragrap
 - Pause, resume, stop, and resumable processing.
 - Reuse of `md文件/` and `抽取缓存/`.
 - OpenAI-compatible API support.
+- Cloud structured-output validation normalizes unexpected provider responses safely, but it does not prove scientific accuracy.
 - Local Ollama model support.
 
 ## Quick Start
