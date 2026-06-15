@@ -209,6 +209,7 @@ The example data is synthetic and does not represent real published papers.
 - [Evaluation and Benchmark Notes](docs/evaluation.md)
 - [Field Templates](examples/field_templates/README.md)
 - [UI Layout Contract](docs/ui_layout_contract.md)
+- [Project Status and Maintainer Roadmap](docs/project_status_and_roadmap.md)
 - [Screenshot Guide](docs/screenshot_guide.md)
 - [Release and Feedback Path](docs/release_and_feedback.md)
 - [Windows One-click Package Guide](docs/windows_package.md)

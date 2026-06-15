@@ -4,6 +4,9 @@ Chem-PDF-Extractor is an early-stage open-source tool for extracting structured 
 
 This roadmap focuses on practical improvements for literature review workflows, extraction reliability, documentation, and manual verification support.
 
+For current maturity, contribution expectations, and future RAG-related direction,
+see [Project Status and Maintainer Roadmap](docs/project_status_and_roadmap.md).
+
 ## Short term
 
 - Improve PDF parsing stability across different PDF layouts.
@@ -29,7 +32,7 @@ This roadmap focuses on practical improvements for literature review workflows, 
 
 ## Long term
 
-- Explore RAG-style domain knowledge support when it can be added without making the project too complex.
+- Keep issue #7 / RAG-like work as future exploration until evaluation and provenance workflows are stronger.
 - Explore packaged Windows releases for users who are not familiar with Python environments.
 - Explore optional desktop or simplified local UI packaging.
 - Explore full PDF source highlighting and page-coordinate anchoring after the
