@@ -132,6 +132,7 @@ The `examples/` directory contains synthetic demonstration files:
 - `sample_output.csv`: expected CSV output structure.
 - `sample_output.xlsx`: expected Excel output structure.
 - `demo_literature_batch/`: complete synthetic batch demo with input PDFs, field configuration, and expected output shape.
+- `benchmark_cases/`: synthetic/public-safe benchmark cases for first-pass evaluation.
 - `demo_literature_batch/`：完整合成批处理示例，包含输入 PDF、字段配置和期望输出表格结构。
 - `field_templates/`: reusable field templates for catalysis, materials synthesis, environmental treatment, and electrochemistry workflows.
 - `field_templates/`：面向催化反应、材料合成、环境处理和电化学方向的可复用字段模板。
@@ -141,6 +142,7 @@ The example data is synthetic and does not represent real published papers.
 ## Project Docs
 
 - [Usage Case: Catalysis Literature Data Extraction](docs/use_case_catalysis_literature_extraction.md)
+- [Evaluation and Benchmark Notes](docs/evaluation.md)
 - [Roadmap](ROADMAP.md)
 - [Windows One-click Package Guide](docs/windows_package.md)
 - [Windows 一键包说明](docs/windows_package.md)

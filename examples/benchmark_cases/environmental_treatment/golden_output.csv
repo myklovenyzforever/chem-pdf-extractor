@@ -1,0 +1,2 @@
+pollutant,treatment_method,catalyst_or_adsorbent,initial_concentration_mg_l,ph,contact_time_min,removal_efficiency_percent,adsorption_capacity_mg_g
+methylene blue,adsorption,biochar-Fe-B3,25,7.0,60,94.5,47

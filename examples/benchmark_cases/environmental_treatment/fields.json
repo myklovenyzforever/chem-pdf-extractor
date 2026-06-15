@@ -1,0 +1,42 @@
+[
+  {
+    "label": "pollutant",
+    "requirement": "required",
+    "description": "Target pollutant or contaminant."
+  },
+  {
+    "label": "treatment_method",
+    "requirement": "required",
+    "description": "Treatment route such as adsorption or photocatalysis."
+  },
+  {
+    "label": "catalyst_or_adsorbent",
+    "requirement": "required",
+    "description": "Catalyst, adsorbent, membrane, or treatment material."
+  },
+  {
+    "label": "initial_concentration_mg_l",
+    "requirement": "recommended",
+    "description": "Initial pollutant concentration in mg/L."
+  },
+  {
+    "label": "ph",
+    "requirement": "optional",
+    "description": "Solution pH."
+  },
+  {
+    "label": "contact_time_min",
+    "requirement": "recommended",
+    "description": "Treatment or contact time in minutes."
+  },
+  {
+    "label": "removal_efficiency_percent",
+    "requirement": "required",
+    "description": "Removal efficiency percentage."
+  },
+  {
+    "label": "adsorption_capacity_mg_g",
+    "requirement": "optional",
+    "description": "Adsorption capacity in mg/g."
+  }
+]

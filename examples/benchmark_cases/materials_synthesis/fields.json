@@ -1,0 +1,42 @@
+[
+  {
+    "label": "material_name",
+    "requirement": "required",
+    "description": "Material name or sample label."
+  },
+  {
+    "label": "material_category",
+    "requirement": "required",
+    "description": "Material class or category."
+  },
+  {
+    "label": "precursor",
+    "requirement": "required",
+    "description": "Main precursor or raw material."
+  },
+  {
+    "label": "synthesis_method",
+    "requirement": "required",
+    "description": "Synthesis route or preparation method."
+  },
+  {
+    "label": "drying_condition",
+    "requirement": "optional",
+    "description": "Drying temperature and duration."
+  },
+  {
+    "label": "calcination_temperature_c",
+    "requirement": "recommended",
+    "description": "Calcination temperature in Celsius."
+  },
+  {
+    "label": "calcination_time_h",
+    "requirement": "recommended",
+    "description": "Calcination duration in hours."
+  },
+  {
+    "label": "surface_area_m2_g",
+    "requirement": "recommended",
+    "description": "BET surface area in m2/g."
+  }
+]

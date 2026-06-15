@@ -1,0 +1,37 @@
+[
+  {
+    "label": "feedstock",
+    "requirement": "required",
+    "description": "Main reactant or feedstock."
+  },
+  {
+    "label": "catalyst",
+    "requirement": "required",
+    "description": "Catalyst name or sample code."
+  },
+  {
+    "label": "reactor_type",
+    "requirement": "recommended",
+    "description": "Type of reactor used for the experiment."
+  },
+  {
+    "label": "reaction_temperature_c",
+    "requirement": "required",
+    "description": "Reaction temperature in Celsius."
+  },
+  {
+    "label": "reaction_pressure_mpa",
+    "requirement": "recommended",
+    "description": "Reaction pressure in MPa."
+  },
+  {
+    "label": "conversion_percent",
+    "requirement": "required",
+    "description": "Feedstock conversion percentage."
+  },
+  {
+    "label": "selectivity_percent",
+    "requirement": "recommended",
+    "description": "Target product selectivity percentage."
+  }
+]

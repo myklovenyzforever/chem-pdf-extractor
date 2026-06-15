@@ -1,0 +1,2 @@
+reaction,electrode_material,electrolyte,current_density_ma_cm2,potential_v,target_product,faradaic_efficiency_percent,stability_time_h
+CO2 electroreduction,Cu-N-C-E2,0.5 M KHCO3,120,-0.92 V vs RHE,ethylene,41,8
