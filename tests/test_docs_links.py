@@ -23,6 +23,7 @@ class DocsLinksTest(unittest.TestCase):
             "examples/field_templates/README.md",
             "docs/ui_layout_contract.md",
             "docs/screenshot_guide.md",
+            "docs/release_and_feedback.md",
             "docs/windows_package.md",
             "SECURITY.md",
             "ROADMAP.md",
@@ -89,6 +90,59 @@ class DocsLinksTest(unittest.TestCase):
         ]:
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, content)
+
+    def test_release_feedback_doc_exists_and_sets_safe_path(self):
+        path = REPO_ROOT / "docs" / "release_and_feedback.md"
+        content = read(path)
+        lower = content.lower()
+        readme_content = read(README)
+
+        self.assertIn("docs/release_and_feedback.md", readme_content)
+
+        for phrase in [
+            "maintainer release checklist",
+            "working tree is clean",
+            "python -m unittest discover -s tests -v",
+            "python -m chem_pdf_extractor --help",
+            "no generated artifacts are staged",
+            "user feedback paths",
+            "extraction quality issues",
+            "incorrect or missing fields",
+            "field template suggestions",
+            "pdf mode or parser problems",
+            "local ollama setup issues",
+            "optional cloud provider configuration issues",
+            "packaging or windows install issues",
+            "documentation gaps",
+            "do not upload private pdfs",
+            "do not paste api keys",
+            "do not paste copyrighted paper text",
+            "do not paste confidential user",
+            "redact private local paths",
+            "avoid pasting full cloud responses",
+            "bug",
+            "docs",
+            "extraction quality",
+            "template suggestion",
+            "packaging/install",
+            "security/privacy concern",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, lower)
+
+        forbidden_terms = [
+            "cod" + "ex for " + "oss",
+            "open" + "ai " + "cre" + "dits",
+            "open" + "ai " + "sponsor" + "ship",
+            "open" + "ai " + "fund" + "ing",
+            "sponsor" + "ship",
+            "fund" + "ing",
+            "accept" + "ance",
+            "cre" + "dits",
+        ]
+        for forbidden in forbidden_terms:
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, lower)
 
 
 if __name__ == "__main__":
