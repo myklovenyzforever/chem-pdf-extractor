@@ -25,6 +25,24 @@ from .security import redact_sensitive_text
 from .text_safety import json_dumps_utf8
 
 
+class TransientCloudAPIError(RuntimeError):
+    """Raised only after retry-exhausted transient cloud/API/network failures."""
+
+    def __init__(self, message: str = "", *, status_code: int | None = None) -> None:
+        self.status_code = status_code
+        super().__init__(message or "Cloud API/network temporarily unavailable after retries.")
+
+
+def is_transient_cloud_error(exc: BaseException) -> bool:
+    return isinstance(exc, TransientCloudAPIError)
+
+
+def transient_cloud_failure_summary(exc: BaseException) -> str:
+    if isinstance(exc, TransientCloudAPIError) and exc.status_code is not None:
+        return f"Transient cloud/API failure after retries (HTTP {exc.status_code})."
+    return "Transient cloud/API/network failure after retries."
+
+
 def tail_text(text: str, limit: int = 4000) -> str:
     if len(text) <= limit:
         return text
@@ -197,19 +215,23 @@ def cloud_chat_completion(
             last_exc = exc
             retryable = exc.code == 429 or 500 <= exc.code <= 599
             if not retryable or attempt >= CLOUD_RETRY_COUNT - 1:
-                body_text = ""
-                try:
-                    body_text = exc.read().decode("utf-8", errors="replace")
-                except Exception:
-                    pass
-                raise RuntimeError(f"云端 API HTTP {exc.code}: {redact_sensitive_text(tail_text(body_text))}") from exc
-        except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError, KeyError) as exc:
+                if retryable:
+                    raise TransientCloudAPIError(
+                        f"Cloud API transient HTTP {exc.code} after retries.",
+                        status_code=exc.code,
+                    ) from exc
+                raise RuntimeError(f"Cloud API HTTP {exc.code}. Check cloud API configuration or request settings.") from exc
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
             last_exc = exc
             if attempt >= CLOUD_RETRY_COUNT - 1:
-                raise RuntimeError(f"云端 API 请求失败：{short_error(exc)}") from exc
+                raise TransientCloudAPIError(
+                    "Cloud API/network temporarily unavailable after retries."
+                ) from exc
+        except (json.JSONDecodeError, KeyError) as exc:
+            raise RuntimeError(f"Cloud API returned malformed response: {redact_sensitive_text(short_error(exc))}") from exc
         delay = min(CLOUD_RETRY_MAX_DELAY_SECONDS, CLOUD_RETRY_BASE_DELAY_SECONDS * (2**attempt))
         time.sleep(delay)
-    raise RuntimeError(f"云端 API 请求失败：{short_error(last_exc) if last_exc else 'unknown error'}")
+    raise TransientCloudAPIError("Cloud API/network temporarily unavailable after retries.") from last_exc
 
 
 def test_openai_compatible_chat(base_url: str, api_key: str, model: str, timeout: float = 10.0) -> dict[str, Any]:
