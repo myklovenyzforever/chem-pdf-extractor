@@ -49,9 +49,11 @@ from .llm import (
     choose_model,
     extract_with_cloud_api,
     get_ollama_models,
+    is_transient_cloud_error,
     labeled_rows,
     model_order,
     pydantic_to_dict,
+    transient_cloud_failure_summary,
     translate_item_batch_to_chinese_cloud,
 )
 from .pdf import (
@@ -75,6 +77,17 @@ from .security import redact_sensitive_text
 from .text_safety import json_dumps_utf8, utf8_safe_obj
 
 
+RESUMABLE_CLOUD_PAUSE_REASON = "transient_cloud_failure"
+RESUMABLE_CLOUD_PAUSE_MESSAGE = "网络/API 暂时不可用，任务已暂停。请检查网络或服务状态后点击继续。"
+
+
+class ResumableCloudFailure(RuntimeError):
+    def __init__(self, pdf_path: Path, original: BaseException) -> None:
+        self.pdf_path = pdf_path
+        self.original = original
+        super().__init__("Retry-exhausted transient cloud/API failure.")
+
+
 class JobState:
     def __init__(self) -> None:
         self.lock = threading.Lock()
@@ -96,6 +109,9 @@ class JobState:
         self.output_path = ""
         self.error_log_path = ""
         self.partial_jsonl_path = ""
+        self.pause_reason = ""
+        self.resumable_error = ""
+        self.current_retry_stage = ""
         self.logs: list[str] = []
 
     def reset(self, output_path: Path, error_log_path: Path, partial_jsonl_path: Path) -> None:
@@ -118,6 +134,9 @@ class JobState:
             self.output_path = str(output_path)
             self.error_log_path = str(error_log_path)
             self.partial_jsonl_path = str(partial_jsonl_path)
+            self.pause_reason = ""
+            self.resumable_error = ""
+            self.current_retry_stage = ""
             self.logs = []
 
     def add_log(self, message: str) -> None:
@@ -151,6 +170,9 @@ class JobState:
                 "output_path": self.output_path,
                 "error_log_path": self.error_log_path,
                 "partial_jsonl_path": self.partial_jsonl_path,
+                "pause_reason": self.pause_reason,
+                "resumable_error": self.resumable_error,
+                "current_retry_stage": self.current_retry_stage,
                 "logs": list(self.logs),
             }
 
@@ -162,13 +184,29 @@ class JobState:
     def request_pause(self) -> None:
         with self.lock:
             self.pause_requested = True
+            self.pause_reason = "user_requested"
+            self.resumable_error = ""
+            self.current_retry_stage = ""
             self.message = "正在请求暂停，当前文件结束后暂停"
 
     def request_resume(self) -> None:
         with self.lock:
             self.pause_requested = False
+            self.pause_reason = ""
+            self.resumable_error = ""
+            self.current_retry_stage = ""
             if self.running:
                 self.message = "已继续处理"
+
+    def request_resumable_pause(
+        self, *, reason: str, resumable_error: str, current_retry_stage: str,
+    ) -> None:
+        with self.lock:
+            self.pause_requested = True
+            self.pause_reason = reason
+            self.resumable_error = resumable_error
+            self.current_retry_stage = current_retry_stage
+            self.message = RESUMABLE_CLOUD_PAUSE_MESSAGE
 
 
 def state_update(state: JobState, **kwargs: Any) -> None:
@@ -203,7 +241,10 @@ def wait_while_paused(
                 export_bad_rows_excel(bad_rows_jsonl_path, bad_rows_excel_path, runtime)
             state.add_log(f"已暂停，当前结果已导出：{output_path}")
             exported = True
-        state_update(state, message="已暂停，点击继续后从当前进度接着处理")
+        if snapshot.get("pause_reason") == RESUMABLE_CLOUD_PAUSE_REASON:
+            state_update(state, message=RESUMABLE_CLOUD_PAUSE_MESSAGE)
+        else:
+            state_update(state, message="已暂停，点击继续后从当前进度接着处理")
         time.sleep(0.5)
 
 
@@ -441,6 +482,8 @@ def process_pdf(
             save_extraction_cache(cache_path, rows)
             return rows
         except Exception as exc:
+            if is_transient_cloud_error(exc):
+                raise ResumableCloudFailure(pdf_path, exc) from exc
             record_failure(
                 error_log_path=error_log_path, pdf_path=pdf_path, input_dir=input_dir,
                 stage="cloud_llm_extraction", exc=exc, state=state,
@@ -618,67 +661,93 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
             f"model_total={len(fields)}"
         )
 
+        stop_batch = False
         for index, pdf_path in enumerate(pdf_files, start=1):
-            if wait_while_paused(state, rows, output_path, runtime, bad_rows_jsonl_path, bad_rows_excel_path):
-                state.add_log("收到停止请求，提前结束。")
-                break
-            if state.snapshot()["stop_requested"]:
-                state.add_log("收到停止请求，提前结束。")
-                break
+            while True:
+                if wait_while_paused(state, rows, output_path, runtime, bad_rows_jsonl_path, bad_rows_excel_path):
+                    state.add_log("收到停止请求，提前结束。")
+                    stop_batch = True
+                    break
+                if state.snapshot()["stop_requested"]:
+                    state.add_log("收到停止请求，提前结束。")
+                    stop_batch = True
+                    break
 
-            if str(pdf_path.resolve()).casefold() in completed_paths:
-                state.add_log(f"[{index}/{len(pdf_files)}] 跳过已完成：{pdf_path.name}")
-                state_update(state, done=index)
-                continue
-
-            state_update(state, current_file=pdf_path.name, message=f"处理中：{pdf_path.name}")
-            state.add_log(f"[{index}/{len(pdf_files)}] {pdf_path.name}")
-            pdf_started = time.perf_counter()
-
-            pdf_rows = process_pdf(
-                pdf_path, input_dir, config, runtime, chains, fields, key_to_label,
-                error_log_path, state, f"[{index}/{len(pdf_files)}]", stage_stats,
-            )
-            if pdf_rows is None:
-                state_update(state, failed=state.snapshot()["failed"] + 1)
-                state.add_log(f"失败：{pdf_path.name}（耗时 {format_duration(time.perf_counter() - pdf_started)}）")
-            else:
-                if translation_batch_translator is not None:
-                    try:
-                        translate_started = time.perf_counter()
-                        translated_count = translate_rows_to_chinese(pdf_rows, fields, translation_batch_translator)
-                        add_stat(stage_stats, "translation", time.perf_counter() - translate_started)
-                        if translated_count:
-                            state.add_log(f"中文翻译：{pdf_path.name}（{translated_count} 个单元格）")
-                    except Exception as exc:
-                        log_error(error_log_path, pdf_path, "cloud_chinese_translation", exc)
-                        state.add_log(f"中文翻译失败，保留原文：{pdf_path.name}")
-                extracted_count = len(pdf_rows)
-                pdf_rows = filter_bad_data_rows(pdf_rows, fields, error_log_path, default_pdf_path=pdf_path, state=state, log_prefix=pdf_path.name, min_fill_rate=bad_row_min_fill_rate)
-                bad_count = extracted_count - len(pdf_rows)
-                if bad_count:
-                    state_increment(state, bad_rows=bad_count)
-                if not pdf_rows:
-                    state_update(state, failed=state.snapshot()["failed"] + 1)
-                    state.add_log(
-                        f"坏数据：{pdf_path.name}（抽取到 {extracted_count} 条记录，但填写率均低于 {bad_row_min_fill_rate:.0%}，已删除，耗时 {format_duration(time.perf_counter() - pdf_started)}）"
-                    )
+                if str(pdf_path.resolve()).casefold() in completed_paths:
+                    state.add_log(f"[{index}/{len(pdf_files)}] 跳过已完成：{pdf_path.name}")
                     state_update(state, done=index)
+                    break
+
+                state_update(state, current_file=pdf_path.name, message=f"处理中：{pdf_path.name}")
+                state.add_log(f"[{index}/{len(pdf_files)}] {pdf_path.name}")
+                pdf_started = time.perf_counter()
+
+                try:
+                    pdf_rows = process_pdf(
+                        pdf_path, input_dir, config, runtime, chains, fields, key_to_label,
+                        error_log_path, state, f"[{index}/{len(pdf_files)}]", stage_stats,
+                    )
+                except ResumableCloudFailure as exc:
+                    summary = transient_cloud_failure_summary(exc.original)
+                    state.request_resumable_pause(
+                        reason=RESUMABLE_CLOUD_PAUSE_REASON,
+                        resumable_error=summary,
+                        current_retry_stage="cloud_llm_extraction",
+                    )
+                    state.add_log(
+                        f"{RESUMABLE_CLOUD_PAUSE_MESSAGE} 当前 PDF：{pdf_path.name}；{summary}"
+                    )
+                    if wait_while_paused(state, rows, output_path, runtime, bad_rows_jsonl_path, bad_rows_excel_path):
+                        state.add_log("收到停止请求，提前结束。")
+                        stop_batch = True
+                        break
+                    state.add_log(f"已继续，重新处理当前 PDF：{pdf_path.name}")
                     continue
-                suspicious_count = log_suspicious_rows(pdf_rows, fields, suspicious_jsonl_path, default_pdf_path=pdf_path)
-                if suspicious_count:
-                    add_stat(stage_stats, "suspicious_rows", suspicious_count)
-                    state_increment(state, suspicious_rows=suspicious_count)
-                    state.add_log(f"可疑数据：{pdf_path.name}（{suspicious_count} 条，详见 {SUSPICIOUS_ROWS_EXCEL_NAME}）")
-                rows.extend(pdf_rows)
-                state_increment(state, extracted_rows=len(pdf_rows))
-                for row in pdf_rows:
-                    append_jsonl(partial_jsonl_path, row)
-                state_update(state, success=state.snapshot()["success"] + 1)
-                state.add_log(
-                    f"成功：{pdf_path.name}（{len(pdf_rows)} 条记录，耗时 {format_duration(time.perf_counter() - pdf_started)}，{eta_text(total_started, index, len(pdf_files))}）"
-                )
-            state_update(state, done=index)
+
+                if pdf_rows is None:
+                    state_update(state, failed=state.snapshot()["failed"] + 1)
+                    state.add_log(f"失败：{pdf_path.name}（耗时 {format_duration(time.perf_counter() - pdf_started)}）")
+                else:
+                    if translation_batch_translator is not None:
+                        try:
+                            translate_started = time.perf_counter()
+                            translated_count = translate_rows_to_chinese(pdf_rows, fields, translation_batch_translator)
+                            add_stat(stage_stats, "translation", time.perf_counter() - translate_started)
+                            if translated_count:
+                                state.add_log(f"中文翻译：{pdf_path.name}（{translated_count} 个单元格）")
+                        except Exception as exc:
+                            log_error(error_log_path, pdf_path, "cloud_chinese_translation", exc)
+                            state.add_log(f"中文翻译失败，保留原文：{pdf_path.name}")
+                    extracted_count = len(pdf_rows)
+                    pdf_rows = filter_bad_data_rows(pdf_rows, fields, error_log_path, default_pdf_path=pdf_path, state=state, log_prefix=pdf_path.name, min_fill_rate=bad_row_min_fill_rate)
+                    bad_count = extracted_count - len(pdf_rows)
+                    if bad_count:
+                        state_increment(state, bad_rows=bad_count)
+                    if not pdf_rows:
+                        state_update(state, failed=state.snapshot()["failed"] + 1)
+                        state.add_log(
+                            f"坏数据：{pdf_path.name}（抽取到 {extracted_count} 条记录，但填写率均低于 {bad_row_min_fill_rate:.0%}，已删除，耗时 {format_duration(time.perf_counter() - pdf_started)}）"
+                        )
+                        state_update(state, done=index)
+                        break
+                    suspicious_count = log_suspicious_rows(pdf_rows, fields, suspicious_jsonl_path, default_pdf_path=pdf_path)
+                    if suspicious_count:
+                        add_stat(stage_stats, "suspicious_rows", suspicious_count)
+                        state_increment(state, suspicious_rows=suspicious_count)
+                        state.add_log(f"可疑数据：{pdf_path.name}（{suspicious_count} 条，详见 {SUSPICIOUS_ROWS_EXCEL_NAME}）")
+                    rows.extend(pdf_rows)
+                    state_increment(state, extracted_rows=len(pdf_rows))
+                    for row in pdf_rows:
+                        append_jsonl(partial_jsonl_path, row)
+                    completed_paths.add(str(pdf_path.resolve()).casefold())
+                    state_update(state, success=state.snapshot()["success"] + 1)
+                    state.add_log(
+                        f"成功：{pdf_path.name}（{len(pdf_rows)} 条记录，耗时 {format_duration(time.perf_counter() - pdf_started)}，{eta_text(total_started, index, len(pdf_files))}）"
+                    )
+                state_update(state, done=index)
+                break
+            if stop_batch:
+                break
 
         duplicate_count = log_near_duplicates(rows, suspicious_jsonl_path)
         if duplicate_count:
@@ -709,4 +778,12 @@ def run_extraction_job(config: dict[str, Any], runtime: RuntimeDeps, state: JobS
         state.add_log(f"总耗时：{format_duration(time.perf_counter() - total_started)}")
         state_update(state, message=f"任务异常：{exc}")
     finally:
-        state_update(state, running=False, pause_requested=False, finished_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        state_update(
+            state,
+            running=False,
+            pause_requested=False,
+            pause_reason="",
+            resumable_error="",
+            current_retry_stage="",
+            finished_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        )

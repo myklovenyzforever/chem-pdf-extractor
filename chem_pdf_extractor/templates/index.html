@@ -863,6 +863,7 @@
         next_action_waiting: "下一步：选择输入/输出后点击开始。",
         next_action_running: "下一步：等待处理；需要时可暂停。",
         next_action_paused: "下一步：可继续或停止。",
+        next_action_api_paused: "下一步：检查网络/API 服务后点击继续。",
         next_action_done: "下一步：打开输出 Excel 并复核抽取结果。",
         next_action_done_failed: "下一步：查看错误日志和失败 PDF。",
         next_action_review_rows: "下一步：先复核可疑/坏数据文件。",
@@ -992,6 +993,7 @@
         next_action_waiting: "Next action: choose input/output and click Start.",
         next_action_running: "Next action: wait, or pause if needed.",
         next_action_paused: "Next action: resume or stop.",
+        next_action_api_paused: "Next action: check network/API service, then click Resume.",
         next_action_done: "Next action: open the output Excel and review rows.",
         next_action_done_failed: "Next action: check error log and failed PDFs.",
         next_action_review_rows: "Next action: review suspicious/bad files first.",
@@ -1201,7 +1203,10 @@
 
     function nextActionKey(data) {
       const snapshot = data || {};
-      if (snapshot.running && snapshot.pause_requested) return "next_action_paused";
+      if (snapshot.running && snapshot.pause_requested) {
+        if (snapshot.pause_reason === "transient_cloud_failure") return "next_action_api_paused";
+        return "next_action_paused";
+      }
       if (snapshot.running) return "next_action_running";
       const total = numberValue(snapshot.total || 0);
       const done = numberValue(snapshot.done || 0);
