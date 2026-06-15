@@ -11,6 +11,7 @@ This roadmap focuses on practical improvements for literature review workflows, 
 - Improve bad-row and suspicious-row detection.
 - Improve error logs so users can more easily identify failed or low-confidence extraction cases.
 - Add more usage cases and reproducible examples.
+- Maintain synthetic/public-safe benchmark cases and first-pass evaluation notes.
 - Keep installation and Windows startup behavior stable.
 
 ## Medium term

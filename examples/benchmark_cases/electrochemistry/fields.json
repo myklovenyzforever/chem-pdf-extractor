@@ -1,0 +1,42 @@
+[
+  {
+    "label": "reaction",
+    "requirement": "required",
+    "description": "Electrochemical reaction or target conversion."
+  },
+  {
+    "label": "electrode_material",
+    "requirement": "required",
+    "description": "Working electrode material or catalyst."
+  },
+  {
+    "label": "electrolyte",
+    "requirement": "recommended",
+    "description": "Electrolyte composition and concentration."
+  },
+  {
+    "label": "current_density_ma_cm2",
+    "requirement": "required",
+    "description": "Current density in mA/cm2."
+  },
+  {
+    "label": "potential_v",
+    "requirement": "recommended",
+    "description": "Applied potential in volts and reference scale when available."
+  },
+  {
+    "label": "target_product",
+    "requirement": "recommended",
+    "description": "Main target product."
+  },
+  {
+    "label": "faradaic_efficiency_percent",
+    "requirement": "required",
+    "description": "Faradaic efficiency percentage."
+  },
+  {
+    "label": "stability_time_h",
+    "requirement": "optional",
+    "description": "Stability test duration in hours."
+  }
+]
