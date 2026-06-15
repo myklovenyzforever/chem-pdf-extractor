@@ -10,11 +10,29 @@ Chem-PDF-Extractor 是一个面向化工、催化、材料、能源与环境领�
 
 ## Overview
 
-The project provides an inspectable first-pass workflow for converting PDF papers to Markdown/text, defining configurable LLM-based extraction fields, extracting multiple records from one paper, and exporting structured results for review. It also supports low-quality row filtering, error logs, suspicious-data records, bad-data records, resumable processing, cache reuse, OpenAI-compatible APIs, and local Ollama models.
+The project provides an inspectable, local-first workflow for converting PDF papers to Markdown/text, defining configurable LLM-based extraction fields, extracting multiple records from one paper, and exporting structured results for review. It supports local Ollama models and optional OpenAI-compatible cloud APIs, but cloud use is opt-in and requires the user to provide their own API configuration.
+
+The output is intended as first-pass extraction for literature review and dataset preparation. It should be checked against the original paper before being used for scientific conclusions.
 
 ## Why This Project
 
 Experimental information in scientific papers is often scattered across paragraphs, tables, figures, captions, and supplementary materials. Manually collecting feedstocks, catalysts, reaction temperature, pressure, conversion, selectivity, yield, and product information is slow and error-prone. This project provides a local, inspectable workflow for building first-pass structured datasets that still require human review.
+
+## Workflow Overview
+
+1. Install the project and start the local Web UI or CLI.
+2. Choose a PDF mode: `pymupdf4llm` for the recommended default, `pypdf_text` for the smallest fallback, `auto` for the current heuristic path, or optional `mineru` for harder layouts.
+3. Choose a field template from [Field Templates](examples/field_templates/README.md) or provide a custom `fields.json`.
+4. Run extraction with local Ollama or an OpenAI-compatible cloud provider.
+5. Review extracted rows, warnings, bad-row filtering, and evidence/hint columns against the source PDF.
+6. Export Excel/CSV results for downstream manual review.
+
+## Supported Workflows
+
+- Local Web UI: run `python -m chem_pdf_extractor`, open the printed `127.0.0.1` URL, configure fields and models, then start a batch.
+- Local LLM: use Ollama when you want PDF text and prompts to stay on the machine running the tool.
+- Optional cloud LLM: use an OpenAI-compatible Base URL, model name, and API key when you intentionally choose a cloud provider.
+- CLI: use `python -m chem_pdf_extractor --cli ...` for scripted local runs.
 
 ## Features
 
@@ -72,7 +90,28 @@ Maintainers who are verifying a release can install with `constraints.txt` to av
 python -m pip install -r requirements.txt -c constraints.txt
 ```
 
-Normal source users can continue using `requirements.txt` or `requirements-core.txt` directly.
+Normal source users can continue using `requirements.txt` or `requirements-core.txt` directly. See [Windows One-click Package Guide](docs/windows_package.md) for package and release-constraint guidance.
+
+## Web UI Workflow
+
+1. Start with `python -m chem_pdf_extractor`.
+2. Open the local URL printed in the terminal.
+3. Select the PDF input folder and output path.
+4. Choose PDF mode, max text budget, model provider, and model settings.
+5. Apply a field template or edit fields below the first workbench.
+6. Start the task, watch progress/logs, then inspect exported Excel/CSV files and review-aid columns.
+
+The compact three-column workbench is documented in [UI Layout Contract](docs/ui_layout_contract.md). The field editing panel intentionally stays below the first workbench.
+
+## CLI Workflow
+
+Use CLI mode when you want a repeatable command or do not need the browser UI:
+
+```powershell
+python -m chem_pdf_extractor --cli --input-dir .\papers --output .\output\results.xlsx --pdf-mode pymupdf4llm --llm-provider ollama --model qwen2.5:7b
+```
+
+For cloud providers, pass or save a real API key, Base URL, and model name. Do not put private keys into committed scripts, issue reports, screenshots, or logs.
 
 ## Configuration
 
@@ -154,22 +193,26 @@ The example data is synthetic and does not represent real published papers.
 
 ## Project Docs
 
+- [Configuration](docs/configuration.md)
 - [Usage Case: Catalysis Literature Data Extraction](docs/use_case_catalysis_literature_extraction.md)
 - [Evaluation and Benchmark Notes](docs/evaluation.md)
 - [Field Templates](examples/field_templates/README.md)
-- [Roadmap](ROADMAP.md)
+- [UI Layout Contract](docs/ui_layout_contract.md)
+- [Screenshot Guide](docs/screenshot_guide.md)
 - [Windows One-click Package Guide](docs/windows_package.md)
+- [Security Policy](SECURITY.md)
+- [Roadmap](ROADMAP.md)
 - [Windows 一键包说明](docs/windows_package.md)
 
 ## Screenshots
 
-A Web UI screenshot and a synthetic Excel/CSV output preview are shown below. Screenshots may vary slightly between releases.
+A recent compact Web UI screenshot and a synthetic Excel/CSV output preview are shown below. Screenshots may vary slightly between releases. They should contain only synthetic/public-safe data and must not show private PDFs, API keys, local paths, copyrighted paper text, or user outputs from real papers.
 
 ![Web UI](docs/screenshots/web-ui-zh+en.png)
 
 ![Synthetic Excel Output Preview](docs/screenshots/excel-output-example.svg)
 
-The output preview uses synthetic data only and does not represent real published papers or real extracted research results.
+The output preview uses synthetic data only and does not represent real published papers or real extracted research results. See [Screenshot Guide](docs/screenshot_guide.md) before refreshing screenshots.
 
 ## Limitations
 
