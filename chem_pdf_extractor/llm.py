@@ -6,6 +6,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +33,45 @@ PROVENANCE_HINT_RULE = (
     "only from clear headings, captions, tables, or nearby text. Leave provenance "
     "hints empty when unclear."
 )
+
+
+MALFORMED_JSON_WARNING = "malformed_json"
+MISSING_RECORDS_WARNING = "missing_records"
+SINGLE_OBJECT_FALLBACK_WARNING = "single_object_fallback"
+NON_OBJECT_RECORD_WARNING = "non_object_record"
+UNKNOWN_KEYS_WARNING = "unknown_keys"
+TYPE_NORMALIZATION_FAILED_WARNING = "type_normalization_failed"
+RECORDS_NOT_LIST_WARNING = "records_not_list"
+TOP_LEVEL_NOT_OBJECT_WARNING = "top_level_not_object"
+
+
+class CloudStructuredOutputError(RuntimeError):
+    """Raised when cloud model output cannot be parsed as a safe JSON object."""
+
+
+@dataclass
+class CloudStructuredOutputReport:
+    warnings: list[str] = field(default_factory=list)
+    unknown_keys: list[str] = field(default_factory=list)
+    type_normalization_failed: list[str] = field(default_factory=list)
+    dropped_record_count: int = 0
+    normalized_record_count: int = 0
+
+    def add_warning(self, warning: str) -> None:
+        if warning not in self.warnings:
+            self.warnings.append(warning)
+
+    def add_unknown_keys(self, keys: set[str]) -> None:
+        if keys:
+            self.add_warning(UNKNOWN_KEYS_WARNING)
+        for key in sorted(keys):
+            if key not in self.unknown_keys:
+                self.unknown_keys.append(key)
+
+    def add_type_normalization_failed(self, key: str) -> None:
+        self.add_warning(TYPE_NORMALIZATION_FAILED_WARNING)
+        if key not in self.type_normalization_failed:
+            self.type_normalization_failed.append(key)
 
 
 class TransientCloudAPIError(RuntimeError):
@@ -127,6 +167,20 @@ def extract_json_object(text: str) -> dict[str, Any]:
         raise
 
 
+def parse_cloud_extraction_payload(content: Any) -> dict[str, Any]:
+    try:
+        raw = extract_json_object(message_content(content))
+    except (json.JSONDecodeError, TypeError, ValueError):
+        raise CloudStructuredOutputError(
+            f"Cloud structured output validation failed: {MALFORMED_JSON_WARNING}."
+        ) from None
+    if not isinstance(raw, dict):
+        raise CloudStructuredOutputError(
+            f"Cloud structured output validation failed: {TOP_LEVEL_NOT_OBJECT_WARNING}."
+        ) from None
+    return raw
+
+
 def raw_records(raw: dict[str, Any]) -> list[dict[str, Any]]:
     records = raw.get("records")
     if isinstance(records, list):
@@ -144,19 +198,72 @@ def blank_labeled_row(fields: list[dict[str, str]], key_to_label: dict[str, str]
     return row
 
 
-def labeled_rows(
+def _expected_field_keys(fields: list[dict[str, str]]) -> set[str]:
+    return {f"field_{index:02d}" for index, _item in enumerate(fields, start=1)}
+
+
+def _records_with_report(
+    raw: dict[str, Any], expected_keys: set[str],
+) -> tuple[list[dict[str, Any]], CloudStructuredOutputReport]:
+    report = CloudStructuredOutputReport()
+    records = raw.get("records")
+    if isinstance(records, list):
+        raw_records_value = records
+    elif "records" not in raw:
+        if expected_keys and any(key in raw for key in expected_keys):
+            report.add_warning(SINGLE_OBJECT_FALLBACK_WARNING)
+            raw_records_value = [raw]
+        else:
+            report.add_warning(MISSING_RECORDS_WARNING)
+            raw_records_value = []
+    else:
+        report.add_warning(RECORDS_NOT_LIST_WARNING)
+        raw_records_value = []
+
+    records_out: list[dict[str, Any]] = []
+    for record in raw_records_value:
+        if not isinstance(record, dict):
+            report.add_warning(NON_OBJECT_RECORD_WARNING)
+            report.dropped_record_count += 1
+            continue
+        if expected_keys:
+            report.add_unknown_keys(set(record) - expected_keys)
+        records_out.append(record)
+    return records_out, report
+
+
+def labeled_rows_with_report(
     raw: dict[str, Any], fields: list[dict[str, str]], key_to_label: dict[str, str],
-) -> list[dict[str, Any]]:
-    from .quality import normalize_cloud_value
+) -> tuple[list[dict[str, Any]], CloudStructuredOutputReport]:
+    from .quality import clean_extracted_value, normalize_cloud_value
+
+    expected_keys = _expected_field_keys(fields)
+    records, report = _records_with_report(raw, expected_keys)
     rows: list[dict[str, Any]] = []
-    for record in raw_records(raw):
+    for record in records:
         row: dict[str, Any] = {}
         for index, item in enumerate(fields, start=1):
             key = f"field_{index:02d}"
             label = key_to_label[key]
-            row[label] = normalize_cloud_value(record.get(key), item["type"])
+            field_type = item.get("type", "str")
+            raw_value = record.get(key)
+            value = normalize_cloud_value(raw_value, field_type)
+            if field_type in {"float", "int"} and raw_value is not None:
+                if clean_extracted_value(raw_value) and value == "":
+                    report.add_type_normalization_failed(key)
+            row[label] = value
         rows.append(row)
-    return rows or [blank_labeled_row(fields, key_to_label)]
+    if not rows:
+        rows = [blank_labeled_row(fields, key_to_label)]
+    report.normalized_record_count = len(rows)
+    return rows, report
+
+
+def labeled_rows(
+    raw: dict[str, Any], fields: list[dict[str, str]], key_to_label: dict[str, str],
+) -> list[dict[str, Any]]:
+    rows, _report = labeled_rows_with_report(raw, fields, key_to_label)
+    return rows
 
 
 def build_extraction_chain(
@@ -413,5 +520,5 @@ def extract_with_cloud_api(
         },
     ]
     content = cloud_chat_completion(base_url, api_key, model, messages, int(config.get("llm_timeout") or 0))
-    raw = extract_json_object(content)
+    raw = parse_cloud_extraction_payload(content)
     return labeled_rows(raw, fields, key_to_label)
