@@ -49,6 +49,27 @@ Each evaluation run should record these fields:
 - `notes_limitations`: notes about synthetic scope, known ambiguity, and manual
   review needs.
 
+## PDF Backend Comparison Hook
+
+Auto-mode backend evaluation should use only synthetic or public-safe cases and
+record:
+
+| Column | Meaning |
+| --- | --- |
+| `case_id` | Stable benchmark case identifier. |
+| `backend` | `pypdf_text`, `pymupdf4llm`, `pymupdf_text`, `mineru`, `auto`, or mocked conversion. |
+| `markdown_chars` | Character count in converted Markdown/text before extraction truncation. |
+| `table_line_count` | Count of Markdown-style table lines or equivalent table markers. |
+| `extracted_rows` | Number of rows produced by the extraction step. |
+| `field_match_rate` | Field-level exact-match rate against the golden row after normalization. |
+| `notes` | Backend limitations, fallback behavior, and manual-review notes. |
+
+Current `auto` mode is intentionally heuristic-based. It tries `pymupdf4llm`
+first, may try optional MinerU when the initial Markdown is short, has repeated
+table mentions without table-like rows, or appears image-heavy, and falls back to
+usable `pymupdf4llm` text or `pypdf_text` if MinerU is unavailable. CI should not
+require MinerU; tests cover the heuristic path with mocks.
+
 ## How To Reproduce
 
 The repository currently uses mock tests for reproducibility. These tests avoid
@@ -81,8 +102,8 @@ test and fixture contract, not as a statistical performance claim.
 ## Next Evaluation Work
 
 - Add more public-safe cases across domains and document the case source type.
-- Add backend comparison across `pypdf_text`, `pymupdf4llm`, `pymupdf_text`, and
-  optional MinerU where available.
+- Fill backend comparison reports across `pypdf_text`, `pymupdf4llm`,
+  `pymupdf_text`, and optional MinerU where available.
 - Add model comparison for OpenAI-compatible providers and local Ollama models
   using the same synthetic/public-safe cases.
 - Add stronger provenance/page/table hint evaluation against human-checked
