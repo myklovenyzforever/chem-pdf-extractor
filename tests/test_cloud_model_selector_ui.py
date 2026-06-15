@@ -125,10 +125,25 @@ class CloudModelSelectorUiTest(unittest.TestCase):
     def test_left_and_middle_columns_do_not_use_internal_scrollbars(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
-        for selector in [".left-stack", ".task-panel", ".task-stats-panel", ".config-stack", ".api-panel", ".progress-panel"]:
+        for selector in [
+            ".left-stack",
+            ".task-panel",
+            ".task-stats-panel",
+            ".config-stack",
+            ".api-panel",
+            "\n    .progress-panel",
+            ".task-grid",
+            ".api-grid",
+            ".task-panel .checks",
+            ".task-panel .actions",
+            ".cloud-actions",
+            ".status-box",
+        ]:
             block = css_block(template, selector)
             self.assertNotIn("overflow-y: auto", block)
             self.assertNotIn("overflow: auto", block)
+            self.assertNotIn("overflow-y: scroll", block)
+            self.assertNotIn("overflow: scroll", block)
 
     def test_cloud_mode_hides_only_ollama_fields(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")

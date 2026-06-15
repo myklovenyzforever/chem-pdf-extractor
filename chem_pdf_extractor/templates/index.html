@@ -47,6 +47,12 @@
       vertical-align: -4px;
     }
     main { width: 100%; max-width: 1680px; margin: 0 auto; padding: 12px 16px; overflow-x: hidden; }
+    /*
+      UI layout contract: the 1366x768 desktop workbench must show left task
+      settings, middle API/progress, statistics, and logs without left/middle
+      internal scrollbars. Only pre#logs may scroll internally, and the fields
+      panel intentionally remains below .top-grid. See docs/ui_layout_contract.md.
+    */
     .top-grid {
       display: grid;
       grid-template-columns: minmax(0, 3fr) minmax(0, 3fr) minmax(0, 4fr);
