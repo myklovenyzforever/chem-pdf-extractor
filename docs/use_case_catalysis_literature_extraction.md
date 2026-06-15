@@ -124,6 +124,8 @@ Expected outputs may include:
 
 The Markdown cache can help users inspect what the PDF conversion backend produced before the model extraction step. Error logs, bad-row records, and suspicious-row records are useful for deciding which papers require manual follow-up.
 
+Exported review/provenance aid columns include `source_evidence`, `source_hint`, `verification_status`, `review_note`, `page_hint`, `section_hint`, and `table_hint`. The page/section/table hints are optional model-written review aids based on visible converted text such as page markers, headings, captions, or nearby table text. They are not guaranteed full provenance, PDF highlighting, or page-coordinate source anchors, so human verification against the original paper is still required.
+
 ## Example Output Table Shape
 
 | Source file   | Catalyst | Feedstock | Reaction temperature | Reaction pressure | Conversion | Selectivity | Product | Notes |
@@ -143,6 +145,7 @@ The empty cells above are intentional. They show the expected table structure wi
 - Extracted values should be checked against the original paper before being used in analysis, publication, or model training.
 - Different PDF conversion modes may produce different extraction quality.
 - Complex tables, scanned pages, two-column layouts, and figure-only information may require additional manual checking.
+- Page, section, and table hints are practical review aids only; full PDF source highlighting remains future work.
 
 ## 8. Reproducibility and Safety
 

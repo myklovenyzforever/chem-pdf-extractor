@@ -150,6 +150,9 @@ REVIEW_AID_FIELD_LABELS = [
     "source_hint",
     "verification_status",
     "review_note",
+    "page_hint",
+    "section_hint",
+    "table_hint",
 ]
 
 REVIEW_AID_FIELDS = [
@@ -170,7 +173,8 @@ REVIEW_AID_FIELDS = [
         "requirement": "optional",
         "description": (
             "Indicate where the evidence appears to come from. Use one of: body_text, table, "
-            "figure_caption, supplementary, ocr_text, not_clear. If uncertain, use not_clear."
+            "figure_caption, supplementary, ocr_text, not_clear. Do not invent source hints. "
+            "If uncertain, use not_clear."
         ),
     },
     {
@@ -183,7 +187,7 @@ REVIEW_AID_FIELDS = [
             "only when the value is directly supported by nearby text or a table. Use inferred "
             "when interpretation or unit conversion was needed. Use needs_review when the source "
             "is unclear or multiple interpretations are possible. Use low_confidence when evidence "
-            "is weak."
+            "is weak. Do not invent verification support."
         ),
     },
     {
@@ -193,7 +197,37 @@ REVIEW_AID_FIELDS = [
         "description": (
             "Briefly explain why the row should or should not be reviewed. Mention uncertainty, "
             "unit conversion, missing context, OCR ambiguity, table complexity, or unclear source "
-            "when applicable. Keep it short. Do not include long paper text."
+            "when applicable. Keep it short. Do not include long paper text. Do not invent "
+            "provenance details."
+        ),
+    },
+    {
+        "label": "page_hint",
+        "type": "str",
+        "requirement": "optional",
+        "description": (
+            'Optional review aid. Use visible page markers such as "Page 3" only if '
+            "available in the converted text. Do not invent page numbers. Leave empty "
+            "when unclear."
+        ),
+    },
+    {
+        "label": "section_hint",
+        "type": "str",
+        "requirement": "optional",
+        "description": (
+            "Optional review aid. Prefer abstract, experimental, results, table caption, "
+            "figure caption, or nearby heading when clear. Do not invent sections. Leave "
+            "empty when unclear."
+        ),
+    },
+    {
+        "label": "table_hint",
+        "type": "str",
+        "requirement": "optional",
+        "description": (
+            "Optional review aid. Prefer table number, table caption, or nearby row/caption "
+            "when clear. Do not invent table identifiers. Leave empty when unclear."
         ),
     },
 ]

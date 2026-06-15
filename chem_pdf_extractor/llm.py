@@ -25,6 +25,15 @@ from .security import redact_sensitive_text
 from .text_safety import json_dumps_utf8
 
 
+PROVENANCE_HINT_RULE = (
+    " Review/provenance aid rule: never invent source_evidence, source_hint, "
+    "page_hint, section_hint, table_hint, verification_status, or review_note. "
+    "Use page_hint only from visible page markers, and use section_hint/table_hint "
+    "only from clear headings, captions, tables, or nearby text. Leave provenance "
+    "hints empty when unclear."
+)
+
+
 class TransientCloudAPIError(RuntimeError):
     """Raised only after retry-exhausted transient cloud/API/network failures."""
 
@@ -167,7 +176,8 @@ def build_extraction_chain(
             "严格按照结构化输出字段抽取数据。文献可能是中文、英文或中英混合。"
             "只能依据原文，不要编造。任何字段缺失时留空，不要填 N/A、null 或 -999。"
             "如果同一篇文献包含多个工艺、催化剂、实验条件、表格行或独立结果，"
-            "请在 records 中拆成多条记录；只有一条结果时也输出一条 records。",
+            "请在 records 中拆成多条记录；只有一条结果时也输出一条 records。"
+            + PROVENANCE_HINT_RULE,
         ),
         (
             "human",
@@ -387,6 +397,7 @@ def extract_with_cloud_api(
                 "JSON 顶层必须是 records 数组，例如 {\"records\":[{\"field_01\":\"...\"}]}。"
                 "同一篇文献如果包含多个工艺、催化剂、实验条件、表格行或独立结果，就输出多条 records。"
                 "任何字段缺失时留空字符串，不要输出 N/A、null 或 -999。"
+                + PROVENANCE_HINT_RULE
             ),
         },
         {

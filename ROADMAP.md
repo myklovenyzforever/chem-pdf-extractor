@@ -27,6 +27,8 @@ This roadmap focuses on practical improvements for literature review workflows, 
 - Explore RAG-style domain knowledge support when it can be added without making the project too complex.
 - Explore packaged Windows releases for users who are not familiar with Python environments.
 - Explore optional desktop or simplified local UI packaging.
+- Explore full PDF source highlighting and page-coordinate anchoring after the
+  current optional page/section/table review hints are evaluated.
 - Improve support for larger literature batches.
 - Encourage external issue reports, field template suggestions, and reproducible bug reports.
 
