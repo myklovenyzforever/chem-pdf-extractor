@@ -139,7 +139,7 @@ The `examples/` directory contains synthetic demonstration files:
 - `demo_literature_batch/`: complete synthetic batch demo with input PDFs, field configuration, and expected output shape.
 - `benchmark_cases/`: synthetic/public-safe benchmark cases for first-pass evaluation.
 - `demo_literature_batch/`：完整合成批处理示例，包含输入 PDF、字段配置和期望输出表格结构。
-- `field_templates/`: reusable field templates for catalysis, materials synthesis, environmental treatment, and electrochemistry workflows.
+- `field_templates/`: reusable field templates for catalysis, materials synthesis, environmental treatment, and electrochemistry workflows. See [Field Templates](examples/field_templates/README.md).
 - `field_templates/`：面向催化反应、材料合成、环境处理和电化学方向的可复用字段模板。
 
 The example data is synthetic and does not represent real published papers.
@@ -148,6 +148,7 @@ The example data is synthetic and does not represent real published papers.
 
 - [Usage Case: Catalysis Literature Data Extraction](docs/use_case_catalysis_literature_extraction.md)
 - [Evaluation and Benchmark Notes](docs/evaluation.md)
+- [Field Templates](examples/field_templates/README.md)
 - [Roadmap](ROADMAP.md)
 - [Windows One-click Package Guide](docs/windows_package.md)
 - [Windows 一键包说明](docs/windows_package.md)
