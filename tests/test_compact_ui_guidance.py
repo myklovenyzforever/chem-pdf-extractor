@@ -1,9 +1,11 @@
+import re
 import unittest
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_PATH = REPO_ROOT / "chem_pdf_extractor" / "templates" / "index.html"
+LAYOUT_CONTRACT_PATH = REPO_ROOT / "docs" / "ui_layout_contract.md"
 
 
 def css_block(template: str, selector: str) -> str:
@@ -49,6 +51,76 @@ class CompactUiGuidanceTest(unittest.TestCase):
         for text in checks:
             with self.subTest(text=text):
                 self.assertIn(text, self.template)
+
+    def test_first_screen_workbench_required_controls_exist_before_fields(self):
+        fields_panel_index = self.template.index('<section class="fields-panel">')
+        required_ids = [
+            "inputDir",
+            "outputPath",
+            "llmProvider",
+            "pdfMode",
+            "maxChars",
+            "llmTimeout",
+            "badRowMinFillPercent",
+            "recursive",
+            "autoFallback",
+            "copyFailedSources",
+            "startBtn",
+            "pauseBtn",
+            "resumeBtn",
+            "stopBtn",
+            "cloudPanel",
+            "cloudBaseUrl",
+            "cloudApiKey",
+            "cloudModelSelect",
+            "progressBar",
+            "progressRatio",
+            "done",
+            "total",
+            "success",
+            "failed",
+            "extractedRows",
+            "successfulPdfs",
+            "failedPdfs",
+            "suspiciousBadRows",
+            "cacheHits",
+            "logs",
+        ]
+
+        for element_id in required_ids:
+            marker = f'id="{element_id}"'
+            with self.subTest(element_id=element_id):
+                self.assertIn(marker, self.template)
+                self.assertLess(self.template.index(marker), fields_panel_index)
+
+    def test_compact_chinese_labels_are_layout_contract(self):
+        zh = i18n_block(self.template, "zh")
+        compact_labels = {
+            "llm_provider": "模型来源",
+            "pdf_mode": "解析方式",
+            "max_chars": "上传字数",
+            "llm_timeout": "超时秒",
+            "bad_row_percent": "坏行阈值",
+            "recursive": "含子目录",
+            "auto_fallback": "失败换模型",
+            "copy_failed_sources": "复制失败 PDF",
+            "copy_failed_sources_help": "会复制私有/版权 PDF，仅调试时开启。",
+            "start": "开始",
+            "pause": "暂停",
+            "resume": "继续",
+            "stop": "停止",
+            "stat_suspicious_bad_rows": "可疑/坏行",
+        }
+
+        for key, label in compact_labels.items():
+            with self.subTest(key=key):
+                self.assertIn(f'{key}: "{label}"', zh)
+
+    def test_copy_failed_sources_is_not_enabled_by_default(self):
+        start = self.template.index('id="copyFailedSources"')
+        end = self.template.index("</label>", start)
+
+        self.assertNotIn("checked", self.template[start:end])
 
     def test_new_i18n_keys_exist_for_zh_and_en(self):
         keys = [
@@ -116,6 +188,8 @@ class CompactUiGuidanceTest(unittest.TestCase):
         self.assertIn('</div>\n\n        <section class="fields-panel">', self.template)
 
     def test_only_logs_pre_has_first_workbench_internal_scroll_target(self):
+        self.assertEqual(re.findall(r"<pre\b[^>]*>", self.template), ['<pre id="logs">'])
+
         for selector in [
             ".top-grid",
             ".left-stack",
@@ -124,6 +198,12 @@ class CompactUiGuidanceTest(unittest.TestCase):
             ".task-stats-panel",
             ".api-panel",
             "\n    .progress-panel",
+            ".task-grid",
+            ".api-grid",
+            ".task-panel .checks",
+            ".task-panel .actions",
+            ".cloud-actions",
+            ".status-box",
             ".log-filters",
             ".workflow-guide",
         ]:
@@ -136,6 +216,42 @@ class CompactUiGuidanceTest(unittest.TestCase):
 
         log_pre = css_block(self.template, ".log-panel pre")
         self.assertIn("overflow: auto", log_pre)
+
+    def test_layout_contract_css_comment_points_to_docs(self):
+        comment_index = self.template.index("UI layout contract")
+        top_grid_index = self.template.index(".top-grid")
+
+        self.assertLess(comment_index, top_grid_index)
+        self.assertIn("1366x768 desktop workbench", self.template)
+        self.assertIn("Only pre#logs may scroll internally", self.template)
+        self.assertIn("fields", self.template[comment_index:top_grid_index])
+        self.assertIn("panel intentionally remains below .top-grid", self.template)
+        self.assertIn("docs/ui_layout_contract.md", self.template)
+
+    def test_layout_contract_document_records_phase_one_rules(self):
+        contract = LAYOUT_CONTRACT_PATH.read_text(encoding="utf-8")
+        required_text = [
+            "1366x768",
+            "100% browser zoom",
+            "compact three-column workbench",
+            "Field editing intentionally stays below the first workbench",
+            "No internal scrollbar in the left Task Settings column",
+            "No internal scrollbar in the middle API/Progress column",
+            "only intended internal scroll region in the workbench is `pre#logs`",
+            "模型来源",
+            "解析方式",
+            "上传字数",
+            "超时秒",
+            "坏行阈值",
+            "复制失败 PDF",
+            "Copying failed source PDFs must not be enabled by default",
+            "Start/Pause/Resume/Stop",
+            "left and middle columns do not show internal scrollbars",
+        ]
+
+        for text in required_text:
+            with self.subTest(text=text):
+                self.assertIn(text, contract)
 
     def test_field_templates_replace_rows_after_confirmation(self):
         self.assertIn("const fieldTemplates = {", self.template)
