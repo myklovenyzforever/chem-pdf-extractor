@@ -25,6 +25,10 @@ generated outputs from real papers.
 For release checks and user feedback categories, see
 [Release and Feedback Path](docs/release_and_feedback.md).
 
+For current project maturity, single-maintainer expectations, and future
+RAG-related direction, see
+[Project Status and Maintainer Roadmap](docs/project_status_and_roadmap.md).
+
 ## Safety and Privacy
 
 Do not upload copyrighted papers, private documents, unpublished data, API keys, tokens, passwords, local file paths, or `config.local.json` in issues, pull requests, examples, logs, or screenshots.

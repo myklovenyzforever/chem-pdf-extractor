@@ -22,6 +22,7 @@ class DocsLinksTest(unittest.TestCase):
             "docs/evaluation.md",
             "examples/field_templates/README.md",
             "docs/ui_layout_contract.md",
+            "docs/project_status_and_roadmap.md",
             "docs/screenshot_guide.md",
             "docs/release_and_feedback.md",
             "docs/windows_package.md",
@@ -135,6 +136,70 @@ class DocsLinksTest(unittest.TestCase):
             "open" + "ai " + "cre" + "dits",
             "open" + "ai " + "sponsor" + "ship",
             "open" + "ai " + "fund" + "ing",
+            "sponsor" + "ship",
+            "fund" + "ing",
+            "accept" + "ance",
+            "cre" + "dits",
+        ]
+        for forbidden in forbidden_terms:
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, lower)
+
+    def test_project_status_doc_exists_and_sets_maintainer_roadmap(self):
+        path = REPO_ROOT / "docs" / "project_status_and_roadmap.md"
+        content = read(path)
+        lower = content.lower()
+        readme_content = read(README)
+
+        self.assertIn("docs/project_status_and_roadmap.md", readme_content)
+
+        for phrase in [
+            "local-first tool for chemistry and chemical engineering pdf extraction",
+            "first-pass literature review",
+            "not automated scientific correctness",
+            "checked by a human",
+            "tests covering core extraction flow",
+            "synthetic/public-safe benchmark examples",
+            "release checklist",
+            "single maintainer",
+            "limited review bandwidth",
+            "small, focused",
+            "minimal synthetic or public-safe reproductions",
+            "privacy-conscious",
+            "issue #7",
+            "rag-like ideas remain future exploration",
+            "rag is not current functionality",
+            "retrieval-assisted chunk selection",
+            "local-first indexing",
+            "evidence linking",
+            "table-aware and section-aware retrieval",
+            "benchmark-driven evaluation",
+            "broader adoption evidence should be added only when it exists",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, lower)
+
+        overclaims = [
+            "wide" + "ly used",
+            "large user " + "base",
+            "many production " + "deployments",
+            "institutional " + "use",
+            "test" + "imonials",
+            "production-grade scientific " + "accuracy",
+            "fully automated " + "correctness",
+            "guaranteed " + "accuracy",
+        ]
+        for overclaim in overclaims:
+            with self.subTest(overclaim=overclaim):
+                self.assertNotIn(overclaim, lower)
+
+        forbidden_terms = [
+            "cod" + "ex for " + "oss",
+            "open" + "ai " + "application",
+            "open" + "ai " + "cre" + "dits",
+            "open" + "ai " + "sponsor" + "ship",
+            "open" + "ai " + "fund" + "ing",
+            "open" + "ai " + "support",
             "sponsor" + "ship",
             "fund" + "ing",
             "accept" + "ance",
