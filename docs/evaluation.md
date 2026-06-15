@@ -43,6 +43,9 @@ Each evaluation run should record these fields:
   review.
 - `pdf_backend_used`: PDF conversion backend used, such as `pypdf_text`,
   `pymupdf4llm`, `pymupdf_text`, `mineru`, or mocked conversion.
+- `page_hint`, `section_hint`, and `table_hint`: optional review aids from
+  visible page markers, headings, captions, or table text when available. They
+  are not full provenance, PDF highlighting, or page-coordinate anchors.
 - `notes_limitations`: notes about synthetic scope, known ambiguity, and manual
   review needs.
 
@@ -68,9 +71,9 @@ PDFs.
 ## Interpreting Results
 
 Benchmark output is useful for regression checks and workflow confidence. It is
-not a substitute for reading the original paper. Extracted rows should be
-reviewed against source evidence before scientific analysis, publication, or
-model training.
+not a substitute for reading the original paper. Extracted rows and optional
+page/section/table hints should be reviewed against source evidence before
+scientific analysis, publication, or model training.
 
 The initial benchmark is intentionally small. It should be treated as a smoke
 test and fixture contract, not as a statistical performance claim.
@@ -82,8 +85,8 @@ test and fixture contract, not as a statistical performance claim.
   optional MinerU where available.
 - Add model comparison for OpenAI-compatible providers and local Ollama models
   using the same synthetic/public-safe cases.
-- Add provenance/page/table hint evaluation when those fields are available in a
-  future scope.
+- Add stronger provenance/page/table hint evaluation against human-checked
+  synthetic or public-safe cases.
 - Add malformed output recovery evaluation once structured output hardening is
   implemented.
 - Expand from smoke tests to a larger public-safe benchmark set before making
