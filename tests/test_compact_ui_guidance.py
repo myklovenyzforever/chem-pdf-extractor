@@ -1,6 +1,11 @@
 import re
+import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+
+from chem_pdf_extractor.app import parse_args
+from chem_pdf_extractor.config import DEFAULT_MAX_CHARS
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +56,26 @@ class CompactUiGuidanceTest(unittest.TestCase):
         for text in checks:
             with self.subTest(text=text):
                 self.assertIn(text, self.template)
+
+    def test_default_max_chars_is_finite_and_cli_zero_remains_no_truncation(self):
+        self.assertEqual(DEFAULT_MAX_CHARS, 80000)
+
+        with patch.object(sys, "argv", ["chem-pdf-extractor"]):
+            default_args = parse_args()
+        self.assertEqual(default_args.max_chars, 80000)
+
+        with patch.object(sys, "argv", ["chem-pdf-extractor", "--max-chars", "0"]):
+            no_truncation_args = parse_args()
+        self.assertEqual(no_truncation_args.max_chars, 0)
+
+    def test_max_chars_help_keeps_manual_zero_and_presets_clear(self):
+        en = i18n_block(self.template, "en")
+        self.assertIn("0 = no truncation, may be slow/costly", en)
+        self.assertIn("40k = small/cheap", en)
+        self.assertIn("80k = recommended/default", en)
+        self.assertIn("120k = larger context", en)
+        self.assertIn("max_chars: \"Max chars\"", en)
+        self.assertIn('max_chars: Number(document.getElementById("maxChars").value || 0)', self.template)
 
     def test_first_screen_workbench_required_controls_exist_before_fields(self):
         fields_panel_index = self.template.index('<section class="fields-panel">')

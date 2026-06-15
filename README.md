@@ -107,6 +107,10 @@ Backend choices:
 - `pymupdf4llm`: recommended default, balanced install size and extraction quality, suitable for most research PDFs.
 - `mineru`: optional enhanced backend, larger install size, slower first-time installation, suitable for complex layouts, tables, scanned PDFs, and high-performance PCs. It may require more disk space, memory, installation time, and external downloads.
 
+The default extraction text budget is 80k characters. Enter `0` in the Web UI or pass `--max-chars 0` in CLI mode only when you intentionally want no truncation; that can be slower, costlier, and more likely to exceed model context limits.
+
+`--pdf-mode auto` first tries `pymupdf4llm`. If the converted Markdown is very short, mentions tables without table-like rows, or appears image-heavy, auto mode may try optional MinerU. If MinerU is unavailable or fails, auto mode keeps usable `pymupdf4llm` text or falls back to `pypdf_text`. MinerU is optional and is not required in CI.
+
 GitHub Download ZIP is a source package. It does not include Python, `.venv/`, installed dependencies, MinerU models, or a bundled runtime, but users can still run the first-run launcher online. A fully offline package is not provided by default because it would need bundled Python, wheel caches, MinerU dependencies/models, and larger runtime assets.
 
 Legacy names such as `YiJianQiDong.bat` and `YiLaiHuanJing/` are kept for compatibility with older local packages.

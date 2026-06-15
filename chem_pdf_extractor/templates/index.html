@@ -617,7 +617,7 @@
               <p class="field-help" id="pdfModeHelp" data-i18n="pdf_mode_help_pymupdf4llm">Recommended for most papers.</p>
             </div>
             <div class="form-field">
-              <label data-i18n="max_chars">Max Upload Characters (0 = no truncation)</label>
+              <label data-i18n="max_chars">Max Upload Characters</label>
               <div class="compact-input-row">
                 <input id="maxChars" type="number" value="0" min="0" />
                 <div class="char-presets" aria-label="Max character presets">
@@ -626,7 +626,7 @@
                   <button type="button" onclick="setMaxCharsPreset(120000)" data-i18n="preset_120k">120k</button>
                 </div>
               </div>
-              <p class="field-help" data-i18n="max_chars_help">0 = no limit; may be slower/costlier and exceed model context.</p>
+              <p class="field-help" data-i18n="max_chars_help">0 = no truncation, slow/costly; 40k = small/cheap; 80k = default; 120k = larger.</p>
             </div>
             <div class="form-field ollama-only">
               <label>Ollama num_ctx</label>
@@ -822,7 +822,7 @@
         preset_40k: "40k",
         preset_80k: "80k",
         preset_120k: "120k",
-        max_chars_help: "0 不限制，可能更慢/更贵/超上下文；建议 40k/80k/120k。",
+        max_chars_help: "0 = 不截断，可能更慢/更贵；40k = 小批量；80k = 默认推荐；120k = 大上下文。",
         llm_timeout: "超时秒",
         bad_row_percent: "坏行阈值",
         ollama_url: "Ollama 地址",
@@ -948,11 +948,11 @@
         pdf_mode_help_pypdf_text: "Lightweight fallback, weaker for tables and multi-column layouts.",
         pdf_mode_help_auto: "Tries to choose automatically, but verify results.",
         pdf_mode_help_pymupdf_text: "Fast plain-text fallback for simple PDFs.",
-        max_chars: "Max chars (0 = no limit)",
+        max_chars: "Max chars",
         preset_40k: "40k",
         preset_80k: "80k",
         preset_120k: "120k",
-        max_chars_help: "0 = no limit; may be slower/costlier and exceed model context. Try 40k/80k/120k.",
+        max_chars_help: "0 = no truncation, may be slow/costly; 40k = small/cheap; 80k = recommended/default; 120k = larger context.",
         llm_timeout: "Timeout (0 = no limit)",
         bad_row_percent: "Bad row threshold (%)",
         ollama_url: "Ollama URL",

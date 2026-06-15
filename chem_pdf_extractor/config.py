@@ -20,7 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_MODEL = "minicpm-v:latest"
 DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434"
-DEFAULT_MAX_CHARS = 0
+DEFAULT_MAX_CHARS = 80000
 DEFAULT_NUM_CTX = 8192
 DEFAULT_CLOUD_SERVICE_NAME = "openai_compatible"
 DEFAULT_CLOUD_MODEL = "provider/model-name"
