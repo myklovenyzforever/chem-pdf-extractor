@@ -66,7 +66,7 @@
     .left-stack {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       min-width: 0;
       height: var(--workbench-height);
       overflow: visible;
@@ -127,19 +127,21 @@
     }
     .workflow-guide {
       display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin: -2px 0 7px;
+      flex-wrap: nowrap;
+      gap: 3px;
+      margin: -2px 0 6px;
+      min-width: 0;
     }
     .workflow-guide span {
       border: 1px solid var(--line);
       border-radius: 999px;
       background: var(--panel-soft);
       color: var(--muted);
-      font-size: 11px;
+      font-size: 10.5px;
       line-height: 1;
-      padding: 4px 7px;
+      padding: 4px 6px;
       white-space: nowrap;
+      min-width: 0;
     }
     section {
       background: var(--panel);
@@ -174,7 +176,7 @@
       min-height: 0;
       min-width: 0;
       overflow: visible;
-      padding: 10px 12px;
+      padding: 9px 10px;
     }
     .task-panel > .small { margin-top: 8px; }
     .api-panel, .progress-panel { min-height: 0; min-width: 0; }
@@ -207,15 +209,16 @@
     .top-grid h2 { font-size: 18px; }
     .top-grid label { font-size: 13px; }
     .top-grid input, .top-grid select, .top-grid button { font-size: 15px; }
-    .task-panel h2 { margin-bottom: 8px; font-size: 17px; }
-    .task-panel label { margin: 5px 0 3px; line-height: 1.15; }
+    .task-panel h2 { margin-bottom: 7px; font-size: 15px; }
+    .task-panel label { margin: 0 0 3px; line-height: 1.15; }
     .task-panel input, .task-panel select {
-      min-height: 30px;
-      padding: 5px 9px;
+      min-height: 28px;
+      padding: 4px 8px;
+      font-size: 13px;
     }
     .task-panel button {
-      min-height: 31px;
-      padding: 5px 12px;
+      min-height: 29px;
+      padding: 4px 8px;
     }
     label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 5px; font-weight: 650; }
     input, select, textarea {
@@ -247,13 +250,38 @@
     .checks { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; color: var(--muted); font-size: 13px; }
     .checks label { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
     .checks input { width: auto; }
+    .task-panel .checks input {
+      width: 14px;
+      height: 14px;
+      min-height: 0;
+      margin: 1px 0 0;
+      padding: 0;
+    }
     .task-panel .checks {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px 12px;
-      margin-top: 8px;
+      gap: 5px 10px;
+      margin-top: 7px;
+      padding: 6px 7px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
     }
-    .task-panel .checks label { min-width: 0; }
+    .task-panel .checks label {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 14px minmax(0, 1fr);
+      align-items: start;
+      gap: 5px;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+    .task-panel .checks label:nth-child(3) { grid-column: 1 / -1; }
+    .task-panel .checks span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .cloud-actions {
       display: flex;
       align-items: center;
@@ -283,13 +311,23 @@
     .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
     .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
     .action-row + .action-row { margin-top: 8px; }
-    .task-panel .actions { gap: 8px; margin-top: 8px; }
+    .task-panel .actions {
+      gap: 6px;
+      margin-top: 7px;
+      flex-wrap: nowrap;
+    }
+    .task-panel .actions button {
+      flex: 1 1 0;
+      min-width: 0;
+      white-space: nowrap;
+      font-size: 13px;
+    }
     .task-panel .action-row { gap: 8px; }
     .task-panel .action-row + .action-row { margin-top: 6px; }
     .task-grid, .api-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px 12px;
+      gap: 6px 10px;
       align-items: end;
     }
     .api-grid { gap: 7px 10px; }
@@ -299,20 +337,23 @@
     .form-field label {
       min-height: 0;
       height: auto;
-      line-height: 1.18;
-      margin: 0 0 4px;
+      line-height: 1.15;
+      margin: 0 0 3px;
       display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .field-help {
-      margin: 4px 0 0;
+      margin: 3px 0 0;
       color: var(--muted);
-      font-size: 12px;
-      line-height: 1.35;
+      font-size: 11px;
+      line-height: 1.25;
     }
     .compact-input-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 6px;
+      gap: 5px;
       align-items: center;
     }
     .char-presets, .log-filters, .field-template-row {
@@ -323,8 +364,8 @@
     }
     .log-filters { margin: 0 0 6px; }
     .char-presets button, .log-filters button {
-      min-height: 28px;
-      padding: 4px 8px;
+      min-height: 26px;
+      padding: 3px 7px;
       font-size: 12px;
     }
     .log-filters button.active {
@@ -435,40 +476,46 @@
       white-space: nowrap;
     }
     .task-stats-panel {
-      flex: 1 1 auto;
+      flex: 0 0 auto;
       min-height: 0;
       overflow: visible;
-      padding: 10px 12px;
+      padding: 8px 10px;
+    }
+    .task-stats-panel h2 {
+      margin-bottom: 7px;
+      font-size: 15px;
     }
     .task-stats-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 7px;
+      gap: 6px;
     }
     .task-stat {
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel-soft);
-      padding: 7px 8px;
+      padding: 6px 7px;
       min-width: 0;
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      min-height: 30px;
     }
     .task-stat span {
       color: var(--muted);
       font-size: 11px;
       font-weight: 650;
-      line-height: 1.2;
+      line-height: 1.15;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .task-stat b {
       color: #10213f;
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1;
+      white-space: nowrap;
     }
     pre {
       height: 320px;
@@ -526,11 +573,11 @@
         <section class="task-panel">
           <h2 data-i18n="task_settings">Task Settings</h2>
           <div class="workflow-guide" aria-label="First-use workflow">
-            <span data-i18n="guide_api">1 API / Ollama</span>
-            <span data-i18n="guide_folder">2 PDF Folder</span>
-            <span data-i18n="guide_pdf_mode">3 PDF Mode</span>
-            <span data-i18n="guide_test">4 Test PDFs</span>
-            <span data-i18n="guide_review">5 Review Rows</span>
+            <span data-i18n="guide_api">1 API</span>
+            <span data-i18n="guide_folder">2 Folder</span>
+            <span data-i18n="guide_pdf_mode">3 Mode</span>
+            <span data-i18n="guide_test">4 Test</span>
+            <span data-i18n="guide_review">5 Review</span>
           </div>
           <div class="task-grid">
             <div class="form-field full-span">
@@ -735,25 +782,25 @@
     const i18n = {
       zh: {
         task_settings: "任务设置",
-        guide_api: "1 配置 API / Ollama",
-        guide_folder: "2 选择 PDF 目录",
-        guide_pdf_mode: "3 选择解析方式",
-        guide_test: "4 先测几篇",
-        guide_review: "5 复核可疑/坏行",
+        guide_api: "1 API",
+        guide_folder: "2 目录",
+        guide_pdf_mode: "3 模式",
+        guide_test: "4 测试",
+        guide_review: "5 复核",
         statistics: "统计信息",
-        stat_extracted_rows: "已抽取数据",
-        stat_successful_pdfs: "成功文献",
-        stat_failed_pdfs: "失败文献",
-        stat_suspicious_bad_rows: "可疑/坏数据",
-        stat_cache_hits: "缓存复用",
+        stat_extracted_rows: "抽取行",
+        stat_successful_pdfs: "成功 PDF",
+        stat_failed_pdfs: "失败 PDF",
+        stat_suspicious_bad_rows: "可疑/坏行",
+        stat_cache_hits: "缓存",
         progress_ratio_done: "已处理",
         input_dir: "PDF 目录",
         output_path: "输出路径",
-        llm_provider: "LLM 提供方",
+        llm_provider: "模型来源",
         provider_cloud: "云端 OpenAI-compatible API",
         provider_ollama: "本地 Ollama",
-        local_ollama_model: "本地 Ollama 模型",
-        pdf_mode: "PDF 解析方式",
+        local_ollama_model: "Ollama 模型",
+        pdf_mode: "解析方式",
         pdf_mode_mineru: "MinerU（复杂/较重）",
         pdf_mode_auto: "auto（自动尝试）",
         pdf_mode_pymupdf4llm: "pymupdf4llm（多数论文推荐）",
@@ -765,22 +812,22 @@
         pdf_mode_help_pypdf_text: "轻量后备，安装简单，但表格和多栏效果较弱。",
         pdf_mode_help_auto: "自动尝试选择解析方式，但结果仍需人工核验。",
         pdf_mode_help_pymupdf_text: "快速纯文本后备，适合排版简单的 PDF。",
-        max_chars: "最大字符数（0 不限制）",
+        max_chars: "上传字数",
         preset_40k: "40k",
         preset_80k: "80k",
         preset_120k: "120k",
-        max_chars_help: "0 = 不限制，可能更慢、更贵或超出模型上下文；建议 40k/80k/120k。",
-        llm_timeout: "超时秒数（0 不限制）",
-        bad_row_percent: "坏数据阈值（%）",
+        max_chars_help: "0 不限制，可能更慢/更贵/超上下文；建议 40k/80k/120k。",
+        llm_timeout: "超时秒",
+        bad_row_percent: "坏行阈值",
         ollama_url: "Ollama 地址",
-        recursive: "递归处理子文件夹",
-        auto_fallback: "模型失败时尝试备选模型",
-        copy_failed_sources: "复制失败源 PDF 以便排查",
-        copy_failed_sources_help: "可能复制私有或受版权保护的 PDF；除非调试，否则保持关闭。",
-        start: "开始处理",
-        pause: "暂停任务",
-        resume: "继续任务",
-        stop: "停止任务",
+        recursive: "含子目录",
+        auto_fallback: "失败换模型",
+        copy_failed_sources: "复制失败 PDF",
+        copy_failed_sources_help: "会复制私有/版权 PDF，仅调试时开启。",
+        start: "开始",
+        pause: "暂停",
+        resume: "继续",
+        stop: "停止",
         api_config: "LLM API 配置",
         service_name: "LLM 服务名称",
         placeholder_service: "openai_compatible",
@@ -864,11 +911,11 @@
       },
       en: {
         task_settings: "Task Settings",
-        guide_api: "1 API / Ollama",
-        guide_folder: "2 PDF folder",
-        guide_pdf_mode: "3 PDF mode",
-        guide_test: "4 Test PDFs",
-        guide_review: "5 Review rows",
+        guide_api: "1 API",
+        guide_folder: "2 Folder",
+        guide_pdf_mode: "3 Mode",
+        guide_test: "4 Test",
+        guide_review: "5 Review",
         statistics: "Statistics",
         stat_extracted_rows: "Extracted rows",
         stat_successful_pdfs: "Successful PDFs",
