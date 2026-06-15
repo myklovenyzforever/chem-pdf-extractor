@@ -113,6 +113,17 @@ python -m chem_pdf_extractor --cli --input-dir .\papers --output .\output\result
 
 For cloud providers, pass or save a real API key, Base URL, and model name. Do not put private keys into committed scripts, issue reports, screenshots, or logs.
 
+For CLI cloud runs, prefer environment variables:
+
+```powershell
+$env:CHEM_PDF_EXTRACTOR_API_KEY="YOUR_API_KEY_HERE"
+$env:CHEM_PDF_EXTRACTOR_BASE_URL="https://api.example.com/v1"
+$env:CHEM_PDF_EXTRACTOR_MODEL="provider/model-name"
+python -m chem_pdf_extractor --cli --llm-provider cloud
+```
+
+Use `--llm-provider ollama` when you want to stay local.
+
 ## Configuration
 
 This repository does not include any real API key, token, or password.

@@ -397,20 +397,39 @@ def validate_cloud_start_config(config: dict[str, Any]) -> str | None:
 
     api_key = str(config.get("cloud_api_key") or config.get("api_key") or "").strip()
     if not api_key:
-        return "请先填写云端 API Key，或切换到本地 Ollama。"
+        return (
+            "Cloud API Key is required for --llm-provider cloud. "
+            "Set CHEM_PDF_EXTRACTOR_API_KEY, pass --cloud-api-key, save config.local.json, "
+            "or stay local with --llm-provider ollama."
+        )
+    if is_placeholder_cloud_api_key(api_key):
+        return (
+            "Cloud API Key looks like a placeholder. Set CHEM_PDF_EXTRACTOR_API_KEY "
+            "or pass a real --cloud-api-key. To avoid cloud processing, use --llm-provider ollama."
+        )
 
     base_url = str(config.get("cloud_base_url") or config.get("base_url") or "").strip()
     if not base_url:
-        return "请填写 OpenAI-compatible Base URL。"
+        return (
+            "Cloud Base URL is required for --llm-provider cloud. "
+            "Set CHEM_PDF_EXTRACTOR_BASE_URL or pass --cloud-base-url."
+        )
     base_url_error = validate_cloud_base_url_security(base_url)
     if base_url_error:
         return base_url_error
 
     model = str(config.get("cloud_model") or config.get("model") or "").strip()
     if not model:
-        return "请填写或选择云端模型名称。"
+        return (
+            "Cloud model name is required. Set CHEM_PDF_EXTRACTOR_MODEL, pass --cloud-model, "
+            "or pass --model as a legacy cloud model alias. 云端模型名称不能为空。"
+        )
     if model.lower() in PLACEHOLDER_CLOUD_MODELS:
-        return "请填写或选择真实的云端模型名称。"
+        return (
+            "Cloud model name looks like a placeholder. Set CHEM_PDF_EXTRACTOR_MODEL, "
+            "pass --cloud-model, or pass --model as a legacy cloud model alias. "
+            "请填写真实的云端模型名称。"
+        )
 
     return None
 
