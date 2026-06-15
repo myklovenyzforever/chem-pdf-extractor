@@ -15,6 +15,7 @@ This roadmap focuses on practical improvements for literature review workflows, 
 - Add more usage cases and reproducible examples.
 - Maintain synthetic/public-safe benchmark cases and first-pass evaluation notes.
 - Keep installation and Windows startup behavior stable.
+- Keep the release and user-feedback path documented in [Release and Feedback Path](docs/release_and_feedback.md).
 
 ## Medium term
 
@@ -53,6 +54,7 @@ Useful contributions include:
 - Bug reports with reproducible examples.
 - Suggestions for field templates in specific research domains.
 - Documentation improvements.
+- Feedback using the categories in [Release and Feedback Path](docs/release_and_feedback.md).
 - Tests for PDF backend behavior.
 - Examples using synthetic, public-domain, or otherwise shareable materials.
 
