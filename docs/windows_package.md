@@ -35,6 +35,7 @@ Chem-PDF-Extractor-Windows/
   run_chem_pdf_extractor.py
   requirements.txt
   requirements-core.txt
+  constraints.txt
   requirements-mineru.txt
   config.example.json
   README or quick-start note
@@ -72,6 +73,24 @@ User flow:
 
 This is not implemented by default. A fully offline package would require bundling Python, wheelhouse files, MinerU dependencies/models, and possibly large runtime assets. It would be much larger and should not be committed to the repository.
 
+## Release dependency constraints
+
+Normal users can install with `requirements.txt` or `requirements-core.txt` directly. The release constraints file is for maintainer verification, not mandatory development setup.
+
+For a release package check, maintainers may install with:
+
+```powershell
+python -m pip install -r requirements.txt -c constraints.txt
+```
+
+or, for the smaller fallback dependency set:
+
+```powershell
+python -m pip install -r requirements-core.txt -c constraints.txt
+```
+
+`constraints.txt` intentionally uses broad upper bounds instead of exact pins. Refresh it when testing support for a new major dependency version, after a dependency deprecates a current version range, or before preparing a release that should validate newer package families.
+
 ## PDF backend choices
 
 `pypdf_text`:
@@ -103,6 +122,7 @@ This is not implemented by default. A fully offline package would require bundli
 - `YiJianQiDong.bat` as a legacy compatibility launcher
 - `requirements.txt`
 - `requirements-core.txt`
+- `constraints.txt`
 - `requirements-mineru.txt`
 - `config.example.json`
 - `LICENSE`
@@ -214,6 +234,9 @@ Before publishing the release zip:
 
 - Run `python -m py_compile run_chem_pdf_extractor.py`.
 - Run `python -m unittest discover -s tests -v`.
+- Run `python -m build`.
+- Install the built wheel into a clean virtual environment and run `chem-pdf-extractor --help`.
+- For release dependency verification, test `python -m pip install -r requirements.txt -c constraints.txt`.
 - Create a clean copy of the repository.
 - Do not include `.git/`.
 - Do not include `.venv/`.
@@ -226,6 +249,7 @@ Before publishing the release zip:
 - Include `install_and_start.ps1`.
 - Include `requirements.txt`.
 - Include `requirements-core.txt`.
+- Include `constraints.txt`.
 - Include `requirements-mineru.txt`.
 - Include `chem_pdf_extractor/`.
 - Include `run_chem_pdf_extractor.py`.
