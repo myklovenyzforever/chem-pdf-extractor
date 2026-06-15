@@ -15,6 +15,13 @@ We welcome:
 - Permission-safe examples where sharing is allowed.
 - Suggestions for safer extraction, validation, and review workflows.
 
+For field template suggestions, use issue #11 or the field-template suggestion
+workflow described in [examples/field_templates/README.md](examples/field_templates/README.md).
+Please provide only synthetic or public-safe examples, explain why the fields
+matter, and include the expected output shape or an optional draft `fields.json`.
+Do not upload copyrighted papers, private PDFs, API keys, private local paths, or
+generated outputs from real papers.
+
 ## Safety and Privacy
 
 Do not upload copyrighted papers, private documents, unpublished data, API keys, tokens, passwords, local file paths, or `config.local.json` in issues, pull requests, examples, logs, or screenshots.

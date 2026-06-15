@@ -63,6 +63,63 @@ class FieldTemplatesTest(unittest.TestCase):
                     self.assertIsInstance(description, str)
                     self.assertTrue(description.strip())
 
+    def test_readme_mentions_every_template_and_workflow(self):
+        readme = (self.TEMPLATE_DIR / "README.md").read_text(encoding="utf-8")
+        for filename in self.TEMPLATE_FILES:
+            with self.subTest(filename=filename):
+                self.assertIn(filename, readme)
+
+        required_phrases = [
+            "Field templates are reusable",
+            "Choosing A Template",
+            "Using Templates In The Web UI",
+            "Using Templates With CLI Or Config Files",
+            "Requirement Levels",
+            "required",
+            "recommended",
+            "optional",
+            "Manual verification",
+        ]
+        for phrase in required_phrases:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, readme)
+
+    def test_readme_documents_template_safety_and_issue_11_workflow(self):
+        readme = (self.TEMPLATE_DIR / "README.md").read_text(encoding="utf-8")
+        safety_phrases = [
+            "synthetic or public-safe examples only",
+            "Do not upload copyrighted papers",
+            "private PDFs",
+            "API keys",
+            "private local paths",
+            "config.local.json",
+            "issue #11",
+            "field-template suggestion workflow",
+        ]
+        for phrase in safety_phrases:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, readme)
+
+    def test_readme_documents_each_template_review_details(self):
+        readme = (self.TEMPLATE_DIR / "README.md").read_text(encoding="utf-8")
+        expected_detail_labels = [
+            "Domain:",
+            "Suitable literature type:",
+            "Key required fields:",
+            "Recommended fields:",
+            "Optional fields:",
+            "Common extraction mistakes:",
+            "Recommended PDF mode:",
+            "Manual verification advice:",
+        ]
+        for filename in self.TEMPLATE_FILES:
+            section_start = readme.index(f"### `{filename}`")
+            next_section = readme.find("\n### `", section_start + 1)
+            section = readme[section_start:] if next_section == -1 else readme[section_start:next_section]
+            for label in expected_detail_labels:
+                with self.subTest(filename=filename, label=label):
+                    self.assertIn(label, section)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -9,7 +9,7 @@ This roadmap focuses on practical improvements for literature review workflows, 
 - Improve PDF parsing stability across different PDF layouts.
 - Track PDF auto-mode backend comparison with synthetic/public-safe evaluation
   rows before making broad backend-quality claims.
-- Add more example field templates for catalysis, materials, energy, and environmental engineering papers.
+- Add more example field templates for catalysis, materials, energy, and environmental engineering papers; use issue #11 for focused template suggestions.
 - Improve bad-row and suspicious-row detection.
 - Improve error logs so users can more easily identify failed or low-confidence extraction cases.
 - Add more usage cases and reproducible examples.
