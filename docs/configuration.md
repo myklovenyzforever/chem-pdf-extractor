@@ -34,6 +34,14 @@ $env:CHEM_PDF_EXTRACTOR_MODEL="provider/model-name"
 
 OpenAI-compatible API providers can be used by setting the Base URL, API key, and model name in the Web UI. Local Ollama models can also be used; start Ollama first, then select the local provider and model.
 
+CLI provider notes:
+
+- Stay local with `python -m chem_pdf_extractor --cli --llm-provider ollama --model <ollama-model>`.
+- Use optional cloud extraction with `--llm-provider cloud` only after setting a real API key, Base URL, and model name.
+- For cloud CLI runs, prefer `CHEM_PDF_EXTRACTOR_API_KEY`, `CHEM_PDF_EXTRACTOR_BASE_URL`, and `CHEM_PDF_EXTRACTOR_MODEL` over putting secrets in shell history.
+- `--model` selects the Ollama model in local mode. In cloud mode, prefer `--cloud-model`; `--model` is accepted only as a legacy cloud model alias when `--cloud-model` is not provided.
+- If you do not want any cloud processing, use `--llm-provider ollama` and avoid saved cloud translation configuration.
+
 Python 3.11 is recommended for the broadest PDF-backend compatibility. On some Windows + Python 3.12 environments, `pymupdf4llm` / `pymupdf` may fail during install or import. These packages are optional lazy-loaded PDF backends, so startup does not require importing them.
 
 `max_chars` defaults to `80000`. This is the recommended/default extraction text budget. Set it to `40000` for smaller/cheaper runs, `120000` for larger-context models, or `0` only when you intentionally want no truncation.
