@@ -49,7 +49,7 @@
     main { width: 100%; max-width: 1680px; margin: 0 auto; padding: 12px 16px; overflow-x: hidden; }
     /*
       UI layout contract: the 1366x768 desktop workbench must show left task
-      settings, middle API/progress, statistics, and logs without left/middle
+      settings, middle API/statistics/progress, and logs without left/middle
       internal scrollbars. Only pre#logs may scroll internally, and the fields
       panel intentionally remains below .top-grid. See docs/ui_layout_contract.md.
     */
@@ -58,6 +58,7 @@
       grid-template-columns: minmax(0, 3fr) minmax(0, 3fr) minmax(0, 4fr);
       gap: 14px;
       align-items: stretch;
+      height: var(--workbench-height);
       margin-bottom: 12px;
       overflow: visible;
     }
@@ -176,7 +177,7 @@
       overflow: hidden;
     }
     .task-panel {
-      flex: 0 0 auto;
+      flex: 1 1 auto;
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -185,16 +186,18 @@
       padding: 9px 10px;
     }
     .task-panel > .small { margin-top: 8px; }
-    .api-panel, .progress-panel { min-height: 0; min-width: 0; }
+    .api-panel, .progress-panel, .task-stats-panel { min-height: 0; min-width: 0; }
     .api-panel {
       flex: 0 0 auto;
       overflow: visible;
+      padding: 11px 12px;
     }
     .progress-panel {
       flex: 1 1 auto;
       display: flex;
       flex-direction: column;
       overflow: visible;
+      padding: 10px 12px;
     }
     .log-panel {
       display: flex;
@@ -292,8 +295,8 @@
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8px 10px;
-      margin-top: 8px;
+      gap: 6px 8px;
+      margin-top: 6px;
     }
     .cloud-actions .checks { margin-top: 0; }
     .cloud-actions .checks label { line-height: 1.2; }
@@ -336,10 +339,41 @@
       gap: 6px 10px;
       align-items: end;
     }
-    .api-grid { gap: 7px 10px; }
+    .api-grid { gap: 5px 10px; }
+    .api-panel h2, .progress-panel h2 {
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
     .api-panel label { margin-top: 5px; }
+    .api-panel input, .api-panel select, .api-panel button {
+      min-height: 30px;
+      padding: 5px 8px;
+      font-size: 13px;
+    }
+    .api-panel .field-help {
+      margin-top: 2px;
+      font-size: 10.5px;
+      line-height: 1.15;
+    }
+    .api-panel > .small {
+      margin: 6px 0 0;
+      font-size: 11px;
+      line-height: 1.25;
+    }
     .form-field { min-width: 0; }
     .form-field.full-span { grid-column: 1 / -1; }
+    .task-grid .task-cell-provider,
+    .task-grid .task-cell-max,
+    .task-grid .task-cell-bad-row,
+    .task-grid .task-cell-ollama-model {
+      grid-column: 1;
+    }
+    .task-grid .task-cell-pdf,
+    .task-grid .task-cell-timeout,
+    .task-grid .task-cell-ollama-url,
+    .task-grid .task-cell-num-ctx {
+      grid-column: 2;
+    }
     .form-field label {
       min-height: 0;
       height: auto;
@@ -356,6 +390,12 @@
       font-size: 11px;
       line-height: 1.25;
     }
+    .task-grid > .task-help {
+      grid-column: 1 / -1;
+      margin: -2px 0 0;
+      font-size: 10.5px;
+      line-height: 1.2;
+    }
     .compact-input-row {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -368,6 +408,7 @@
       gap: 5px;
       flex-wrap: wrap;
     }
+    .char-presets { flex-wrap: nowrap; }
     .log-filters { margin: 0 0 6px; }
     .char-presets button, .log-filters button {
       min-height: 26px;
@@ -403,10 +444,10 @@
     }
     #cloudModelCustom[hidden] { display: none; }
     .advanced-config {
-      margin-top: 8px;
+      margin-top: 6px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 7px 10px;
+      padding: 5px 8px;
       background: var(--panel-soft);
     }
     .advanced-config summary {
@@ -436,8 +477,8 @@
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
+      gap: 8px;
+      margin-bottom: 6px;
     }
     .progress-ratio {
       color: #10213f;
@@ -451,7 +492,11 @@
       gap: 8px;
       margin: 10px 0;
     }
-    .progress-panel .stats { grid-template-columns: repeat(2, 1fr); }
+    .progress-panel .stats {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 5px;
+      margin: 6px 0;
+    }
     .stat {
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -464,10 +509,28 @@
     }
     .stat b { display: block; flex: 0 0 auto; font-size: 24px; line-height: 1; color: #10213f; }
     .stat span { color: var(--muted); font-size: 13px; line-height: 1.2; }
+    .progress-panel .stat {
+      min-width: 0;
+      min-height: 46px;
+      padding: 6px;
+      gap: 3px;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .progress-panel .stat b { font-size: 18px; }
+    .progress-panel .stat span {
+      font-size: 10.5px;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
     .status-box {
-      min-height: 86px;
-      max-height: 86px;
-      margin-top: 8px;
+      min-height: 70px;
+      max-height: 70px;
+      margin-top: 6px;
       display: grid;
       grid-template-rows: repeat(4, 1fr);
       align-content: start;
@@ -485,32 +548,32 @@
       flex: 0 0 auto;
       min-height: 0;
       overflow: visible;
-      padding: 8px 10px;
+      padding: 7px 9px;
     }
     .task-stats-panel h2 {
-      margin-bottom: 7px;
+      margin-bottom: 5px;
       font-size: 15px;
     }
     .task-stats-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 5px;
     }
     .task-stat {
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel-soft);
-      padding: 6px 7px;
+      padding: 5px 6px;
       min-width: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 6px;
-      min-height: 30px;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+      gap: 3px;
+      min-height: 36px;
     }
     .task-stat span {
       color: var(--muted);
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 650;
       line-height: 1.15;
       overflow: hidden;
@@ -519,7 +582,7 @@
     }
     .task-stat b {
       color: #10213f;
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1;
       white-space: nowrap;
     }
@@ -560,6 +623,7 @@
       main { overflow-x: visible; }
       .top-grid { grid-template-columns: 1fr; height: auto; min-height: 0; overflow: visible; }
       .task-grid, .api-grid, .cloud-model-row { grid-template-columns: 1fr; }
+      .task-grid > .form-field, .task-grid > .task-help { grid-column: 1 / -1; }
       .app-header { flex-wrap: wrap; }
       .stats { grid-template-columns: repeat(2, 1fr); }
     }
@@ -594,18 +658,14 @@
               <label data-i18n="output_path">Excel Output Path</label>
               <input id="outputPath" />
             </div>
-            <div class="form-field">
+            <div class="form-field task-cell-provider">
               <label data-i18n="llm_provider">LLM Provider</label>
               <select id="llmProvider" onchange="onProviderChange()">
                 <option value="cloud" data-i18n="provider_cloud">Cloud OpenAI-compatible API</option>
                 <option value="ollama" data-i18n="provider_ollama">Local Ollama</option>
               </select>
             </div>
-            <div class="form-field ollama-only">
-              <label data-i18n="local_ollama_model">Local Ollama Model</label>
-              <select id="model"></select>
-            </div>
-            <div class="form-field">
+            <div class="form-field task-cell-pdf">
               <label data-i18n="pdf_mode">PDF Mode</label>
               <select id="pdfMode" onchange="updatePdfModeHelp()">
                 <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm (recommended)</option>
@@ -614,10 +674,10 @@
                 <option value="auto" data-i18n="pdf_mode_auto">auto (verify results)</option>
                 <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF text (fast text)</option>
               </select>
-              <p class="field-help" id="pdfModeHelp" data-i18n="pdf_mode_help_pymupdf4llm">Recommended for most papers.</p>
             </div>
-            <div class="form-field">
-              <label data-i18n="max_chars">Max Upload Characters</label>
+            <p class="field-help task-help" id="pdfModeHelp" data-i18n="pdf_mode_help_pymupdf4llm">Recommended for most papers.</p>
+            <div class="form-field task-cell-max">
+              <label data-i18n="max_chars">Max chars</label>
               <div class="compact-input-row">
                 <input id="maxChars" type="number" value="0" min="0" />
                 <div class="char-presets" aria-label="Max character presets">
@@ -626,23 +686,27 @@
                   <button type="button" onclick="setMaxCharsPreset(120000)" data-i18n="preset_120k">120k</button>
                 </div>
               </div>
-              <p class="field-help" data-i18n="max_chars_help">0 = no truncation, slow/costly; 40k = small/cheap; 80k = default; 120k = larger.</p>
             </div>
-            <div class="form-field ollama-only">
-              <label>Ollama num_ctx</label>
-              <input id="numCtx" type="number" value="8192" min="1024" />
-            </div>
-            <div class="form-field">
-              <label data-i18n="llm_timeout">LLM Timeout Seconds (0 = unlimited)</label>
+            <div class="form-field task-cell-timeout">
+              <label data-i18n="llm_timeout">Timeout</label>
               <input id="llmTimeout" type="number" value="0" min="0" />
             </div>
-            <div class="form-field">
-              <label data-i18n="bad_row_percent">Bad Data Threshold (%)</label>
+            <p class="field-help task-help" data-i18n="max_chars_help">0 = no truncation, slow/costly; 40k = small/cheap; 80k = default; 120k = larger.</p>
+            <div class="form-field task-cell-bad-row">
+              <label data-i18n="bad_row_percent">Bad row threshold</label>
               <input id="badRowMinFillPercent" type="number" value="40" min="0" max="100" step="1" />
             </div>
-            <div class="form-field full-span ollama-only">
+            <div class="form-field task-cell-ollama-url ollama-only">
               <label data-i18n="ollama_url">Ollama URL</label>
               <input id="ollamaBaseUrl" value="http://127.0.0.1:11434" />
+            </div>
+            <div class="form-field task-cell-ollama-model ollama-only">
+              <label data-i18n="local_ollama_model">Local Ollama Model</label>
+              <select id="model"></select>
+            </div>
+            <div class="form-field task-cell-num-ctx ollama-only">
+              <label>Ollama num_ctx</label>
+              <input id="numCtx" type="number" value="8192" min="1024" />
             </div>
           </div>
           <div class="checks">
@@ -656,16 +720,6 @@
             <button id="pauseBtn" onclick="pauseJob()" data-i18n="pause">Pause</button>
             <button id="resumeBtn" onclick="resumeJob()" data-i18n="resume">Resume</button>
             <button class="danger" id="stopBtn" onclick="stopJob()" data-i18n="stop">Stop</button>
-          </div>
-        </section>
-        <section class="task-stats-panel">
-          <h2 data-i18n="statistics">Statistics</h2>
-          <div class="task-stats-grid">
-            <div class="task-stat"><span data-i18n="stat_extracted_rows">Extracted rows</span><b id="extractedRows">0</b></div>
-            <div class="task-stat"><span data-i18n="stat_successful_pdfs">Successful PDFs</span><b id="successfulPdfs">0</b></div>
-            <div class="task-stat"><span data-i18n="stat_failed_pdfs">Failed PDFs</span><b id="failedPdfs">0</b></div>
-            <div class="task-stat"><span data-i18n="stat_suspicious_bad_rows">Suspicious / bad</span><b id="suspiciousBadRows">0 / 0</b></div>
-            <div class="task-stat"><span data-i18n="stat_cache_hits">Cache hits</span><b id="cacheHits">0</b></div>
           </div>
         </section>
       </div>
@@ -708,6 +762,17 @@
             <p class="field-help" data-i18n="service_name_help">Defaults to openai_compatible. Existing config.local.json files remain compatible.</p>
           </details>
           <p class="small" data-i18n="api_help">Enter an OpenAI-compatible Base URL and API key. If the provider supports /models, use Fetch models; otherwise enter the model manually.</p>
+        </section>
+
+        <section class="task-stats-panel">
+          <h2 data-i18n="statistics">Statistics</h2>
+          <div class="task-stats-grid">
+            <div class="task-stat"><span data-i18n="stat_extracted_rows">Extracted rows</span><b id="extractedRows">0</b></div>
+            <div class="task-stat"><span data-i18n="stat_successful_pdfs">Successful PDFs</span><b id="successfulPdfs">0</b></div>
+            <div class="task-stat"><span data-i18n="stat_failed_pdfs">Failed PDFs</span><b id="failedPdfs">0</b></div>
+            <div class="task-stat"><span data-i18n="stat_suspicious_bad_rows">Suspicious / bad</span><b id="suspiciousBadRows">0 / 0</b></div>
+            <div class="task-stat"><span data-i18n="stat_cache_hits">Cache hits</span><b id="cacheHits">0</b></div>
+          </div>
         </section>
 
         <section class="progress-panel">
@@ -953,8 +1018,8 @@
         preset_80k: "80k",
         preset_120k: "120k",
         max_chars_help: "0 = no truncation, may be slow/costly; 40k = small/cheap; 80k = recommended/default; 120k = larger context.",
-        llm_timeout: "Timeout (0 = no limit)",
-        bad_row_percent: "Bad row threshold (%)",
+        llm_timeout: "Timeout",
+        bad_row_percent: "Bad row threshold",
         ollama_url: "Ollama URL",
         recursive: "Recursive",
         auto_fallback: "Try backup model",
