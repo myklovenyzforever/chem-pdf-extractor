@@ -4,6 +4,9 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pandas as pd
+from pydantic import Field, create_model
+
 from chem_pdf_extractor import config
 from chem_pdf_extractor.diagnostics import diagnostics_log_dir
 from chem_pdf_extractor.extractor import JobState, run_extraction_job
@@ -13,6 +16,17 @@ from chem_pdf_extractor.pdf import list_pdf_files
 def touch_pdf(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(b"%PDF-1.4\n% synthetic test pdf\n")
+
+
+def minimal_runtime() -> config.RuntimeDeps:
+    return config.RuntimeDeps(
+        pd=pd,
+        PdfReader=None,
+        ChatPromptTemplate=None,
+        ChatOllama=None,
+        Field=Field,
+        create_model=create_model,
+    )
 
 
 class PdfDiscoveryTest(unittest.TestCase):
@@ -88,27 +102,51 @@ class PdfDiscoveryTest(unittest.TestCase):
             with patch.dict(os.environ, {"CHEM_PDF_EXTRACTOR_USER_ROOT": str(user_root)}, clear=False):
                 input_dir = config.default_input_dir()
                 output_dir = config.default_output_path()
+                touch_pdf(input_dir / "source.pdf")
                 state = JobState()
-                run_extraction_job(
-                    {
-                        "input_dir": str(input_dir),
-                        "output_path": str(output_dir),
-                        "recursive": False,
-                    },
-                    config.RuntimeDeps(
-                        pd=None,
-                        PdfReader=None,
-                        ChatPromptTemplate=None,
-                        ChatOllama=None,
-                        Field=None,
-                        create_model=None,
+                with (
+                    patch(
+                        "chem_pdf_extractor.extractor.read_pdf_as_markdown_with_mode",
+                        return_value=("Synthetic markdown", "pypdf_text"),
                     ),
-                    state,
-                )
+                    patch(
+                        "chem_pdf_extractor.extractor.extract_with_cloud_api",
+                        return_value=[{"sample_id": "S-1"}],
+                    ),
+                ):
+                    run_extraction_job(
+                        {
+                            "input_dir": str(input_dir),
+                            "output_path": str(output_dir),
+                            "recursive": False,
+                            "llm_provider": "cloud",
+                            "cloud_active": True,
+                            "cloud_service_name": "cloud",
+                            "cloud_model": "mock-model",
+                            "cloud_api_key": "sk-test-not-real",
+                            "pdf_mode": "pypdf_text",
+                            "max_chars": 0,
+                            "llm_timeout": 0,
+                            "copy_failed_sources": False,
+                            "translate_to_chinese": False,
+                            "bad_row_min_fill_percent": 40,
+                            "fields": [
+                                {
+                                    "label": "sample_id",
+                                    "requirement": "required",
+                                    "description": "Synthetic sample id.",
+                                }
+                            ],
+                        },
+                        minimal_runtime(),
+                        state,
+                    )
 
         snapshot = state.snapshot()
         self.assertEqual(Path(snapshot["output_path"]), output_dir / config.OUTPUT_EXCEL_NAME)
         self.assertEqual(Path(snapshot["partial_jsonl_path"]), output_dir / config.PARTIAL_JSONL_NAME)
+        self.assertEqual(snapshot["failed"], 0)
+        self.assertEqual(snapshot["success"], 1)
 
     def test_list_pdf_files_excludes_mineru_outputs(self):
         with tempfile.TemporaryDirectory() as tmp:
