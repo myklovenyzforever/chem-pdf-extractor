@@ -64,11 +64,12 @@ class CloudModelSelectorUiTest(unittest.TestCase):
 
         self.assertIn("--workbench-height: min(760px, calc(100vh - 24px))", template)
         self.assertIn("align-items: stretch", top_grid)
+        self.assertIn("height: var(--workbench-height)", top_grid)
         self.assertIn("overflow: visible", top_grid)
         self.assertIn("height: var(--workbench-height)", left_stack)
         self.assertIn("height: var(--workbench-height)", config_stack)
         self.assertIn("height: var(--workbench-height)", log_panel)
-        self.assertIn("flex: 0 0 auto", task_panel)
+        self.assertIn("flex: 1 1 auto", task_panel)
         self.assertIn("overflow: visible", task_panel)
         self.assertNotIn("overflow-y: auto", task_panel)
         self.assertNotIn("flex: 1 1 0", task_panel)
@@ -87,6 +88,18 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertIn("extractedRows", template)
         self.assertIn("suspiciousBadRows", template)
         self.assertIn("cacheHits", template)
+
+        left_stack_start = template.index('<div class="left-stack">')
+        config_stack_start = template.index('<div class="config-stack">')
+        left_stack = template[left_stack_start:config_stack_start]
+        self.assertNotIn('class="task-stats-panel"', left_stack)
+
+        cloud_panel_index = template.index('<section id="cloudPanel" class="api-panel"')
+        stats_index = template.index('<section class="task-stats-panel">')
+        progress_index = template.index('<section class="progress-panel">')
+        self.assertLess(config_stack_start, cloud_panel_index)
+        self.assertLess(cloud_panel_index, stats_index)
+        self.assertLess(stats_index, progress_index)
 
     def test_progress_panel_has_ratio_and_core_stats(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
@@ -153,8 +166,34 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertIn("el.hidden = isCloud", template)
         self.assertIn('cloudPanel.style.display = isCloud ? "block" : "none"', template)
         self.assertIn('document.getElementById("autoFallback").disabled = isCloud', template)
-        self.assertIn('<div class="form-field ollama-only">', template)
-        self.assertIn('<div class="form-field full-span ollama-only">', template)
+        self.assertIn('<div class="form-field task-cell-ollama-model ollama-only">', template)
+        self.assertIn('<div class="form-field task-cell-ollama-url ollama-only">', template)
+        self.assertNotIn('<div class="form-field full-span ollama-only">', template)
+
+    def test_task_grid_aligns_core_pairs_and_ollama_url_row(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        for class_name in [
+            "task-cell-provider",
+            "task-cell-pdf",
+            "task-cell-max",
+            "task-cell-timeout",
+            "task-cell-bad-row",
+            "task-cell-ollama-url",
+            "task-cell-ollama-model",
+            "task-cell-num-ctx",
+        ]:
+            with self.subTest(class_name=class_name):
+                self.assertIn(class_name, template)
+
+        self.assertLess(template.index("task-cell-provider"), template.index("task-cell-pdf"))
+        self.assertLess(template.index("task-cell-max"), template.index("task-cell-timeout"))
+        self.assertLess(template.index("task-cell-bad-row"), template.index("task-cell-ollama-url"))
+
+        self.assertIn(".task-grid .task-cell-provider", template)
+        self.assertIn(".task-grid .task-cell-pdf", template)
+        self.assertIn(".task-grid .task-cell-bad-row", template)
+        self.assertIn(".task-grid .task-cell-ollama-url", template)
 
     def test_cloud_panel_removes_local_ollama_refresh_button(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")

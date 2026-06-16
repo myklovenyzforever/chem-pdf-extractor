@@ -120,12 +120,14 @@ class CompactUiGuidanceTest(unittest.TestCase):
 
     def test_compact_chinese_labels_are_layout_contract(self):
         zh = i18n_block(self.template, "zh")
+        en = i18n_block(self.template, "en")
         compact_labels = {
             "llm_provider": "模型来源",
             "pdf_mode": "解析方式",
             "max_chars": "上传字数",
             "llm_timeout": "超时秒",
             "bad_row_percent": "坏行阈值",
+            "ollama_url": "Ollama 地址",
             "recursive": "含子目录",
             "auto_fallback": "失败换模型",
             "copy_failed_sources": "复制失败 PDF",
@@ -140,6 +142,18 @@ class CompactUiGuidanceTest(unittest.TestCase):
         for key, label in compact_labels.items():
             with self.subTest(key=key):
                 self.assertIn(f'{key}: "{label}"', zh)
+
+        english_compact_labels = {
+            "llm_provider": "LLM Provider",
+            "pdf_mode": "PDF Mode",
+            "max_chars": "Max chars",
+            "llm_timeout": "Timeout",
+            "bad_row_percent": "Bad row threshold",
+            "ollama_url": "Ollama URL",
+        }
+        for key, label in english_compact_labels.items():
+            with self.subTest(key=key):
+                self.assertIn(f'{key}: "{label}"', en)
 
     def test_copy_failed_sources_is_not_enabled_by_default(self):
         start = self.template.index('id="copyFailedSources"')
@@ -261,14 +275,16 @@ class CompactUiGuidanceTest(unittest.TestCase):
             "compact three-column workbench",
             "Field editing intentionally stays below the first workbench",
             "No internal scrollbar in the left Task Settings column",
-            "No internal scrollbar in the middle API/Progress column",
+            "No internal scrollbar in the middle API/Statistics/Progress column",
             "only intended internal scroll region in the workbench is `pre#logs`",
             "模型来源",
             "解析方式",
             "上传字数",
             "超时秒",
             "坏行阈值",
+            "Ollama 地址",
             "复制失败 PDF",
+            "Statistics appear above Progress",
             "Copying failed source PDFs must not be enabled by default",
             "Start/Pause/Resume/Stop",
             "left and middle columns do not show internal scrollbars",
