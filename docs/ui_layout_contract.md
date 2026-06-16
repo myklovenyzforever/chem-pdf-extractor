@@ -8,7 +8,8 @@ left-column clutter, hidden controls, or extra internal scrollbars.
 
 - Primary verification viewport: 1366x768 at 100% browser zoom.
 - The first screen must preserve the existing compact three-column workbench:
-  left task controls, middle API/statistics/progress controls, and right run logs.
+  left task controls/provider-specific statistics, middle API/progress controls,
+  and right run logs.
 - The page may scroll naturally below the workbench to reach field editing.
 - Field editing intentionally stays below the first workbench and is not part of
   the first-screen control set.
@@ -28,13 +29,23 @@ At the desktop target, the first screen must show:
 - Progress area.
 - Run Logs.
 
+Statistics are provider-specific in the first screen:
+
+- In Cloud mode, Statistics must appear directly below Task Settings in the left
+  column, while the middle column shows API config followed by Progress.
+- In Local Ollama mode, Statistics must appear in the middle column above
+  Progress, while the left column contains Task Settings only.
+- The UI must use one Statistics section and move it between left/middle mount
+  points. Do not duplicate Statistics DOM nodes or backend-bound IDs.
+
 Do not hide these controls, move them below the field editor, or depend on
 scrolling inside the left or middle column to reach them.
 
 ## Scrolling Rules
 
 - No internal scrollbar in the left Task Settings column.
-- No internal scrollbar in the middle API/Statistics/Progress column.
+- No internal scrollbar in the middle API/Progress or API/Statistics/Progress
+  column.
 - The only intended internal scroll region in the workbench is `pre#logs`.
 - Whole-page scrolling is allowed for content below the first workbench.
 
@@ -56,8 +67,10 @@ zoom:
 - Header/title/language switch is visible.
 - Task Settings and all core task controls are visible.
 - Start/Pause/Resume/Stop are visually stable in a compact row.
-- API/model configuration, Statistics, and Progress are visible in the middle column.
-- Statistics appear above Progress and `可疑/坏行 0 / 0` is not clipped.
+- Cloud mode shows Statistics under Task Settings and Progress under API config.
+- Local Ollama mode shows Statistics above Progress in the middle column.
+- Stat cards show number and label on the same row.
+- `可疑/坏行 0 / 0` is not clipped.
 - Run Logs are visible and `pre#logs` is the only internal scroll area.
 - The left and middle columns do not show internal scrollbars.
 - Field editing starts below the first workbench.

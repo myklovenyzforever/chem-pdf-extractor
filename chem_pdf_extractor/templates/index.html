@@ -49,7 +49,7 @@
     main { width: 100%; max-width: 1680px; margin: 0 auto; padding: 12px 16px; overflow-x: hidden; }
     /*
       UI layout contract: the 1366x768 desktop workbench must show left task
-      settings, middle API/statistics/progress, and logs without left/middle
+      settings, provider-specific statistics, middle API/progress, and logs without left/middle
       internal scrollbars. Only pre#logs may scroll internally, and the fields
       panel intentionally remains below .top-grid. See docs/ui_layout_contract.md.
     */
@@ -135,8 +135,8 @@
     .workflow-guide {
       display: flex;
       flex-wrap: nowrap;
-      gap: 3px;
-      margin: -2px 0 6px;
+      gap: 4px;
+      margin: -1px 0 7px;
       min-width: 0;
     }
     .workflow-guide span {
@@ -144,9 +144,9 @@
       border-radius: 999px;
       background: var(--panel-soft);
       color: var(--muted);
-      font-size: 10.5px;
+      font-size: 11px;
       line-height: 1;
-      padding: 4px 6px;
+      padding: 5px 7px;
       white-space: nowrap;
       min-width: 0;
     }
@@ -183,7 +183,7 @@
       min-height: 0;
       min-width: 0;
       overflow: visible;
-      padding: 9px 10px;
+      padding: 11px 12px;
     }
     .task-panel > .small { margin-top: 8px; }
     .api-panel, .progress-panel, .task-stats-panel { min-height: 0; min-width: 0; }
@@ -218,16 +218,16 @@
     .top-grid h2 { font-size: 18px; }
     .top-grid label { font-size: 13px; }
     .top-grid input, .top-grid select, .top-grid button { font-size: 15px; }
-    .task-panel h2 { margin-bottom: 7px; font-size: 15px; }
+    .task-panel h2 { margin-bottom: 8px; font-size: 16px; }
     .task-panel label { margin: 0 0 3px; line-height: 1.15; }
     .task-panel input, .task-panel select {
-      min-height: 28px;
-      padding: 4px 8px;
-      font-size: 13px;
+      min-height: 30px;
+      padding: 5px 9px;
+      font-size: 14px;
     }
     .task-panel button {
-      min-height: 29px;
-      padding: 4px 8px;
+      min-height: 31px;
+      padding: 5px 9px;
     }
     label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 5px; font-weight: 650; }
     input, select, textarea {
@@ -269,9 +269,9 @@
     .task-panel .checks {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 5px 10px;
-      margin-top: 7px;
-      padding: 6px 7px;
+      gap: 6px 10px;
+      margin-top: 8px;
+      padding: 7px 8px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel-soft);
@@ -282,7 +282,7 @@
       grid-template-columns: 14px minmax(0, 1fr);
       align-items: start;
       gap: 5px;
-      font-size: 11px;
+      font-size: 12px;
       line-height: 1.2;
     }
     .task-panel .checks label:nth-child(3) { grid-column: 1 / -1; }
@@ -321,22 +321,22 @@
     .action-row { display: flex; gap: 10px; flex-wrap: wrap; }
     .action-row + .action-row { margin-top: 8px; }
     .task-panel .actions {
-      gap: 6px;
-      margin-top: 7px;
+      gap: 7px;
+      margin-top: 8px;
       flex-wrap: nowrap;
     }
     .task-panel .actions button {
       flex: 1 1 0;
       min-width: 0;
       white-space: nowrap;
-      font-size: 13px;
+      font-size: 14px;
     }
     .task-panel .action-row { gap: 8px; }
     .task-panel .action-row + .action-row { margin-top: 6px; }
     .task-grid, .api-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px 10px;
+      gap: 7px 10px;
       align-items: end;
     }
     .api-grid { gap: 5px 10px; }
@@ -387,14 +387,14 @@
     .field-help {
       margin: 3px 0 0;
       color: var(--muted);
-      font-size: 11px;
+      font-size: 11.5px;
       line-height: 1.25;
     }
     .task-grid > .task-help {
       grid-column: 1 / -1;
-      margin: -2px 0 0;
-      font-size: 10.5px;
-      line-height: 1.2;
+      margin: -1px 0 1px;
+      font-size: 11px;
+      line-height: 1.25;
     }
     .compact-input-row {
       display: grid;
@@ -494,8 +494,8 @@
     }
     .progress-panel .stats {
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 5px;
-      margin: 6px 0;
+      gap: 6px;
+      margin: 7px 0;
     }
     .stat {
       border: 1px solid var(--line);
@@ -511,17 +511,17 @@
     .stat span { color: var(--muted); font-size: 13px; line-height: 1.2; }
     .progress-panel .stat {
       min-width: 0;
-      min-height: 46px;
-      padding: 6px;
-      gap: 3px;
-      flex-direction: column;
-      align-items: flex-start;
+      min-height: 48px;
+      padding: 7px 8px;
+      gap: 6px;
+      flex-direction: row;
+      align-items: center;
       justify-content: center;
     }
-    .progress-panel .stat b { font-size: 18px; }
+    .progress-panel .stat b { font-size: 21px; }
     .progress-panel .stat span {
-      font-size: 10.5px;
-      line-height: 1.1;
+      font-size: 12px;
+      line-height: 1.15;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -544,36 +544,44 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .stats-mount {
+      flex: 0 0 auto;
+      min-height: 0;
+      overflow: visible;
+    }
+    .stats-mount[hidden] { display: none; }
     .task-stats-panel {
       flex: 0 0 auto;
       min-height: 0;
       overflow: visible;
-      padding: 7px 9px;
+      padding: 9px 10px;
     }
     .task-stats-panel h2 {
-      margin-bottom: 5px;
-      font-size: 15px;
+      margin-bottom: 7px;
+      font-size: 16px;
     }
     .task-stats-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 5px;
+      gap: 6px;
     }
+    #leftStatsMount .task-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #middleStatsMount .task-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .task-stat {
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--panel-soft);
-      padding: 5px 6px;
+      padding: 7px 8px;
       min-width: 0;
       display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      align-items: start;
-      gap: 3px;
-      min-height: 36px;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 7px;
+      min-height: 40px;
     }
     .task-stat span {
       color: var(--muted);
-      font-size: 10.5px;
+      font-size: 12px;
       font-weight: 650;
       line-height: 1.15;
       overflow: hidden;
@@ -582,7 +590,7 @@
     }
     .task-stat b {
       color: #10213f;
-      font-size: 15px;
+      font-size: 18px;
       line-height: 1;
       white-space: nowrap;
     }
@@ -722,6 +730,7 @@
             <button class="danger" id="stopBtn" onclick="stopJob()" data-i18n="stop">Stop</button>
           </div>
         </section>
+        <div id="leftStatsMount" class="stats-mount" hidden></div>
       </div>
 
       <div class="config-stack">
@@ -764,16 +773,18 @@
           <p class="small" data-i18n="api_help">Enter an OpenAI-compatible Base URL and API key. If the provider supports /models, use Fetch models; otherwise enter the model manually.</p>
         </section>
 
-        <section class="task-stats-panel">
-          <h2 data-i18n="statistics">Statistics</h2>
-          <div class="task-stats-grid">
-            <div class="task-stat"><span data-i18n="stat_extracted_rows">Extracted rows</span><b id="extractedRows">0</b></div>
-            <div class="task-stat"><span data-i18n="stat_successful_pdfs">Successful PDFs</span><b id="successfulPdfs">0</b></div>
-            <div class="task-stat"><span data-i18n="stat_failed_pdfs">Failed PDFs</span><b id="failedPdfs">0</b></div>
-            <div class="task-stat"><span data-i18n="stat_suspicious_bad_rows">Suspicious / bad</span><b id="suspiciousBadRows">0 / 0</b></div>
-            <div class="task-stat"><span data-i18n="stat_cache_hits">Cache hits</span><b id="cacheHits">0</b></div>
-          </div>
-        </section>
+        <div id="middleStatsMount" class="stats-mount">
+          <section id="taskStatsPanel" class="task-stats-panel">
+            <h2 data-i18n="statistics">Statistics</h2>
+            <div class="task-stats-grid">
+              <div class="task-stat"><b id="extractedRows">0</b><span data-i18n="stat_extracted_rows">Extracted rows</span></div>
+              <div class="task-stat"><b id="successfulPdfs">0</b><span data-i18n="stat_successful_pdfs">Successful PDFs</span></div>
+              <div class="task-stat"><b id="failedPdfs">0</b><span data-i18n="stat_failed_pdfs">Failed PDFs</span></div>
+              <div class="task-stat"><b id="suspiciousBadRows">0 / 0</b><span data-i18n="stat_suspicious_bad_rows">Suspicious / bad</span></div>
+              <div class="task-stat"><b id="cacheHits">0</b><span data-i18n="stat_cache_hits">Cache hits</span></div>
+            </div>
+          </section>
+        </div>
 
         <section class="progress-panel">
           <h2 data-i18n="progress">进度</h2>
@@ -1591,6 +1602,17 @@
       const cloudPanel = document.getElementById("cloudPanel");
       const isCloud = provider === "cloud";
       cloudPanel.style.display = isCloud ? "block" : "none";
+      const statsPanel = document.getElementById("taskStatsPanel");
+      const leftStatsMount = document.getElementById("leftStatsMount");
+      const middleStatsMount = document.getElementById("middleStatsMount");
+      if (statsPanel && leftStatsMount && middleStatsMount) {
+        const targetMount = isCloud ? leftStatsMount : middleStatsMount;
+        if (statsPanel.parentElement !== targetMount) {
+          targetMount.appendChild(statsPanel);
+        }
+        leftStatsMount.hidden = !isCloud;
+        middleStatsMount.hidden = isCloud;
+      }
       document.querySelectorAll(".ollama-only").forEach(el => {
         el.hidden = isCloud;
       });

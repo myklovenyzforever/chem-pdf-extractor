@@ -75,10 +75,11 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertNotIn("flex: 1 1 0", task_panel)
         self.assertIn("flex: 1 1 auto", progress_panel)
 
-    def test_statistics_panel_exists_and_uses_backend_status_fields(self):
+    def test_statistics_panel_exists_once_and_uses_backend_status_fields(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
-        self.assertIn('class="task-stats-panel"', template)
+        self.assertEqual(template.count('id="taskStatsPanel"'), 1)
+        self.assertEqual(template.count('class="task-stats-panel"'), 1)
         self.assertIn("Statistics", template)
         self.assertIn("\u7edf\u8ba1\u4fe1\u606f", template)
         self.assertIn("extracted_rows", template)
@@ -89,17 +90,39 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertIn("suspiciousBadRows", template)
         self.assertIn("cacheHits", template)
 
-        left_stack_start = template.index('<div class="left-stack">')
-        config_stack_start = template.index('<div class="config-stack">')
-        left_stack = template[left_stack_start:config_stack_start]
-        self.assertNotIn('class="task-stats-panel"', left_stack)
+    def test_statistics_mounts_move_by_provider_without_duplicate_ids(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
+        left_stats_mount_index = template.index('id="leftStatsMount"')
+        config_stack_start = template.index('<div class="config-stack">')
         cloud_panel_index = template.index('<section id="cloudPanel" class="api-panel"')
-        stats_index = template.index('<section class="task-stats-panel">')
+        middle_stats_mount_index = template.index('id="middleStatsMount"')
+        stats_index = template.index('id="taskStatsPanel"')
         progress_index = template.index('<section class="progress-panel">')
+        self.assertLess(left_stats_mount_index, config_stack_start)
         self.assertLess(config_stack_start, cloud_panel_index)
-        self.assertLess(cloud_panel_index, stats_index)
+        self.assertLess(cloud_panel_index, middle_stats_mount_index)
+        self.assertLess(middle_stats_mount_index, stats_index)
         self.assertLess(stats_index, progress_index)
+
+        self.assertIn('const statsPanel = document.getElementById("taskStatsPanel")', template)
+        self.assertIn('const leftStatsMount = document.getElementById("leftStatsMount")', template)
+        self.assertIn('const middleStatsMount = document.getElementById("middleStatsMount")', template)
+        self.assertIn("const targetMount = isCloud ? leftStatsMount : middleStatsMount", template)
+        self.assertIn("targetMount.appendChild(statsPanel)", template)
+        self.assertIn("leftStatsMount.hidden = !isCloud", template)
+        self.assertIn("middleStatsMount.hidden = isCloud", template)
+
+    def test_stat_cards_keep_number_and_label_on_same_row(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+        progress_stat = css_block(template, "\n    .progress-panel .stat {")
+        task_stat = css_block(template, "\n    .task-stat {")
+
+        self.assertIn("flex-direction: row", progress_stat)
+        self.assertIn("align-items: center", progress_stat)
+        self.assertIn("grid-template-columns: auto minmax(0, 1fr)", task_stat)
+        self.assertIn("align-items: center", task_stat)
+        self.assertIn('<div class="task-stat"><b id="suspiciousBadRows">0 / 0</b><span', template)
 
     def test_progress_panel_has_ratio_and_core_stats(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
@@ -140,6 +163,7 @@ class CloudModelSelectorUiTest(unittest.TestCase):
 
         for selector in [
             ".left-stack",
+            ".stats-mount",
             ".task-panel",
             ".task-stats-panel",
             ".config-stack",
