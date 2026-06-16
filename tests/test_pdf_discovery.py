@@ -29,6 +29,15 @@ def minimal_runtime() -> config.RuntimeDeps:
     )
 
 
+def assert_existing_paths_same(testcase: unittest.TestCase, actual: Path, expected: Path) -> None:
+    actual = Path(actual)
+    expected = Path(expected)
+    if actual.exists() and expected.exists():
+        testcase.assertTrue(actual.samefile(expected), f"{actual} != {expected}")
+    else:
+        testcase.assertEqual(actual, expected)
+
+
 class PdfDiscoveryTest(unittest.TestCase):
     def test_default_input_dir_returns_project_input_pdfs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -69,15 +78,17 @@ class PdfDiscoveryTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             user_root = Path(tmp)
             with patch.dict(os.environ, {"CHEM_PDF_EXTRACTOR_USER_ROOT": str(user_root)}, clear=False):
+                expected_root = config.default_user_root()
+                assert_existing_paths_same(self, expected_root, user_root)
                 input_dir = config.default_input_dir()
                 output_path = config.default_output_path()
                 local_config = config.local_config_path()
                 self.assertTrue(input_dir.exists())
                 self.assertTrue(output_path.exists())
 
-                self.assertEqual(input_dir, user_root / "input_pdfs")
-                self.assertEqual(output_path, user_root / config.DEFAULT_OUTPUT_DIR_NAME)
-                self.assertEqual(local_config, user_root / ".runtime" / config.LOCAL_CONFIG_NAME)
+                self.assertEqual(input_dir, expected_root / "input_pdfs")
+                self.assertEqual(output_path, expected_root / config.DEFAULT_OUTPUT_DIR_NAME)
+                self.assertEqual(local_config, expected_root / ".runtime" / config.LOCAL_CONFIG_NAME)
 
     def test_user_root_env_controls_default_diagnostics_log_dir(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -91,9 +102,11 @@ class PdfDiscoveryTest(unittest.TestCase):
                 clear=False,
             ):
                 os.environ.pop("CHEM_PDF_EXTRACTOR_LOG_DIR", None)
+                expected_root = config.default_user_root()
+                assert_existing_paths_same(self, expected_root, user_root)
                 log_dir = diagnostics_log_dir()
 
-                self.assertEqual(log_dir, user_root / "logs")
+                self.assertEqual(log_dir, expected_root / "logs")
                 self.assertTrue(log_dir.exists())
 
     def test_extractor_converts_user_root_output_directory_to_excel_file(self):
