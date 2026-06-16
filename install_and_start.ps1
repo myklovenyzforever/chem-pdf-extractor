@@ -1,3 +1,9 @@
+﻿param(
+  [ValidateSet("en", "zh")]
+  [string]$Language = "en",
+  [string]$UserRoot = ""
+)
+
 $ErrorActionPreference = "Stop"
 
 try {
@@ -9,21 +15,105 @@ try {
   # Console encoding setup is best-effort only.
 }
 
-$ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location -LiteralPath $ProjectRoot
+$AppRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+if ([string]::IsNullOrWhiteSpace($UserRoot)) {
+  if ((Split-Path -Leaf $AppRoot) -ieq "app") {
+    $UserRoot = Split-Path -Parent $AppRoot
+  } else {
+    $UserRoot = $AppRoot
+  }
+}
+$UserRoot = [System.IO.Path]::GetFullPath($UserRoot)
+Set-Location -LiteralPath $AppRoot
 
-$LogsDir = Join-Path $ProjectRoot "logs"
-$RuntimeDir = Join-Path $ProjectRoot ".runtime"
+$InputDir = Join-Path $UserRoot "input_pdfs"
+$OutputDir = Join-Path $UserRoot "提取结果"
+$LogsDir = Join-Path $UserRoot "logs"
+$RuntimeDir = Join-Path $UserRoot ".runtime"
 $SettingsPath = Join-Path $RuntimeDir "launcher_settings.json"
 $InstallLog = Join-Path $LogsDir "install.log"
 $StartupLog = Join-Path $LogsDir "startup.log"
 
 New-Item -ItemType Directory -Force -Path $LogsDir | Out-Null
 New-Item -ItemType Directory -Force -Path $RuntimeDir | Out-Null
+New-Item -ItemType Directory -Force -Path $InputDir | Out-Null
+New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
 $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
+$env:CHEM_PDF_EXTRACTOR_USER_ROOT = $UserRoot
 $env:CHEM_PDF_EXTRACTOR_LOG_DIR = $LogsDir
+
+$Messages = @{
+  en = @{
+    ChooseBackend = "Please choose a PDF parsing backend:"
+    PypdfDesc = "Lightweight mode | smallest install size | fastest install | best compatibility"
+    PypdfSuitable = "Suitable for text-based PDFs."
+    PypdfWeakness = "Weakness: weaker layout, table, and multi-column handling."
+    PymupdfDesc = "Standard mode | medium install size | good speed | suitable for most research PDFs."
+    PymupdfDefault = "This remains the default if the user presses Enter."
+    MineruDesc = "Enhanced mode | large install size | slow first-time installation."
+    MineruSuitable = "Suitable for complex layouts, tables, scanned PDFs, and high-performance PCs."
+    MineruWarning = "Warning: requires more disk space, memory, installation time, and may download large dependencies or models."
+    PreviousBackend = "Previous backend choice:"
+    EnterReuse = "Enter 1, 2, or 3. Press Enter to reuse previous choice"
+    EnterDefault = "Enter 1, 2, or 3. Press Enter for option 2"
+    InvalidChoice = "Invalid input. Please enter 1, 2, 3, or press Enter."
+    MineruFailed = "MinerU installation did not complete successfully."
+    Reason = "Reason:"
+    RetryMineru = "[1] Retry MinerU installation"
+    ContinuePymupdf = "[2] Continue now with pymupdf4llm"
+    Exit = "[3] Exit"
+    Enter123 = "Enter 1, 2, or 3"
+    StartingApp = "Starting Chem-PDF-Extractor local web app..."
+    LocalUrl = "Local URL:"
+    BrowserHint = "The browser should open automatically. If it does not, copy the URL above."
+    KeepWindowOpen = "Keep this PowerShell window open while the server is running."
+    StopHint = "Press Ctrl+C to stop the server."
+    LauncherFailed = "Chem-PDF-Extractor launcher failed."
+    Logs = "Logs:"
+    Fallback = "Suggested fallback: rerun Start-Chem-PDF-Extractor.bat and choose option 2, pymupdf4llm."
+    RetrySafe = "You can retry safely after fixing the issue."
+  }
+  zh = @{
+    ChooseBackend = "请选择 PDF 解析后端："
+    PypdfDesc = "轻量模式 | 安装体积最小 | 安装最快 | 兼容性最好"
+    PypdfSuitable = "适合文本型 PDF。"
+    PypdfWeakness = "弱点：版面、表格、多栏处理能力较弱。"
+    PymupdfDesc = "标准模式 | 中等安装体积 | 速度较好 | 适合大多数科研 PDF。"
+    PymupdfDefault = "如果直接按 Enter，将默认使用此选项。"
+    MineruDesc = "增强模式 | 安装体积大 | 首次安装较慢。"
+    MineruSuitable = "适合复杂版面、表格、扫描类 PDF 和性能较好的电脑。"
+    MineruWarning = "提示：需要更多磁盘空间、内存和安装时间，可能下载较大的依赖或模型。"
+    PreviousBackend = "上次选择的后端："
+    EnterReuse = "请输入 1、2 或 3。直接按 Enter 复用上次选择"
+    EnterDefault = "请输入 1、2 或 3。直接按 Enter 使用选项 2"
+    InvalidChoice = "输入无效。请输入 1、2、3，或直接按 Enter。"
+    MineruFailed = "MinerU 安装未成功完成。"
+    Reason = "原因："
+    RetryMineru = "[1] 重试 MinerU 安装"
+    ContinuePymupdf = "[2] 现在改用 pymupdf4llm 继续"
+    Exit = "[3] 退出"
+    Enter123 = "请输入 1、2 或 3"
+    StartingApp = "正在启动 Chem-PDF-Extractor 本地网页应用..."
+    LocalUrl = "本地网址："
+    BrowserHint = "浏览器应会自动打开；如果没有打开，请复制上面的网址。"
+    KeepWindowOpen = "服务运行期间请保持此 PowerShell 窗口打开。"
+    StopHint = "按 Ctrl+C 可停止服务。"
+    LauncherFailed = "Chem-PDF-Extractor 启动失败。"
+    Logs = "日志："
+    Fallback = "建议：重新运行 YiJianQiDong.bat，并选择选项 2 pymupdf4llm。"
+    RetrySafe = "修复问题后可以安全重试。"
+  }
+}
+
+function Get-LauncherText {
+  param([string]$Key)
+  if ($Messages.ContainsKey($Language) -and $Messages[$Language].ContainsKey($Key)) {
+    return $Messages[$Language][$Key]
+  }
+  return $Messages["en"][$Key]
+}
 
 function Write-LauncherLog {
   param(
@@ -212,10 +302,13 @@ function Ensure-Python311ForVenv {
 
 function Get-ExistingRuntimePython {
   $candidates = @(
-    (Join-Path $ProjectRoot "bundled_runtime\python\python.exe"),
-    (Join-Path $ProjectRoot ".venv\Scripts\python.exe"),
-    (Join-Path $ProjectRoot "YiLaiHuanJing\python\python.exe"),
-    (Join-Path $ProjectRoot "运行依赖\python\python.exe")
+    (Join-Path $UserRoot "bundled_runtime\python\python.exe"),
+    (Join-Path $RuntimeDir ".venv\Scripts\python.exe"),
+    (Join-Path $AppRoot ".venv\Scripts\python.exe"),
+    (Join-Path $UserRoot "YiLaiHuanJing\python\python.exe"),
+    (Join-Path $UserRoot "运行依赖\python\python.exe"),
+    (Join-Path $AppRoot "YiLaiHuanJing\python\python.exe"),
+    (Join-Path $AppRoot "运行依赖\python\python.exe")
   )
 
   foreach ($candidate in $candidates) {
@@ -233,16 +326,16 @@ function Ensure-ProjectPython {
     return $existing
   }
 
-  $venvPython = Join-Path $ProjectRoot ".venv\Scripts\python.exe"
-  $venvDir = Join-Path $ProjectRoot ".venv"
+  $venvDir = Join-Path $RuntimeDir ".venv"
+  $venvPython = Join-Path $venvDir "Scripts\python.exe"
   if (-not (Test-Path -LiteralPath $venvPython)) {
     $python311 = Ensure-Python311ForVenv
     Write-Step "Creating project virtual environment: $venvDir"
-    Invoke-PythonCommand -PythonCommand $python311 -Arguments @("-m", "venv", $venvDir) -FailureHint "Failed to create .venv. Check logs/install.log and verify that Python 3.11 includes venv support."
+    Invoke-PythonCommand -PythonCommand $python311 -Arguments @("-m", "venv", $venvDir) -FailureHint "Failed to create runtime virtual environment. Check logs/install.log and verify that Python 3.11 includes venv support."
   }
 
   if (-not (Test-Path -LiteralPath $venvPython)) {
-    throw "Virtual environment was created but .venv\Scripts\python.exe was not found."
+    throw "Virtual environment was created but runtime .venv\Scripts\python.exe was not found."
   }
   Write-Step "Using project virtual environment Python: $venvPython"
   return (Resolve-Path -LiteralPath $venvPython).Path
@@ -280,31 +373,32 @@ function Select-PdfBackend {
 
   while ($true) {
     Write-Host ""
-    Write-Host "Please choose a PDF parsing backend:"
+    Write-Host (Get-LauncherText "ChooseBackend")
     Write-Host ""
     Write-Host "[1] pypdf_text"
-    Write-Host "Lightweight mode | smallest install size | fastest install | best compatibility"
-    Write-Host "Suitable for text-based PDFs."
-    Write-Host "Weakness: weaker layout, table, and multi-column handling."
+    Write-Host (Get-LauncherText "PypdfDesc")
+    Write-Host (Get-LauncherText "PypdfSuitable")
+    Write-Host (Get-LauncherText "PypdfWeakness")
     Write-Host ""
     Write-Host "[2] pymupdf4llm (recommended)"
-    Write-Host "Standard mode | medium install size | good speed | suitable for most research PDFs."
-    Write-Host "This remains the default if the user presses Enter."
+    Write-Host (Get-LauncherText "PymupdfDesc")
+    Write-Host (Get-LauncherText "PymupdfDefault")
     Write-Host ""
     Write-Host "[3] mineru"
-    Write-Host "Enhanced mode | large install size | slow first-time installation."
-    Write-Host "Suitable for complex layouts, tables, scanned PDFs, and high-performance PCs."
-    Write-Host "Warning: requires more disk space, memory, installation time, and may download large dependencies or models."
+    Write-Host (Get-LauncherText "MineruDesc")
+    Write-Host (Get-LauncherText "MineruSuitable")
+    Write-Host (Get-LauncherText "MineruWarning")
     Write-Host ""
     if ($previous) {
-      Write-Host "Previous backend choice: $previous"
-      $choice = Read-Host "Enter 1, 2, or 3. Press Enter to reuse previous choice"
+      $previousLabel = Get-LauncherText "PreviousBackend"
+      Write-Host "$previousLabel $previous"
+      $choice = Read-Host (Get-LauncherText "EnterReuse")
       if ([string]::IsNullOrWhiteSpace($choice)) {
         Save-BackendChoice $previous
         return $previous
       }
     } else {
-      $choice = Read-Host "Enter 1, 2, or 3. Press Enter for option 2"
+      $choice = Read-Host (Get-LauncherText "EnterDefault")
       if ([string]::IsNullOrWhiteSpace($choice)) {
         Save-BackendChoice "pymupdf4llm"
         return "pymupdf4llm"
@@ -316,7 +410,7 @@ function Select-PdfBackend {
       "2" { Save-BackendChoice "pymupdf4llm"; return "pymupdf4llm" }
       "3" { Save-BackendChoice "mineru"; return "mineru" }
       default {
-        Write-Host "Invalid input. Please enter 1, 2, 3, or press Enter."
+        Write-Host (Get-LauncherText "InvalidChoice")
       }
     }
   }
@@ -338,7 +432,7 @@ function Install-Requirements {
 
 function Install-MinerU {
   param([string]$PythonExe)
-  $mineruRequirements = Join-Path $ProjectRoot "requirements-mineru.txt"
+  $mineruRequirements = Join-Path $AppRoot "requirements-mineru.txt"
   if (-not (Test-Path -LiteralPath $mineruRequirements)) {
     throw "requirements-mineru.txt was not found."
   }
@@ -374,13 +468,14 @@ function Resolve-MinerUInstallFailure {
   )
   while ($true) {
     Write-Host ""
-    Write-Host "MinerU installation did not complete successfully."
-    Write-Host "Reason: $FailureMessage"
+    Write-Host (Get-LauncherText "MineruFailed")
+    $reasonLabel = Get-LauncherText "Reason"
+    Write-Host "$reasonLabel $FailureMessage"
     Write-Host ""
-    Write-Host "[1] Retry MinerU installation"
-    Write-Host "[2] Continue now with pymupdf4llm"
-    Write-Host "[3] Exit"
-    $choice = Read-Host "Enter 1, 2, or 3"
+    Write-Host (Get-LauncherText "RetryMineru")
+    Write-Host (Get-LauncherText "ContinuePymupdf")
+    Write-Host (Get-LauncherText "Exit")
+    $choice = Read-Host (Get-LauncherText "Enter123")
     switch ($choice.Trim()) {
       "1" {
         try {
@@ -401,7 +496,7 @@ function Resolve-MinerUInstallFailure {
         throw "MinerU installation was cancelled by the user."
       }
       default {
-        Write-Host "Invalid input. Please enter 1, 2, or 3."
+        Write-Host (Get-LauncherText "Enter123")
       }
     }
   }
@@ -414,15 +509,15 @@ function Install-DependenciesForBackend {
   )
   switch ($Backend) {
     "pypdf_text" {
-      Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $ProjectRoot "requirements-core.txt")
+      Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $AppRoot "requirements-core.txt")
       return "pypdf_text"
     }
     "pymupdf4llm" {
-      Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $ProjectRoot "requirements.txt")
+      Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $AppRoot "requirements.txt")
       return "pymupdf4llm"
     }
     "mineru" {
-      Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $ProjectRoot "requirements.txt")
+      Install-Requirements -PythonExe $PythonExe -RequirementsFile (Join-Path $AppRoot "requirements.txt")
       try {
         Install-MinerU -PythonExe $PythonExe
         Save-BackendChoice "mineru"
@@ -440,7 +535,10 @@ function Install-DependenciesForBackend {
 
 try {
   Write-LauncherLog "===== Windows first-run launcher started =====" $StartupLog
-  Write-LauncherLog "project_root: $ProjectRoot" $StartupLog
+  Write-LauncherLog "app_root: $AppRoot" $StartupLog
+  Write-LauncherLog "user_root: $UserRoot" $StartupLog
+  Write-LauncherLog "input_dir: $InputDir" $StartupLog
+  Write-LauncherLog "output_dir: $OutputDir" $StartupLog
   Write-LauncherLog "logs_dir: $LogsDir" $StartupLog
 
   $backend = Select-PdfBackend
@@ -460,11 +558,12 @@ try {
   $startupArgs = @("-m", "chem_pdf_extractor", "--pdf-mode", $backend, "--open-browser")
   Write-LauncherLog "App startup command: $pythonExe $($startupArgs -join ' ')" $StartupLog
   Write-Host ""
-  Write-Host "Starting Chem-PDF-Extractor local web app..."
-  Write-Host "Local URL: $url"
-  Write-Host "The browser should open automatically. If it does not, copy the URL above."
-  Write-Host "Keep this PowerShell window open while the server is running."
-  Write-Host "Press Ctrl+C to stop the server."
+  Write-Host (Get-LauncherText "StartingApp")
+  $localUrlLabel = Get-LauncherText "LocalUrl"
+  Write-Host "$localUrlLabel $url"
+  Write-Host (Get-LauncherText "BrowserHint")
+  Write-Host (Get-LauncherText "KeepWindowOpen")
+  Write-Host (Get-LauncherText "StopHint")
   Write-Host ""
 
   & $pythonExe @startupArgs 2>&1 | Tee-Object -FilePath $StartupLog -Append
@@ -474,14 +573,14 @@ try {
 } catch {
   Write-LauncherLog "Launcher error: $($_.Exception.Message)" $StartupLog
   Write-Host ""
-  Write-Host "Chem-PDF-Extractor launcher failed."
+  Write-Host (Get-LauncherText "LauncherFailed")
   Write-Host $_.Exception.Message
   Write-Host ""
-  Write-Host "Logs:"
+  Write-Host (Get-LauncherText "Logs")
   Write-Host "  $InstallLog"
   Write-Host "  $StartupLog"
   Write-Host ""
-  Write-Host "Suggested fallback: rerun Start-Chem-PDF-Extractor.bat and choose option 2, pymupdf4llm."
-  Write-Host "You can retry safely after fixing the issue."
+  Write-Host (Get-LauncherText "Fallback")
+  Write-Host (Get-LauncherText "RetrySafe")
   exit 1
 }

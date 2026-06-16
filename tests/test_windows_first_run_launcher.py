@@ -6,20 +6,41 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 class WindowsFirstRunLauncherTest(unittest.TestCase):
-    def test_bat_delegates_to_install_and_start_powershell(self):
-        content = (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8")
+    def test_bilingual_bat_launchers_delegate_to_shared_powershell(self):
+        english = (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8")
+        chinese = (REPO_ROOT / "YiJianQiDong.bat").read_text(encoding="utf-8")
 
-        self.assertIn("install_and_start.ps1", content)
-        self.assertIn("-ExecutionPolicy Bypass", content)
-        self.assertIn("pause", content.lower())
+        for content in [english, chinese]:
+            with self.subTest(launcher=content[:40]):
+                self.assertIn("app\\install_and_start.ps1", content)
+                self.assertIn("install_and_start.ps1", content)
+                self.assertIn("-ExecutionPolicy Bypass", content)
+                self.assertIn("-UserRoot", content)
+                self.assertIn("CHEM_PDF_EXTRACTOR_USER_ROOT", content)
+                self.assertIn("logs", content)
+                self.assertIn("EXIT_CODE", content)
+                self.assertIn("exit /b %EXIT_CODE%", content)
+                self.assertIn("pause", content.lower())
+                self.assertNotIn("pip install", content.lower())
+                self.assertNotIn("winget", content.lower())
+                self.assertNotIn("requirements.txt", content.lower())
+
+        self.assertIn("-Language en", english)
+        self.assertIn("Starting Chem-PDF-Extractor", english)
+        self.assertIn("Press any key to close this window", english)
+        self.assertIn("-Language zh", chinese)
+        self.assertIn("正在启动 Chem-PDF-Extractor", chinese)
+        self.assertIn("按任意键关闭此窗口", chinese)
 
     def test_windows_launchers_configure_utf8_console(self):
-        bat = (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8")
+        english = (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8")
+        chinese = (REPO_ROOT / "YiJianQiDong.bat").read_text(encoding="utf-8")
         ps1 = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
 
-        self.assertIn("chcp 65001", bat)
-        self.assertIn('set "PYTHONUTF8=1"', bat)
-        self.assertIn('set "PYTHONIOENCODING=utf-8"', bat)
+        for content in [english, chinese]:
+            self.assertIn("chcp 65001", content)
+            self.assertIn('set "PYTHONUTF8=1"', content)
+            self.assertIn('set "PYTHONIOENCODING=utf-8"', content)
 
         self.assertIn("[Console]::OutputEncoding", ps1)
         self.assertIn("[Console]::InputEncoding", ps1)
@@ -29,7 +50,19 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
     def test_powershell_launcher_has_backend_menu_and_runtime_flow(self):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
 
+        self.assertIn("param(", content)
+        self.assertIn('[ValidateSet("en", "zh")]', content)
+        self.assertIn("[string]$Language", content)
+        self.assertIn("[string]$UserRoot", content)
+        self.assertIn("$AppRoot", content)
+        self.assertIn("$UserRoot", content)
+        self.assertIn("$InputDir", content)
+        self.assertIn("$OutputDir", content)
+        self.assertIn("CHEM_PDF_EXTRACTOR_USER_ROOT", content)
+        self.assertIn("CHEM_PDF_EXTRACTOR_LOG_DIR", content)
+        self.assertIn("Get-LauncherText", content)
         self.assertIn("Please choose a PDF parsing backend", content)
+        self.assertIn("请选择 PDF 解析后端", content)
         self.assertIn("[1] pypdf_text", content)
         self.assertIn("[2] pymupdf4llm (recommended)", content)
         self.assertIn("[3] mineru", content)
@@ -45,12 +78,13 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
     def test_powershell_launcher_runtime_candidates_are_not_mojibake(self):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
 
+        self.assertNotIn("閺夆晜鍔?", content)
         self.assertNotIn("鏉╂劘", content)
-        self.assertNotIn("杩愯", content)
         self.assertIn("bundled_runtime", content)
         self.assertIn(".venv\\Scripts\\python.exe", content)
         self.assertIn("YiLaiHuanJing", content)
         self.assertIn("运行依赖", content)
+        self.assertNotIn("杩愯渚濊禆", content)
 
     def test_launcher_installs_expected_requirements_by_backend(self):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
