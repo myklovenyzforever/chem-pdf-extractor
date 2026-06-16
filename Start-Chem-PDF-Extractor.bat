@@ -4,27 +4,35 @@ setlocal
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
 
-set "SCRIPT_DIR=%~dp0"
-cd /d "%SCRIPT_DIR%"
+set "USER_ROOT=%~dp0"
+cd /d "%USER_ROOT%"
 
-set "PS_SCRIPT=%SCRIPT_DIR%install_and_start.ps1"
-set "LOG_DIR=%SCRIPT_DIR%logs"
+set "CHEM_PDF_EXTRACTOR_LAUNCHER_LANGUAGE=en"
+set "CHEM_PDF_EXTRACTOR_USER_ROOT=%USER_ROOT%"
+set "CHEM_PDF_EXTRACTOR_LOG_DIR=%USER_ROOT%logs"
+set "LOG_DIR=%USER_ROOT%logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
+
+set "PS_SCRIPT=%USER_ROOT%app\install_and_start.ps1"
+if not exist "%PS_SCRIPT%" set "PS_SCRIPT=%USER_ROOT%install_and_start.ps1"
 
 echo.
 echo Starting Chem-PDF-Extractor...
+echo User folder: "%USER_ROOT%"
+echo Logs folder: "%LOG_DIR%"
 
 if not exist "%PS_SCRIPT%" (
   echo.
-  echo install_and_start.ps1 was not found.
-  echo Expected: "%PS_SCRIPT%"
+  echo Shared launcher script was not found.
+  echo Expected packaged path: "%USER_ROOT%app\install_and_start.ps1"
+  echo Expected source path: "%USER_ROOT%install_and_start.ps1"
   echo.
   echo Press any key to close this window.
   pause >nul
   exit /b 1
 )
 
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" -Language en -UserRoot "%USER_ROOT%"
 set "EXIT_CODE=%ERRORLEVEL%"
 
 echo.

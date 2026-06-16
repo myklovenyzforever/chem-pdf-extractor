@@ -48,6 +48,7 @@ Input PDF discovery:
 - Put user source PDFs in `input_pdfs/`, or pass `--input-dir <folder>` / choose a folder in the Web UI.
 - `examples/demo_literature_batch/` contains synthetic example PDFs for docs and tests; they are not default extraction input.
 - `.mineru_outputs/` contains generated MinerU artifacts and is excluded from source PDF discovery.
+- When `CHEM_PDF_EXTRACTOR_USER_ROOT` is set by the Windows launcher, defaults use that outer user folder: source PDFs in `input_pdfs/`, logs in `logs/`, local runtime settings in `.runtime/`, and extraction outputs in `提取结果/`.
 
 Python 3.11 is recommended for the broadest PDF-backend compatibility. On some Windows + Python 3.12 environments, `pymupdf4llm` / `pymupdf` may fail during install or import. These packages are optional lazy-loaded PDF backends, so startup does not require importing them.
 

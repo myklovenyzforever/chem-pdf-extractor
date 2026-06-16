@@ -27,6 +27,8 @@ DEFAULT_CLOUD_MODEL = "provider/model-name"
 DEFAULT_CLOUD_BASE_URL = "https://api.example.com/v1"
 DEFAULT_CLOUD_API_KEY = ""
 LOCAL_CONFIG_NAME = "config.local.json"
+USER_ROOT_ENV_VAR = "CHEM_PDF_EXTRACTOR_USER_ROOT"
+DEFAULT_OUTPUT_DIR_NAME = "提取结果"
 DEFAULT_PDF_MODE = "pymupdf4llm"
 PDF_MODE_CHOICES = ["auto", "pypdf_text", "pymupdf4llm", "pymupdf_text", "mineru"]
 PLACEHOLDER_CLOUD_BASE_URL_MARKERS = {"api.example.com"}
@@ -249,17 +251,38 @@ def script_dir() -> Path:
     return PROJECT_ROOT
 
 
+def app_root() -> Path:
+    return PROJECT_ROOT
+
+
+def default_user_root() -> Path:
+    configured = os.environ.get(USER_ROOT_ENV_VAR)
+    if configured and configured.strip():
+        return Path(configured).expanduser().resolve()
+    return PROJECT_ROOT
+
+
+def user_runtime_dir() -> Path:
+    return default_user_root() / ".runtime"
+
+
 def default_input_dir() -> Path:
-    path = script_dir() / "input_pdfs"
+    path = default_user_root() / "input_pdfs"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def default_output_path() -> Path:
-    return script_dir() / OUTPUT_EXCEL_NAME
+    if not os.environ.get(USER_ROOT_ENV_VAR):
+        return script_dir() / OUTPUT_EXCEL_NAME
+    path = default_user_root() / DEFAULT_OUTPUT_DIR_NAME
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
 
 def local_config_path() -> Path:
+    if os.environ.get(USER_ROOT_ENV_VAR):
+        return user_runtime_dir() / LOCAL_CONFIG_NAME
     return script_dir() / LOCAL_CONFIG_NAME
 
 
@@ -328,6 +351,7 @@ def save_local_config(config: dict[str, Any]) -> Path:
         "copy_failed_sources": normalized["copy_failed_sources"],
     }
     path = local_config_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as handle:
         json.dump(payload, handle, ensure_ascii=False, indent=2)
         handle.write("\n")

@@ -50,11 +50,14 @@ class EnglishEntrypointsTest(unittest.TestCase):
         self.assertIn("ERRORLEVEL", content)
         self.assertIn("pause", content.lower())
 
-    def test_legacy_windows_launcher_delegates_to_new_launcher(self):
+    def test_chinese_windows_launcher_uses_shared_script_directly(self):
         content = (REPO_ROOT / "YiJianQiDong.bat").read_text(encoding="utf-8")
 
-        self.assertIn("Start-Chem-PDF-Extractor.bat", content)
-        self.assertIn("call", content.lower())
+        self.assertIn("install_and_start.ps1", content)
+        self.assertIn("powershell.exe", content)
+        self.assertIn("-Language zh", content)
+        self.assertIn("正在启动", content)
+        self.assertNotIn("call", content.lower())
         self.assertIn("ERRORLEVEL", content)
 
     def test_readme_prefers_python_module_entrypoint(self):

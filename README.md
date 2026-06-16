@@ -157,9 +157,11 @@ $env:CHEM_PDF_EXTRACTOR_MODEL="provider/model-name"
 
 The GitHub source repository does not include `bundled_runtime/` or `YiLaiHuanJing/`. A bundled Windows package may be provided through GitHub Releases for non-programming users.
 
-The recommended Windows launcher name is `Start-Chem-PDF-Extractor.bat`.
+The Windows package provides `Start-Chem-PDF-Extractor.bat` as the English launcher and `YiJianQiDong.bat` as the Chinese launcher.
 
-For an online first-run Windows release package, users can unzip the package and double-click `Start-Chem-PDF-Extractor.bat`. The launcher runs `install_and_start.ps1`, checks for Python 3.11, creates or reuses `.venv/`, asks the user to choose a PDF backend, installs the matching dependencies, starts the local Web UI, and opens `http://127.0.0.1:8766/`.
+For an online first-run Windows release package, users can unzip the package and double-click `Start-Chem-PDF-Extractor.bat` for English or `YiJianQiDong.bat` for Chinese. The package root is the user-facing folder: put source PDFs in `input_pdfs/`, read logs from `logs/`, and find extraction outputs in `提取结果/`. Implementation files may live under an internal `app/` folder in packaged releases; normal users should not need to open it.
+
+The shared launcher script checks for Python 3.11, creates or reuses runtime files under `.runtime/`, asks for a PDF backend choice, installs matching dependencies, starts the local Web UI, and opens `http://127.0.0.1:8766/`.
 
 Backend choices:
 
@@ -173,17 +175,15 @@ The default extraction text budget is 80k characters. Enter `0` in the Web UI or
 
 GitHub Download ZIP is a source package. It does not include Python, `.venv/`, installed dependencies, MinerU models, or a bundled runtime, but users can still run the first-run launcher online. A fully offline package is not provided by default because it would need bundled Python, wheel caches, MinerU dependencies/models, and larger runtime assets.
 
-Legacy names such as `YiJianQiDong.bat` and `YiLaiHuanJing/` are kept for compatibility with older local packages.
+Legacy runtime names such as `YiLaiHuanJing/` are kept for compatibility with older local packages.
 
-The one-click package may include:
+The user-facing package root should contain:
 
-- `run_chem_pdf_extractor.py`
-- `Start-Chem-PDF-Extractor.bat`
-- `install_and_start.ps1`
-- `requirements-mineru.txt`
-- `bundled_runtime/`
-- `YiJianQiDong.bat` as a legacy launcher
-- `YiLaiHuanJing/` as a legacy runtime directory
+- `Start-Chem-PDF-Extractor.bat` as the English launcher
+- `YiJianQiDong.bat` as the Chinese launcher
+- `input_pdfs/` for source PDFs
+
+Packaged implementation files may live under `app/`, including `install_and_start.ps1`, `run_chem_pdf_extractor.py`, requirements files, and `chem_pdf_extractor/`. Runtime-created folders such as `logs/`, `.runtime/`, and `提取结果/` may appear beside the launchers after use.
 
 The runtime folder is excluded from the source repository because it is large and machine-specific.
 

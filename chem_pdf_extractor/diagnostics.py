@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .config import PROJECT_ROOT
+from .config import PROJECT_ROOT, default_user_root
 from .security import redact_sensitive_obj, redact_sensitive_text
 from .text_safety import json_dumps_utf8, utf8_safe_text
 
@@ -19,7 +19,7 @@ _SECRET_FLAGS = {"--cloud-api-key", "--api-key", "--key"}
 
 def diagnostics_log_dir() -> Path:
     configured = os.environ.get("CHEM_PDF_EXTRACTOR_LOG_DIR")
-    log_dir = Path(configured).expanduser() if configured else PROJECT_ROOT / "logs"
+    log_dir = Path(configured).expanduser() if configured else default_user_root() / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     return log_dir
 
