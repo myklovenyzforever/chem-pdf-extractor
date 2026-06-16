@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.1 - Windows launcher user-root quoting hotfix
+
+- Fixed Windows BAT launchers so the user-root path passed to PowerShell no longer ends with a raw trailing backslash inside quotes.
+- Fixed the Windows package startup failure where `GetFullPath($UserRoot)` could raise `"Illegal characters in path"` after extracting the package to a normal folder.
+- Updated launcher regression coverage for both English and Chinese BAT launchers.
+- No extraction, LLM, MinerU, cloud, Web UI, or package-layout behavior changes.
+
 ## v0.3.0 - Release readiness, safer workflows, and Windows package polish
 
 - Hardened local UI security boundaries, export safety, diagnostics, and secret redaction.
