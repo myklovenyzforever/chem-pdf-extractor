@@ -6,19 +6,24 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReleaseMetadataTest(unittest.TestCase):
-    def test_pyproject_uses_v030_beta_metadata(self):
+    def test_pyproject_uses_v031_beta_metadata(self):
         content = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
 
-        self.assertIn('version = "0.3.0"', content)
+        self.assertIn('version = "0.3.1"', content)
         self.assertIn("Development Status :: 4 - Beta", content)
 
-    def test_changelog_contains_v030_and_historical_release_notes(self):
+    def test_changelog_contains_v031_hotfix_and_historical_release_notes(self):
         content = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
+        self.assertIn("## v0.3.1 - Windows launcher user-root quoting hotfix", content)
         self.assertIn("## v0.3.0 - Release readiness, safer workflows, and Windows package polish", content)
         self.assertIn("## v0.2.2", content)
         self.assertIn("## v0.2.1", content)
         self.assertIn("## v0.2.0", content)
+        self.assertIn("user-root path passed to PowerShell", content)
+        self.assertIn("raw trailing backslash inside quotes", content)
+        self.assertIn("Illegal characters in path", content)
+        self.assertIn("English and Chinese BAT launchers", content)
         self.assertIn("cloud/API/network failures", content)
         self.assertIn("structured-output validation", content)
         self.assertIn("max_chars = 80000", content)
