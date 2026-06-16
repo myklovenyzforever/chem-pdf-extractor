@@ -6,6 +6,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 class WindowsFirstRunLauncherTest(unittest.TestCase):
+    def _bat_launchers(self):
+        return {
+            "english": (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8"),
+            "chinese": (REPO_ROOT / "YiJianQiDong.bat").read_text(encoding="utf-8"),
+        }
+
     def test_bilingual_bat_launchers_delegate_to_shared_powershell(self):
         english = (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8")
         chinese = (REPO_ROOT / "YiJianQiDong.bat").read_text(encoding="utf-8")
@@ -31,6 +37,37 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         self.assertIn("-Language zh", chinese)
         self.assertIn("正在启动 Chem-PDF-Extractor", chinese)
         self.assertIn("按任意键关闭此窗口", chinese)
+
+    def test_bat_launchers_trim_user_root_trailing_backslash_before_powershell_call(self):
+        trim_line = 'if "%USER_ROOT:~-1%"=="\\" set "USER_ROOT=%USER_ROOT:~0,-1%"'
+
+        for name, content in self._bat_launchers().items():
+            with self.subTest(launcher=name):
+                self.assertIn('set "USER_ROOT=%~dp0"', content)
+                self.assertIn(trim_line, content)
+                self.assertIn('cd /d "%USER_ROOT%"', content)
+                self.assertIn('set "CHEM_PDF_EXTRACTOR_USER_ROOT=%USER_ROOT%"', content)
+                self.assertIn('set "CHEM_PDF_EXTRACTOR_LOG_DIR=%USER_ROOT%\\logs"', content)
+                self.assertIn('set "LOG_DIR=%USER_ROOT%\\logs"', content)
+                self.assertIn('set "PS_SCRIPT=%USER_ROOT%\\app\\install_and_start.ps1"', content)
+                self.assertIn(
+                    'if not exist "%PS_SCRIPT%" set "PS_SCRIPT=%USER_ROOT%\\install_and_start.ps1"',
+                    content,
+                )
+                self.assertIn('-UserRoot "%USER_ROOT%"', content)
+
+                trim_index = content.index(trim_line)
+                self.assertLess(trim_index, content.index('cd /d "%USER_ROOT%"'))
+                self.assertLess(trim_index, content.index('set "CHEM_PDF_EXTRACTOR_USER_ROOT=%USER_ROOT%"'))
+                self.assertLess(trim_index, content.index('set "PS_SCRIPT=%USER_ROOT%\\app\\install_and_start.ps1"'))
+                self.assertLess(trim_index, content.index('powershell.exe'))
+
+                self.assertNotIn('set "CHEM_PDF_EXTRACTOR_LOG_DIR=%USER_ROOT%logs"', content)
+                self.assertNotIn('set "LOG_DIR=%USER_ROOT%logs"', content)
+                self.assertNotIn('set "PS_SCRIPT=%USER_ROOT%app\\install_and_start.ps1"', content)
+                self.assertNotIn('set "PS_SCRIPT=%USER_ROOT%install_and_start.ps1"', content)
+                self.assertNotIn('"%USER_ROOT%app\\install_and_start.ps1"', content)
+                self.assertNotIn('"%USER_ROOT%install_and_start.ps1"', content)
 
     def test_windows_launchers_configure_utf8_console(self):
         english = (REPO_ROOT / "Start-Chem-PDF-Extractor.bat").read_text(encoding="utf-8")

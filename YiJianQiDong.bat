@@ -5,16 +5,17 @@ set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
 
 set "USER_ROOT=%~dp0"
+if "%USER_ROOT:~-1%"=="\" set "USER_ROOT=%USER_ROOT:~0,-1%"
 cd /d "%USER_ROOT%"
 
 set "CHEM_PDF_EXTRACTOR_LAUNCHER_LANGUAGE=zh"
 set "CHEM_PDF_EXTRACTOR_USER_ROOT=%USER_ROOT%"
-set "CHEM_PDF_EXTRACTOR_LOG_DIR=%USER_ROOT%logs"
-set "LOG_DIR=%USER_ROOT%logs"
+set "CHEM_PDF_EXTRACTOR_LOG_DIR=%USER_ROOT%\logs"
+set "LOG_DIR=%USER_ROOT%\logs"
 if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
-set "PS_SCRIPT=%USER_ROOT%app\install_and_start.ps1"
-if not exist "%PS_SCRIPT%" set "PS_SCRIPT=%USER_ROOT%install_and_start.ps1"
+set "PS_SCRIPT=%USER_ROOT%\app\install_and_start.ps1"
+if not exist "%PS_SCRIPT%" set "PS_SCRIPT=%USER_ROOT%\install_and_start.ps1"
 
 echo.
 echo 正在启动 Chem-PDF-Extractor...
@@ -24,8 +25,8 @@ echo 日志目录: "%LOG_DIR%"
 if not exist "%PS_SCRIPT%" (
   echo.
   echo 未找到共享启动脚本。
-  echo 打包路径应为: "%USER_ROOT%app\install_and_start.ps1"
-  echo 源码路径应为: "%USER_ROOT%install_and_start.ps1"
+  echo 打包路径应为: "%USER_ROOT%\app\install_and_start.ps1"
+  echo 源码路径应为: "%USER_ROOT%\install_and_start.ps1"
   echo.
   echo 按任意键关闭此窗口。
   pause >nul
