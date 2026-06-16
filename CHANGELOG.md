@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.3.0 - Release readiness, safer workflows, and Windows package polish
+
+- Hardened local UI security boundaries, export safety, diagnostics, and secret redaction.
+- Added pause/resume behavior for transient cloud/API/network failures after retries.
+- Hardened cloud structured-output validation so malformed provider responses are normalized or reported safely.
+- Changed the default extraction text budget to `max_chars = 80000`; explicit `0` still means no truncation.
+- Added first-pass evaluation documentation, synthetic benchmark cases, and a mock end-to-end workflow test.
+- Added optional provenance/review hint fields for page, section, table, source evidence, and verification review.
+- Documented the field template workflow and contribution loop.
+- Improved packaging maturity with console script metadata, wheel/package-data checks, dependency constraints guidance, and CI coverage.
+- Fixed default PDF input discovery so source mode no longer scans the project root, bundled examples, or generated `.mineru_outputs` by default.
+- Added bilingual Windows launchers and a user-root package layout for `input_pdfs/`, `logs/`, `.runtime/`, and `提取结果/`.
+- Expanded README, release/feedback, project-status, configuration, Windows-package, and related documentation for safer user workflows.
+
 ## v0.2.2 - Web UI layout and statistics polish
 
 - Refined the Web UI into a fixed-height, bottom-aligned three-column desktop workbench.
