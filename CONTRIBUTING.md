@@ -1,84 +1,74 @@
-# Contributing
+# Contributing to Chem-PDF-Extractor
 
-Thank you for considering a contribution to Chem-PDF-Extractor.
+Thank you for considering a contribution. This project is practical and early-stage, so privacy, safety, and manual scientific verification matter more than broad claims.
 
-This project is early-stage and focused on practical literature data extraction for chemical engineering, catalysis, materials, and environmental research.
+## Project Scope
 
-## Helpful Contributions
+Chem-PDF-Extractor is for local-first, human-verifiable scientific PDF extraction. It supports first-pass literature review and dataset preparation, but it is not a guarantee of scientific correctness. Extracted rows must be checked against source PDFs before scientific use.
 
-We welcome:
+## Good Contribution Types
 
-- Bug reports.
-- Field template suggestions.
+- Bug fixes.
+- Windows packaging or installation fixes.
+- Web UI clarity improvements.
+- CLI usability improvements.
+- Field templates.
+- Synthetic or public-safe benchmark cases.
 - Documentation improvements.
-- Synthetic examples that reproduce a problem.
-- Permission-safe examples where sharing is allowed.
-- Suggestions for safer extraction, validation, and review workflows.
+- Security and privacy hardening.
+- Test coverage improvements.
 
-For field template suggestions, use issue #11 or the field-template suggestion
-workflow described in [examples/field_templates/README.md](examples/field_templates/README.md).
-Please provide only synthetic or public-safe examples, explain why the fields
-matter, and include the expected output shape or an optional draft `fields.json`.
-Do not upload copyrighted papers, private PDFs, API keys, private local paths, or
-generated outputs from real papers.
+## Before Opening An Issue
 
-For release checks and user feedback categories, see
-[Release and Feedback Path](docs/release_and_feedback.md).
+Search existing issues first. When reporting a problem, include:
 
-For current project maturity, single-maintainer expectations, and future
-RAG-related direction, see
-[Project Status and Maintainer Roadmap](docs/project_status_and_roadmap.md).
+- Operating system.
+- Install method: source checkout, wheel, or Windows package.
+- PDF mode.
+- Provider type: local Ollama or optional cloud provider.
+- Field template or `fields.json` shape when relevant.
+- Expected result and actual result.
+- A minimal synthetic or public-safe reproduction when possible.
 
-## Safety and Privacy
+Never include API keys, tokens, passwords, private PDFs, copyrighted paper text, private logs, local absolute paths, unpublished data, or confidential outputs.
 
-Do not upload copyrighted papers, private documents, unpublished data, API keys, tokens, passwords, local file paths, or `config.local.json` in issues, pull requests, examples, logs, or screenshots.
+## Pull Request Expectations
 
-When reporting a problem, prefer synthetic PDFs, synthetic examples, or permission-safe excerpts. Remove personal paths, institution names, private project data, and API credentials from logs.
+- Keep PRs small and focused.
+- Explain user-visible changes.
+- Add or update tests when behavior or documentation contracts change.
+- Do not commit generated artifacts or local configs.
+- Do not commit `release_artifacts/`, `dist/`, `build/`, `.egg-info/`, caches, logs, generated Excel/CSV files, generated PDFs, `.runtime/`, `.venv/`, or `config.local.json`.
 
-LLM extraction results should be manually reviewed. They should not be treated as final scientific conclusions without human verification.
+Run these before final review:
 
-For related project policies, see:
+```powershell
+python -m unittest discover -s tests -v
+python -m chem_pdf_extractor --help
+git diff --check
+```
+
+## Field Template Contributions
+
+Prefer field names, descriptions, required/recommended/optional flags, and synthetic examples. Explain the research domain, why the fields matter, common extraction difficulties, and the expected output shape.
+
+Do not paste full copyrighted paper text. Use public-safe or synthetic examples only.
+
+For field template suggestions, use issue #11 or the field-template suggestion workflow described in [examples/field_templates/README.md](examples/field_templates/README.md).
+
+## Security And Privacy
+
+See [SECURITY.md](SECURITY.md) for security and privacy reporting guidance. Do not post sensitive details publicly.
+
+Redact secrets, private paths, private PDFs, unpublished data, confidential outputs, and full cloud responses before sharing logs, screenshots, examples, or issue reports.
+
+## Release Artifacts
+
+`release_artifacts/` is for local release building only and must remain untracked. GitHub Releases may contain built packages, but the repository should not commit built packages or local runtime artifacts.
+
+## Related Docs
 
 - [Security Policy](SECURITY.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
-
-Pull requests should follow the checklist in `.github/pull_request_template.md`.
-
-## Running Tests
-
-Before opening a pull request, run at least:
-
-```powershell
-python -m py_compile run_chem_pdf_extractor.py
-python -m unittest discover -s tests -v
-```
-
-The tests should not call real cloud APIs and do not require repository secrets.
-
-## Documentation Encoding
-
-Markdown files should be saved as UTF-8 without BOM. Chinese and English content should display correctly on GitHub.
-
-## 中文说明
-
-欢迎提交 bug 报告、字段模板建议、文档改进和安全的复现样例。
-
-提交 issue 或 PR 时，请不要上传真实 API Key、token、私有 PDF、本机绝对路径、`config.local.json`、输出文件、日志中的隐私信息或未授权公开的论文材料。
-
-复现问题时，建议使用合成 PDF、合成数据或确认可以公开分享的样例。大模型抽取结果必须人工核验，不能直接作为最终科研结论。
-
-相关项目规范：
-
-- [Security Policy](SECURITY.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-
-Pull requests should follow the checklist in `.github/pull_request_template.md`.
-
-提交 PR 前至少运行：
-
-```powershell
-python -m py_compile run_chem_pdf_extractor.py
-python -m unittest discover -s tests -v
-```
-
-文档文件请使用 UTF-8 without BOM 保存，并确认中文在 GitHub 页面中正常显示。
+- [Release and Feedback Path](docs/release_and_feedback.md)
+- [Project Status and Maintainer Roadmap](docs/project_status_and_roadmap.md)
