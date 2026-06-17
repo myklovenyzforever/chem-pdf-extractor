@@ -34,14 +34,24 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertIn("syncCloudModelValue()", template)
         self.assertIn("async function loadCloudModels()", template)
 
-    def test_service_name_is_advanced_and_defaults_in_javascript(self):
+    def test_cloud_profiles_replace_visible_service_name_advanced_field(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
 
-        self.assertIn('<details class="advanced-config">', template)
+        self.assertIn('id="cloudProfileList"', template)
+        self.assertIn('id="cloudServiceName" type="hidden"', template)
+        self.assertIn("function renderCloudProfiles()", template)
+        self.assertIn("function applyCloudProfile(profileId)", template)
+        self.assertIn("active_cloud_profile_id: getActiveCloudProfileId()", template)
         self.assertIn("function getCloudServiceName()", template)
-        self.assertIn('return value || "openai_compatible";', template)
         self.assertIn("cloud_service_name: getCloudServiceName()", template)
-        self.assertNotIn('LLM 服务名称</span> <span style="color:#d92d20">*</span>', template)
+        self.assertIn('document.getElementById("cloudApiKey").value = "";', template)
+        self.assertIn("setCloudApiKeyPlaceholder(profile)", template)
+        self.assertIn("function normalizedCloudBaseUrlForMatch(value)", template)
+        self.assertIn("function cloudProfileMatchesCurrentBaseUrl(profile)", template)
+        self.assertIn("function currentCloudProfileCanProvideKey()", template)
+        self.assertIn("currentCloudProfileCanProvideKey()", template)
+        self.assertNotIn('<details class="advanced-config">', template)
+        self.assertNotIn('data-i18n="service_name">LLM Service Name</label>', template)
 
     def test_task_settings_layout_uses_responsive_grid_and_short_pdf_labels(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
