@@ -108,13 +108,13 @@ python -m pip install -r requirements-core.txt -c constraints.txt
 
 `pymupdf4llm`:
 
-- recommended default;
-- balanced install size and extraction quality;
-- suitable for most research PDFs.
+- balanced fallback when MinerU is too heavy;
+- smaller and faster to install than MinerU;
+- suitable for many research PDFs, but complex tables/layouts still need review.
 
 `mineru`:
 
-- optional enhanced backend;
+- default enhanced backend in the Web UI;
 - large install size;
 - slower first-time installation;
 - suitable for complex layouts, tables, scanned PDFs, and high-performance PCs;
@@ -188,7 +188,7 @@ Before creating a Windows package, check:
 2. Avoid paths with special characters if startup fails.
 3. Put source PDFs in `input_pdfs/`. The PDFs under `examples/demo_literature_batch/` are examples/tests, not default input.
 4. Double-click `Start-Chem-PDF-Extractor.bat` for English or `YiJianQiDong.bat` for Chinese.
-5. Choose a PDF backend in the PowerShell menu. Press Enter for `pymupdf4llm` unless a previous backend choice is shown.
+5. Choose a PDF backend in the PowerShell menu. Press Enter for the default option unless a previous backend choice is shown; choose `pymupdf4llm` if you want a lighter install than MinerU.
 6. Let the launcher install dependencies and start the local Web UI.
 7. If the browser does not open automatically, copy the local URL printed in the terminal.
 8. Start with 3-5 PDFs before running a large batch.
