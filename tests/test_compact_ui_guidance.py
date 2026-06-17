@@ -57,12 +57,12 @@ class CompactUiGuidanceTest(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertIn(text, self.template)
 
-    def test_default_max_chars_is_finite_and_cli_zero_remains_no_truncation(self):
-        self.assertEqual(DEFAULT_MAX_CHARS, 80000)
+    def test_default_max_chars_is_zero_and_cli_zero_remains_no_truncation(self):
+        self.assertEqual(DEFAULT_MAX_CHARS, 0)
 
         with patch.object(sys, "argv", ["chem-pdf-extractor"]):
             default_args = parse_args()
-        self.assertEqual(default_args.max_chars, 80000)
+        self.assertEqual(default_args.max_chars, 0)
 
         with patch.object(sys, "argv", ["chem-pdf-extractor", "--max-chars", "0"]):
             no_truncation_args = parse_args()
@@ -70,10 +70,11 @@ class CompactUiGuidanceTest(unittest.TestCase):
 
     def test_max_chars_help_keeps_manual_zero_and_presets_clear(self):
         en = i18n_block(self.template, "en")
-        self.assertIn("0 = no truncation, may be slow/costly", en)
+        self.assertIn("0 = no truncation", en)
         self.assertIn("40k = small/cheap", en)
-        self.assertIn("80k = recommended/default", en)
+        self.assertIn("80k = common cap", en)
         self.assertIn("120k = larger context", en)
+        self.assertNotIn("recommended/default", en)
         self.assertIn("max_chars: \"Max chars\"", en)
         self.assertIn('max_chars: Number(document.getElementById("maxChars").value || 0)', self.template)
 
@@ -265,6 +266,13 @@ class CompactUiGuidanceTest(unittest.TestCase):
         self.assertIn("justify-content: center", block)
         self.assertIn("height: 26px", block)
         self.assertIn("line-height: 1", block)
+
+    def test_task_settings_uses_balanced_desktop_spacing(self):
+        block = css_block(self.template, "\n      .task-panel .task-grid {")
+
+        self.assertIn("flex: 1 1 auto", block)
+        self.assertIn("min-height: 0", block)
+        self.assertIn("align-content: space-evenly", block)
 
     def test_layout_contract_css_comment_points_to_docs(self):
         comment_index = self.template.index("UI layout contract")

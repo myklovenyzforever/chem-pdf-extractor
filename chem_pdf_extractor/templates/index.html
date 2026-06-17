@@ -626,6 +626,20 @@
       height: auto;
       overflow: auto;
     }
+    @media (min-width: 981px) {
+      .task-panel > h2,
+      .task-panel > .workflow-guide,
+      .task-panel > .checks,
+      .task-panel > .field-help,
+      .task-panel > .actions {
+        flex: 0 0 auto;
+      }
+      .task-panel .task-grid {
+        flex: 1 1 auto;
+        min-height: 0;
+        align-content: space-evenly;
+      }
+    }
     .small { color: var(--muted); font-size: 12px; line-height: 1.45; }
     @media (max-width: 980px) {
       .top-grid { grid-template-columns: repeat(2, minmax(320px, 1fr)); height: auto; overflow: visible; }
@@ -684,14 +698,14 @@
             <div class="form-field task-cell-pdf">
               <label data-i18n="pdf_mode">PDF Mode</label>
               <select id="pdfMode" onchange="updatePdfModeHelp()">
-                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm (recommended)</option>
                 <option value="mineru" data-i18n="pdf_mode_mineru">MinerU (complex/heavy)</option>
+                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm (recommended)</option>
                 <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf_text (light fallback)</option>
                 <option value="auto" data-i18n="pdf_mode_auto">auto (verify results)</option>
                 <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF text (fast text)</option>
               </select>
             </div>
-            <p class="field-help task-help" id="pdfModeHelp" data-i18n="pdf_mode_help_pymupdf4llm">Recommended for most papers.</p>
+            <p class="field-help task-help" id="pdfModeHelp" data-i18n="pdf_mode_help_mineru">Better for complex tables/layouts/scanned-like PDFs; setup may be slow or heavy.</p>
             <div class="form-field task-cell-max">
               <label data-i18n="max_chars">Max chars</label>
               <div class="compact-input-row">
@@ -707,7 +721,7 @@
               <label data-i18n="llm_timeout">Timeout</label>
               <input id="llmTimeout" type="number" value="0" min="0" />
             </div>
-            <p class="field-help task-help" data-i18n="max_chars_help">0 = no truncation, slow/costly; 40k = small/cheap; 80k = default; 120k = larger.</p>
+            <p class="field-help task-help" data-i18n="max_chars_help">0 = no truncation; 40k = small/cheap; 80k = common cap; 120k = larger context.</p>
             <div class="form-field task-cell-bad-row">
               <label data-i18n="bad_row_percent">Bad row threshold</label>
               <input id="badRowMinFillPercent" type="number" value="40" min="0" max="100" step="1" />
@@ -896,7 +910,7 @@
         pdf_mode_pymupdf4llm: "pymupdf4llm（多数论文推荐）",
         pdf_mode_pymupdf_text: "PyMuPDF text（快速纯文本）",
         pdf_mode_pypdf_text: "pypdf_text（轻量后备）",
-        pdf_mode_help: "默认使用 pymupdf4llm；复杂版面、表格或扫描件可选 MinerU。",
+        pdf_mode_help: "默认使用 MinerU；复杂版面、表格或扫描件仍需人工核验。",
         pdf_mode_help_pymupdf4llm: "多数论文推荐，兼顾结构和速度。",
         pdf_mode_help_mineru: "复杂表格/版面/类扫描 PDF 更合适，但安装和首次运行可能较慢较重。",
         pdf_mode_help_pypdf_text: "轻量后备，安装简单，但表格和多栏效果较弱。",
@@ -906,7 +920,7 @@
         preset_40k: "40k",
         preset_80k: "80k",
         preset_120k: "120k",
-        max_chars_help: "0 = 不截断，可能更慢/更贵；40k = 小批量；80k = 默认推荐；120k = 大上下文。",
+        max_chars_help: "0 = 不截断；40k = 小批量；80k = 常用上限；120k = 大上下文。",
         llm_timeout: "超时秒",
         bad_row_percent: "坏行阈值",
         ollama_url: "Ollama 地址",
@@ -1026,7 +1040,7 @@
         pdf_mode_pymupdf4llm: "pymupdf4llm (recommended)",
         pdf_mode_pymupdf_text: "PyMuPDF text (fast text)",
         pdf_mode_pypdf_text: "pypdf_text (light fallback)",
-        pdf_mode_help: "pymupdf4llm is the default. Use MinerU for complex layouts, tables, or scanned PDFs.",
+        pdf_mode_help: "MinerU is the default. Verify complex layouts, tables, and scanned-like PDFs.",
         pdf_mode_help_pymupdf4llm: "Recommended for most papers.",
         pdf_mode_help_mineru: "Better for complex tables/layouts/scanned-like PDFs; setup may be slow or heavy.",
         pdf_mode_help_pypdf_text: "Lightweight fallback, weaker for tables and multi-column layouts.",
@@ -1036,7 +1050,7 @@
         preset_40k: "40k",
         preset_80k: "80k",
         preset_120k: "120k",
-        max_chars_help: "0 = no truncation, may be slow/costly; 40k = small/cheap; 80k = recommended/default; 120k = larger context.",
+        max_chars_help: "0 = no truncation; 40k = small/cheap; 80k = common cap; 120k = larger context.",
         llm_timeout: "Timeout",
         bad_row_percent: "Bad row threshold",
         ollama_url: "Ollama URL",
@@ -1209,7 +1223,7 @@
       const select = document.getElementById("pdfMode");
       const help = document.getElementById("pdfModeHelp");
       if (!select || !help) return;
-      help.textContent = t(pdfModeHelpKeys[select.value] || "pdf_mode_help_pymupdf4llm");
+      help.textContent = t(pdfModeHelpKeys[select.value] || "pdf_mode_help_mineru");
     }
 
     function setMaxCharsPreset(value) {
@@ -1772,7 +1786,7 @@
       document.getElementById("cloudActive").checked = defaults.cloud_active !== false;
       document.getElementById("recursive").checked = defaults.recursive !== false;
       document.getElementById("copyFailedSources").checked = defaults.copy_failed_sources === true;
-      document.getElementById("pdfMode").value = defaults.pdf_mode || "pymupdf4llm";
+      document.getElementById("pdfMode").value = defaults.pdf_mode || "mineru";
       document.getElementById("maxChars").value = defaults.max_chars;
       document.getElementById("numCtx").value = defaults.num_ctx;
       document.getElementById("llmTimeout").value = "0";

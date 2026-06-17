@@ -52,7 +52,7 @@ Input PDF discovery:
 
 Python 3.11 is recommended for the broadest PDF-backend compatibility. On some Windows + Python 3.12 environments, `pymupdf4llm` / `pymupdf` may fail during install or import. These packages are optional lazy-loaded PDF backends, so startup does not require importing them.
 
-`max_chars` defaults to `80000`. This is the recommended/default extraction text budget. Set it to `40000` for smaller/cheaper runs, `120000` for larger-context models, or `0` only when you intentionally want no truncation.
+`max_chars` defaults to `0`, which means no truncation. Set it to `40000` for smaller/cheaper runs, `80000` as a common cap, or `120000` for larger-context models.
 
 PDF `auto` mode first tries `pymupdf4llm`. If the Markdown appears too short, mentions tables without table-like rows, or is image-heavy, it may try optional MinerU. If MinerU is unavailable or fails, auto mode keeps usable `pymupdf4llm` text or falls back to `pypdf_text`. MinerU is optional and should not be required for CI.
 

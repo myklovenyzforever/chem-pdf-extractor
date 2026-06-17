@@ -68,7 +68,7 @@ class WebUiOpenTest(unittest.TestCase):
             8766,
             auto_install=True,
             open_browser=True,
-            initial_pdf_mode="pymupdf4llm",
+            initial_pdf_mode="mineru",
         )
 
 
