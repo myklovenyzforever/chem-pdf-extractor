@@ -309,9 +309,172 @@ def _bool_config_value(value: Any, default: bool = False) -> bool:
     return bool(value)
 
 
+KNOWN_CLOUD_PROFILE_HOSTS = [
+    ("token-plan-cn.xiaomimimo.com", "xiaomi_mimo", "Xiaomi Mimo", "小米 Mimo"),
+    ("xiaomimimo.com", "xiaomi_mimo", "Xiaomi Mimo", "小米 Mimo"),
+    ("api.deepseek.com", "deepseek", "DeepSeek", "DeepSeek"),
+    ("deepseek.com", "deepseek", "DeepSeek", "DeepSeek"),
+    ("api.openai.com", "openai", "OpenAI", "OpenAI"),
+    ("openai.com", "openai", "OpenAI", "OpenAI"),
+]
+
+
+def _cloud_base_url_host(base_url: str) -> str:
+    raw = str(base_url or "").strip()
+    if not raw:
+        return ""
+    parsed = urllib.parse.urlsplit(raw if "://" in raw else f"https://{raw}")
+    return (parsed.hostname or "").lower().strip(".")
+
+
+def _cloud_base_url_match_key(base_url: str) -> str:
+    return str(base_url or "").strip().rstrip("/")
+
+
+def _cloud_profile_matches_base_url(profile: dict[str, Any] | None, base_url: str) -> bool:
+    if not profile:
+        return False
+    return _cloud_base_url_match_key(str(profile.get("base_url") or "")) == _cloud_base_url_match_key(base_url)
+
+
+def _readable_host_name(host: str) -> str:
+    labels = [part for part in str(host or "").lower().split(".") if part]
+    if not labels:
+        return DEFAULT_CLOUD_SERVICE_NAME
+    while labels and labels[0] in {"api", "gateway", "openai-compatible"}:
+        labels.pop(0)
+    if len(labels) >= 2 and labels[-1] in {"com", "cn", "net", "org", "ai", "io", "dev"}:
+        candidate = labels[-2]
+    else:
+        candidate = labels[0] if labels else str(host)
+    special = {
+        "openai": "OpenAI",
+        "deepseek": "DeepSeek",
+        "openrouter": "OpenRouter",
+        "xiaomimimo": "Xiaomi Mimo",
+    }
+    if candidate in special:
+        return special[candidate]
+    words = [word for word in re.split(r"[-_]+", candidate) if word]
+    if not words:
+        return host
+    return " ".join(word[:1].upper() + word[1:] for word in words)
+
+
+def infer_cloud_profile_names(base_url: str) -> dict[str, str]:
+    host = _cloud_base_url_host(base_url)
+    for known_host, service_id, display_en, display_zh in KNOWN_CLOUD_PROFILE_HOSTS:
+        if host == known_host or host.endswith("." + known_host):
+            return {
+                "service_name": service_id,
+                "display_name": display_en,
+                "display_name_en": display_en,
+                "display_name_zh": display_zh,
+            }
+    display = _readable_host_name(host)
+    return {
+        "service_name": _slugify_profile_id(display or host or DEFAULT_CLOUD_SERVICE_NAME, DEFAULT_CLOUD_SERVICE_NAME),
+        "display_name": display,
+        "display_name_en": display,
+        "display_name_zh": display,
+    }
+
+
+def _slugify_profile_id(value: str, fallback: str = "cloud") -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", str(value or "").lower()).strip("-")
+    return slug or fallback
+
+
+def _unique_profile_id(base_id: str, existing_ids: set[str]) -> str:
+    profile_id = _slugify_profile_id(base_id)
+    if profile_id not in existing_ids:
+        return profile_id
+    index = 2
+    while f"{profile_id}-{index}" in existing_ids:
+        index += 1
+    return f"{profile_id}-{index}"
+
+
+def _normalize_cloud_profile(raw: dict[str, Any], existing_ids: set[str] | None = None) -> dict[str, Any]:
+    raw = raw or {}
+    base_url = str(raw.get("base_url") or raw.get("cloud_base_url") or DEFAULT_CLOUD_BASE_URL).strip()
+    inferred = infer_cloud_profile_names(base_url)
+    service_name = str(
+        raw.get("service_name")
+        or raw.get("cloud_service_name")
+        or raw.get("llm_service_name")
+        or inferred["service_name"]
+        or DEFAULT_CLOUD_SERVICE_NAME
+    ).strip()
+    profile_id = str(raw.get("id") or raw.get("profile_id") or raw.get("cloud_profile_id") or "").strip()
+    if not profile_id:
+        profile_id = _unique_profile_id(service_name or inferred["service_name"], existing_ids or set())
+    display_name = str(raw.get("display_name") or raw.get("name") or inferred["display_name"]).strip()
+    display_name_en = str(raw.get("display_name_en") or raw.get("name_en") or display_name or inferred["display_name_en"]).strip()
+    display_name_zh = str(raw.get("display_name_zh") or raw.get("name_zh") or inferred["display_name_zh"] or display_name).strip()
+    return {
+        "id": profile_id,
+        "display_name": display_name or display_name_en or display_name_zh or service_name,
+        "display_name_en": display_name_en or display_name or service_name,
+        "display_name_zh": display_name_zh or display_name or service_name,
+        "service_name": service_name or DEFAULT_CLOUD_SERVICE_NAME,
+        "base_url": base_url,
+        "api_key": str(raw.get("api_key") or raw.get("cloud_api_key") or "").strip(),
+        "model": str(raw.get("model") or raw.get("cloud_model") or DEFAULT_CLOUD_MODEL).strip(),
+    }
+
+
+def _profile_contains_real_config(profile: dict[str, Any]) -> bool:
+    return any(
+        str(profile.get(key) or "").strip()
+        for key in ("api_key", "base_url", "model", "service_name")
+    )
+
+
+def _profile_by_id(config: dict[str, Any], profile_id: str | None) -> dict[str, Any] | None:
+    wanted = str(profile_id or "").strip()
+    if not wanted:
+        return None
+    for profile in config.get("cloud_profiles", []) or []:
+        if str(profile.get("id") or "") == wanted:
+            return profile
+    return None
+
+
+def _matching_profile(config: dict[str, Any], base_url: str, model: str) -> dict[str, Any] | None:
+    profiles = config.get("cloud_profiles", []) or []
+    normalized_base = _cloud_base_url_match_key(base_url)
+    normalized_model = str(model or "").strip()
+    for profile in profiles:
+        if (
+            _cloud_base_url_match_key(str(profile.get("base_url") or "")) == normalized_base
+            and str(profile.get("model") or "").strip() == normalized_model
+        ):
+            return profile
+    for profile in profiles:
+        if _cloud_base_url_match_key(str(profile.get("base_url") or "")) == normalized_base:
+            return profile
+    return None
+
+
+def public_cloud_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    api_key = str(profile.get("api_key") or "").strip()
+    return {
+        "id": profile.get("id") or "",
+        "display_name": profile.get("display_name") or profile.get("display_name_en") or "",
+        "display_name_en": profile.get("display_name_en") or profile.get("display_name") or "",
+        "display_name_zh": profile.get("display_name_zh") or profile.get("display_name") or "",
+        "service_name": profile.get("service_name") or DEFAULT_CLOUD_SERVICE_NAME,
+        "base_url": profile.get("base_url") or DEFAULT_CLOUD_BASE_URL,
+        "model": profile.get("model") or DEFAULT_CLOUD_MODEL,
+        "has_api_key": bool(api_key),
+        "cloud_api_key_prefix": mask_api_key(api_key),
+    }
+
+
 def normalize_local_config(raw: dict[str, Any] | None) -> dict[str, Any]:
     raw = raw or {}
-    return {
+    normalized = {
         "cloud_service_name": str(
             raw.get("cloud_service_name")
             or raw.get("llm_service_name")
@@ -324,6 +487,57 @@ def normalize_local_config(raw: dict[str, Any] | None) -> dict[str, Any]:
         "cloud_active": _bool_config_value(raw.get("cloud_active"), False),
         "copy_failed_sources": _bool_config_value(raw.get("copy_failed_sources"), False),
     }
+    profiles: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for raw_profile in raw.get("cloud_profiles") or raw.get("cloud_api_profiles") or []:
+        if not isinstance(raw_profile, dict):
+            continue
+        profile = _normalize_cloud_profile(raw_profile, seen_ids)
+        if not _profile_contains_real_config(profile):
+            continue
+        seen_ids.add(str(profile["id"]))
+        profiles.append(profile)
+
+    active_profile_id = str(
+        raw.get("active_cloud_profile_id")
+        or raw.get("active_cloud_profile")
+        or raw.get("cloud_profile_id")
+        or ""
+    ).strip()
+
+    has_flat_cloud_config = any(
+        key in raw and str(raw.get(key) or "").strip()
+        for key in (
+            "cloud_service_name", "llm_service_name", "service_name",
+            "cloud_api_key", "api_key", "cloud_base_url", "base_url",
+            "cloud_model", "model",
+        )
+    )
+    if not profiles and has_flat_cloud_config:
+        profile = _normalize_cloud_profile(
+            {
+                "id": active_profile_id or raw.get("cloud_service_name") or raw.get("llm_service_name") or raw.get("service_name"),
+                "service_name": normalized["cloud_service_name"],
+                "api_key": normalized["cloud_api_key"],
+                "base_url": normalized["cloud_base_url"],
+                "model": normalized["cloud_model"],
+            },
+            seen_ids,
+        )
+        profiles.append(profile)
+        active_profile_id = profile["id"]
+
+    if profiles:
+        active_profile = _profile_by_id({"cloud_profiles": profiles}, active_profile_id) or profiles[0]
+        active_profile_id = str(active_profile.get("id") or "")
+        normalized["cloud_service_name"] = str(active_profile.get("service_name") or normalized["cloud_service_name"]).strip()
+        normalized["cloud_api_key"] = str(active_profile.get("api_key") or normalized["cloud_api_key"]).strip()
+        normalized["cloud_base_url"] = str(active_profile.get("base_url") or normalized["cloud_base_url"]).strip()
+        normalized["cloud_model"] = str(active_profile.get("model") or normalized["cloud_model"]).strip()
+
+    normalized["cloud_profiles"] = profiles
+    normalized["active_cloud_profile_id"] = active_profile_id
+    return normalized
 
 
 def load_local_config() -> dict[str, Any]:
@@ -341,7 +555,57 @@ def load_local_config() -> dict[str, Any]:
 
 
 def save_local_config(config: dict[str, Any]) -> Path:
-    normalized = normalize_local_config(config)
+    existing = load_local_config()
+    incoming = dict(config or {})
+    profile_id_was_provided = any(
+        key in incoming
+        for key in ("active_cloud_profile_id", "cloud_profile_id", "profile_id")
+    )
+    incoming_profile_id = str(
+        incoming.get("active_cloud_profile_id")
+        or incoming.get("cloud_profile_id")
+        or incoming.get("profile_id")
+        or ("" if profile_id_was_provided else existing.get("active_cloud_profile_id"))
+        or ""
+    ).strip()
+    incoming_base_url = str(incoming.get("cloud_base_url") or incoming.get("base_url") or "").strip()
+    incoming_model = str(incoming.get("cloud_model") or incoming.get("model") or "").strip()
+    if incoming_base_url and not str(
+        incoming.get("cloud_service_name")
+        or incoming.get("llm_service_name")
+        or incoming.get("service_name")
+        or ""
+    ).strip():
+        incoming["cloud_service_name"] = infer_cloud_profile_names(incoming_base_url)["service_name"]
+    existing_profile = (
+        _profile_by_id(existing, incoming_profile_id)
+        or _matching_profile(existing, incoming_base_url, incoming_model)
+    )
+    incoming_key = str(incoming.get("cloud_api_key") or incoming.get("api_key") or "").strip()
+    if not incoming_key and existing_profile and not bool(incoming.get("clear_cloud_api_key", False)):
+        incoming["api_key"] = existing_profile.get("api_key", "")
+        incoming["cloud_api_key"] = existing_profile.get("api_key", "")
+
+    normalized = normalize_local_config(incoming)
+    existing_profiles = [dict(profile) for profile in existing.get("cloud_profiles", []) or []]
+    update_profile = normalized.get("cloud_profiles", [None])[0] if normalized.get("cloud_profiles") else None
+    if update_profile:
+        if existing_profile:
+            update_profile["id"] = existing_profile.get("id") or update_profile["id"]
+        existing_ids = {str(profile.get("id") or "") for profile in existing_profiles if profile is not existing_profile}
+        if update_profile["id"] in existing_ids and not existing_profile:
+            update_profile["id"] = _unique_profile_id(update_profile["id"], existing_ids)
+        profiles = [profile for profile in existing_profiles if profile.get("id") != update_profile["id"]]
+        profiles.append(update_profile)
+        normalized["cloud_profiles"] = profiles
+        normalized["active_cloud_profile_id"] = update_profile["id"]
+        normalized["cloud_service_name"] = update_profile["service_name"]
+        normalized["cloud_api_key"] = update_profile["api_key"]
+        normalized["cloud_base_url"] = update_profile["base_url"]
+        normalized["cloud_model"] = update_profile["model"]
+    elif existing_profiles:
+        normalized["cloud_profiles"] = existing_profiles
+
     payload = {
         "llm_service_name": normalized["cloud_service_name"],
         "api_key": normalized["cloud_api_key"],
@@ -349,6 +613,8 @@ def save_local_config(config: dict[str, Any]) -> Path:
         "model": normalized["cloud_model"],
         "cloud_active": normalized["cloud_active"],
         "copy_failed_sources": normalized["copy_failed_sources"],
+        "active_cloud_profile_id": normalized.get("active_cloud_profile_id") or "",
+        "cloud_profiles": normalized.get("cloud_profiles", []),
     }
     path = local_config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -368,6 +634,11 @@ def public_local_config() -> dict[str, Any]:
         "cloud_active": bool(config.get("cloud_active", False)),
         "has_cloud_api_key": bool(api_key),
         "cloud_api_key_prefix": mask_api_key(api_key),
+        "active_cloud_profile_id": config.get("active_cloud_profile_id") or "",
+        "cloud_profiles": [
+            public_cloud_profile(profile)
+            for profile in config.get("cloud_profiles", []) or []
+        ],
         "copy_failed_sources": bool(config.get("copy_failed_sources", False)),
     }
 
@@ -375,14 +646,35 @@ def public_local_config() -> dict[str, Any]:
 def apply_cloud_config_defaults(config: dict[str, Any]) -> dict[str, Any]:
     local_config = load_local_config()
     env_api_key = os.environ.get("CHEM_PDF_EXTRACTOR_API_KEY") or os.environ.get("CHEM_EXTRACTOR_CLOUD_API_KEY") or ""
+    selected_profile = _profile_by_id(
+        local_config,
+        str(config.get("active_cloud_profile_id") or config.get("cloud_profile_id") or "").strip(),
+    )
+    requested_base_url = str(config.get("cloud_base_url") or config.get("base_url") or "").strip()
+    selected_profile_can_provide_key = bool(
+        selected_profile
+        and (
+            not requested_base_url
+            or _cloud_profile_matches_base_url(selected_profile, requested_base_url)
+        )
+    )
+    local_config_can_provide_key = bool(
+        not requested_base_url
+        or _cloud_base_url_match_key(str(local_config.get("cloud_base_url") or ""))
+        == _cloud_base_url_match_key(requested_base_url)
+    )
     defaults = {
-        "cloud_service_name": local_config.get("cloud_service_name") or DEFAULT_CLOUD_SERVICE_NAME,
-        "cloud_model": local_config.get("cloud_model") or os.environ.get("CHEM_PDF_EXTRACTOR_MODEL") or DEFAULT_CLOUD_MODEL,
-        "cloud_base_url": local_config.get("cloud_base_url") or os.environ.get("CHEM_PDF_EXTRACTOR_BASE_URL") or DEFAULT_CLOUD_BASE_URL,
-        "cloud_api_key": local_config.get("cloud_api_key") or env_api_key or DEFAULT_CLOUD_API_KEY,
+        "cloud_service_name": (selected_profile or {}).get("service_name") or local_config.get("cloud_service_name") or DEFAULT_CLOUD_SERVICE_NAME,
+        "cloud_model": (selected_profile or {}).get("model") or local_config.get("cloud_model") or os.environ.get("CHEM_PDF_EXTRACTOR_MODEL") or DEFAULT_CLOUD_MODEL,
+        "cloud_base_url": (selected_profile or {}).get("base_url") or local_config.get("cloud_base_url") or os.environ.get("CHEM_PDF_EXTRACTOR_BASE_URL") or DEFAULT_CLOUD_BASE_URL,
+        "cloud_api_key": (
+            (selected_profile or {}).get("api_key") if selected_profile_can_provide_key else ""
+        ) or (local_config.get("cloud_api_key") if local_config_can_provide_key else "") or env_api_key or DEFAULT_CLOUD_API_KEY,
         "cloud_active": local_config.get("cloud_active", False),
         "copy_failed_sources": local_config.get("copy_failed_sources", False),
     }
+    if not str(config.get("active_cloud_profile_id") or "").strip():
+        config["active_cloud_profile_id"] = (selected_profile or {}).get("id") or local_config.get("active_cloud_profile_id") or ""
     for key, value in defaults.items():
         if key == "cloud_active":
             config.setdefault(key, value)

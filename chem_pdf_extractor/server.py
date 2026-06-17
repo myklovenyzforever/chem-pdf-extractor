@@ -106,6 +106,13 @@ def sanitize_cloud_test_error(error: Any, api_key: str = "") -> str:
 
 
 def run_cloud_api_test(config: dict[str, Any]) -> dict[str, Any]:
+    if config.get("base_url") and not config.get("cloud_base_url"):
+        config["cloud_base_url"] = config.get("base_url")
+    if config.get("api_key") and not config.get("cloud_api_key"):
+        config["cloud_api_key"] = config.get("api_key")
+    if config.get("model") and not config.get("cloud_model"):
+        config["cloud_model"] = config.get("model")
+    apply_cloud_config_defaults(config)
     api_key = str(config.get("api_key") or config.get("cloud_api_key") or "").strip()
     payload = {
         "api_key": api_key,
@@ -198,6 +205,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/":
             local_config = load_local_config()
+            public_config = public_local_config()
             defaults = {
                 "input_dir": str(default_input_dir()),
                 "output_path": str(default_output_path()),
@@ -210,6 +218,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 "cloud_api_key": "",
                 "cloud_base_url": local_config.get("cloud_base_url") or os.environ.get("CHEM_PDF_EXTRACTOR_BASE_URL") or DEFAULT_CLOUD_BASE_URL,
                 "cloud_active": local_config.get("cloud_active", False),
+                "active_cloud_profile_id": public_config.get("active_cloud_profile_id") or "",
+                "cloud_profiles": public_config.get("cloud_profiles", []),
                 "copy_failed_sources": local_config.get("copy_failed_sources", False),
                 "ui_token": self.app.ui_token,
                 "recursive": True,
@@ -255,7 +265,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/init-config":
             local_config = load_local_config()
             raw_key = local_config.get("cloud_api_key") or os.environ.get("CHEM_PDF_EXTRACTOR_API_KEY") or os.environ.get("CHEM_EXTRACTOR_CLOUD_API_KEY") or ""
-            self.send_json({"ok": True, "cloud_api_key_prefix": mask_api_key(raw_key)})
+            self.send_json({"ok": True, "cloud_api_key_prefix": mask_api_key(raw_key), "config": public_local_config()})
             return
 
         self.send_json({"ok": False, "error": "not found"}, status=404)
@@ -271,11 +281,8 @@ class RequestHandler(BaseHTTPRequestHandler):
                 if bool(config.get("clear_cloud_api_key", False)):
                     config["api_key"] = ""
                     config["cloud_api_key"] = ""
-                elif not str(config.get("api_key") or config.get("cloud_api_key") or "").strip():
-                    existing = load_local_config()
-                    config["api_key"] = existing.get("cloud_api_key", "")
                 save_local_config(config)
-                self.send_json({"ok": True})
+                self.send_json({"ok": True, "config": public_local_config()})
             except Exception as exc:
                 self.send_json({"ok": False, "error": redact_sensitive_text(str(exc))})
             return
@@ -292,8 +299,13 @@ class RequestHandler(BaseHTTPRequestHandler):
             # POST /api/models is kept as a compatibility alias for older frontends.
             try:
                 config = self.read_json()
-                base_url = str(config.get("base_url") or DEFAULT_CLOUD_BASE_URL).strip()
-                api_key = str(config.get("api_key") or "").strip()
+                if config.get("base_url") and not config.get("cloud_base_url"):
+                    config["cloud_base_url"] = config.get("base_url")
+                if config.get("api_key") and not config.get("cloud_api_key"):
+                    config["cloud_api_key"] = config.get("api_key")
+                apply_cloud_config_defaults(config)
+                base_url = str(config.get("base_url") or config.get("cloud_base_url") or DEFAULT_CLOUD_BASE_URL).strip()
+                api_key = str(config.get("api_key") or config.get("cloud_api_key") or "").strip()
                 models = fetch_openai_compatible_models(base_url, api_key)
                 default_model = DEFAULT_CLOUD_MODEL if DEFAULT_CLOUD_MODEL in models else models[0]
                 self.send_json({"ok": True, "models": models, "default_model": default_model})

@@ -451,6 +451,48 @@
       align-items: center;
     }
     #cloudModelCustom[hidden] { display: none; }
+    .cloud-profile-block {
+      margin: 0 0 7px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+    }
+    .cloud-profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 650;
+      line-height: 1.2;
+      margin-bottom: 5px;
+    }
+    .cloud-profile-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      min-height: 24px;
+      align-items: center;
+    }
+    .cloud-profile-list button {
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      line-height: 1;
+    }
+    .cloud-profile-list button.active {
+      color: #fff;
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+    .cloud-profile-empty {
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.2;
+    }
     .advanced-config {
       margin-top: 6px;
       border: 1px solid var(--line);
@@ -758,6 +800,14 @@
       <div class="config-stack">
         <section id="cloudPanel" class="api-panel" style="display:none;">
           <h2 data-i18n="api_config">Edit LLM API Config</h2>
+          <input id="cloudServiceName" type="hidden" value="openai_compatible" />
+          <div class="cloud-profile-block">
+            <div class="cloud-profile-header">
+              <span data-i18n="cloud_services">Cloud services</span>
+              <span id="cloudProfileKeyHint" data-i18n="saved_locally">Saved locally</span>
+            </div>
+            <div id="cloudProfileList" class="cloud-profile-list" aria-label="Saved cloud services"></div>
+          </div>
           <div class="api-grid">
             <div class="form-field full-span">
               <label>LLM BASE URL</label>
@@ -786,12 +836,6 @@
             <button id="testCloudApiBtn" type="button" onclick="testCloudApi()" data-i18n="test_api">Test API</button>
           </div>
           <p id="cloudTestStatus" class="field-help cloud-test-status" aria-live="polite" data-i18n="api_test_idle">Test connection before a large batch.</p>
-          <details class="advanced-config">
-            <summary data-i18n="advanced_settings">Advanced settings</summary>
-            <label data-i18n="service_name">LLM Service Name</label>
-            <input id="cloudServiceName" placeholder="openai_compatible" data-i18n-placeholder="placeholder_service" />
-            <p class="field-help" data-i18n="service_name_help">Defaults to openai_compatible. Existing config.local.json files remain compatible.</p>
-          </details>
           <p class="small" data-i18n="api_help">Enter an OpenAI-compatible Base URL and API key. If the provider supports /models, use Fetch models; otherwise enter the model manually.</p>
         </section>
 
@@ -883,6 +927,8 @@
     const defaultFields = __DEFAULT_FIELDS_JSON__;
     const defaults = __DEFAULT_CONFIG_JSON__;
     const apiToken = defaults.ui_token || "";
+    let cloudProfiles = Array.isArray(defaults.cloud_profiles) ? defaults.cloud_profiles : [];
+    let activeCloudProfileId = defaults.active_cloud_profile_id || "";
     const i18n = {
       zh: {
         task_settings: "任务设置",
@@ -933,6 +979,10 @@
         resume: "继续",
         stop: "停止",
         api_config: "LLM API 配置",
+        cloud_services: "云端服务",
+        saved_services: "已保存服务",
+        saved_locally: "本地已保存密钥",
+        no_saved_services: "暂无保存服务",
         service_name: "LLM 服务名称",
         placeholder_service: "openai_compatible",
         model_name: "模型名称",
@@ -949,7 +999,7 @@
         advanced_settings: "高级设置",
         service_name_help: "默认使用 openai_compatible；旧 config.local.json 仍兼容。",
         cloud_active: "激活此配置",
-        save_local_config: "保存本地配置",
+        save_local_config: "保存为服务",
         refresh_models: "刷新模型",
         api_help: "填写 Base URL 和 API Key 后，可获取模型列表或手动填写模型名。",
         progress: "进度",
@@ -998,14 +1048,14 @@
         remove: "删",
         error_model_read: "模型读取失败",
         error_ollama_read: "无法读取 Ollama 模型：",
-        alert_fill_cloud: "请先填写 LLM BASE URL 和 LLM API KEY。",
-        alert_fill_cloud_test: "请先填写 Base URL、API key 和模型名。",
+        alert_fill_cloud: "请先填写 Base URL；API key 可使用当前已保存服务。",
+        alert_fill_cloud_test: "请先填写 Base URL 和模型名；API key 可使用当前已保存服务。",
         error_cloud_read: "云端模型读取失败",
         alert_cloud_read_done: "已读取云端模型：",
         alert_cloud_read_unit: " 个。",
         alert_cloud_read_failed: "无法读取云端模型：",
         error_save_failed: "保存失败",
-        alert_config_saved: "已保存到本地 config.local.json。该文件已加入 .gitignore，不应上传 GitHub。",
+        alert_config_saved: "已保存为本地云端服务。config.local.json 已加入 .gitignore，不应上传 GitHub。",
         alert_config_save_failed: "本地配置保存失败：",
         alert_cloud_active: "请先勾选“激活此配置”，再使用云端 API。",
         alert_start_failed: "启动失败",
@@ -1063,6 +1113,10 @@
         resume: "Resume",
         stop: "Stop",
         api_config: "LLM API Config",
+        cloud_services: "Cloud services",
+        saved_services: "Saved services",
+        saved_locally: "Saved locally",
+        no_saved_services: "No saved services",
         service_name: "LLM Service Name",
         placeholder_service: "openai_compatible",
         model_name: "Model Name",
@@ -1079,7 +1133,7 @@
         advanced_settings: "Advanced settings",
         service_name_help: "Defaults to openai_compatible. Existing config.local.json files remain compatible.",
         cloud_active: "Active",
-        save_local_config: "Save Config",
+        save_local_config: "Save service",
         refresh_models: "Refresh Models",
         api_help: "Enter Base URL and API key, then fetch models or type a model name.",
         progress: "Progress",
@@ -1128,14 +1182,14 @@
         remove: "Del",
         error_model_read: "Failed to read model list",
         error_ollama_read: "Unable to read Ollama models: ",
-        alert_fill_cloud: "Please fill in LLM BASE URL and LLM API KEY first.",
-        alert_fill_cloud_test: "Please fill in Base URL, API key, and model first.",
+        alert_fill_cloud: "Please enter a Base URL; the current saved service can provide the API key.",
+        alert_fill_cloud_test: "Please enter Base URL and model; the current saved service can provide the API key.",
         error_cloud_read: "Failed to read cloud models",
         alert_cloud_read_done: "Cloud models loaded: ",
         alert_cloud_read_unit: ".",
         alert_cloud_read_failed: "Unable to read cloud models: ",
         error_save_failed: "Save failed",
-        alert_config_saved: "Saved to local config.local.json. This file is in .gitignore and should not be uploaded to GitHub.",
+        alert_config_saved: "Saved as a local cloud service. config.local.json is in .gitignore and should not be uploaded to GitHub.",
         alert_config_save_failed: "Failed to save local config: ",
         alert_cloud_active: "Please check 'Activate this config' before using the cloud API.",
         alert_start_failed: "Start failed",
@@ -1384,6 +1438,7 @@
       syncCloudModelValue();
       updatePdfModeHelp();
       renderCloudTestStatus();
+      renderCloudProfiles();
       updateLogFilterButtons();
       updateProgressRatio(latestStatusData.done, latestStatusData.total, latestStatusData.percent);
       updateNextAction(latestStatusSnapshot);
@@ -1478,10 +1533,103 @@
       }
     }
 
+    function normalizeCloudProfiles(profiles) {
+      return Array.isArray(profiles) ? profiles.filter(profile => profile && profile.id) : [];
+    }
+
+    function activeCloudProfile() {
+      return cloudProfiles.find(profile => profile.id === activeCloudProfileId) || null;
+    }
+
+    function cloudProfileLabel(profile) {
+      if (!profile) return "";
+      if (currentLang === "zh") {
+        return profile.display_name_zh || profile.display_name || profile.display_name_en || profile.id;
+      }
+      return profile.display_name_en || profile.display_name || profile.display_name_zh || profile.id;
+    }
+
+    function cloudProfileKeyPlaceholder(profile) {
+      if (!profile || !profile.has_api_key) {
+        return "YOUR_API_KEY_HERE";
+      }
+      return profile.cloud_api_key_prefix || t("saved_locally");
+    }
+
+    function normalizedCloudBaseUrlForMatch(value) {
+      return String(value || "").trim().replace(/\/+$/, "");
+    }
+
+    function cloudProfileMatchesCurrentBaseUrl(profile) {
+      if (!profile) return false;
+      return normalizedCloudBaseUrlForMatch(profile.base_url) ===
+        normalizedCloudBaseUrlForMatch(document.getElementById("cloudBaseUrl").value);
+    }
+
+    function renderCloudProfiles() {
+      const list = document.getElementById("cloudProfileList");
+      if (!list) return;
+      list.innerHTML = "";
+      if (!cloudProfiles.length) {
+        const empty = document.createElement("span");
+        empty.className = "cloud-profile-empty";
+        empty.textContent = t("no_saved_services");
+        list.appendChild(empty);
+        return;
+      }
+      cloudProfiles.forEach(profile => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = cloudProfileLabel(profile);
+        button.className = profile.id === activeCloudProfileId ? "active" : "";
+        button.onclick = () => applyCloudProfile(profile.id);
+        list.appendChild(button);
+      });
+    }
+
+    function setCloudProfilesFromConfig(config) {
+      if (!config) return;
+      cloudProfiles = normalizeCloudProfiles(config.cloud_profiles || cloudProfiles);
+      activeCloudProfileId = config.active_cloud_profile_id || activeCloudProfileId || (cloudProfiles[0] && cloudProfiles[0].id) || "";
+      renderCloudProfiles();
+    }
+
+    function setCloudApiKeyPlaceholder(profile) {
+      const input = document.getElementById("cloudApiKey");
+      if (!input) return;
+      input.placeholder = cloudProfileKeyPlaceholder(profile) || t("saved_locally");
+    }
+
+    function applyCloudProfile(profileId) {
+      const profile = cloudProfiles.find(item => item.id === profileId);
+      if (!profile) {
+        renderCloudProfiles();
+        return;
+      }
+      activeCloudProfileId = profile.id;
+      document.getElementById("cloudServiceName").value = profile.service_name || "openai_compatible";
+      document.getElementById("cloudBaseUrl").value = profile.base_url || "";
+      document.getElementById("cloudApiKey").value = "";
+      setCloudApiKeyPlaceholder(profile);
+      fillCloudModelSuggestions(defaults.cloud_model_suggestions || [], profile.model || defaults.cloud_model);
+      document.getElementById("cloudActive").checked = true;
+      renderCloudProfiles();
+    }
+
+    function currentCloudProfileCanProvideKey() {
+      const profile = activeCloudProfile();
+      return !!(profile && profile.has_api_key && cloudProfileMatchesCurrentBaseUrl(profile));
+    }
+
+    function getActiveCloudProfileId() {
+      return activeCloudProfileId || "";
+    }
+
     function getCloudServiceName() {
       const input = document.getElementById("cloudServiceName");
       const value = input ? input.value.trim() : "";
-      return value || "openai_compatible";
+      const profile = activeCloudProfile();
+      return value || (profile && profile.service_name) || "openai_compatible";
     }
 
     function syncCloudModelValue() {
@@ -1543,7 +1691,7 @@
       const baseUrl = document.getElementById("cloudBaseUrl").value.trim();
       const apiKey = document.getElementById("cloudApiKey").value.trim();
       const previousModel = getCloudModelValue();
-      if (!baseUrl || !apiKey) {
+      if (!baseUrl || (!apiKey && !currentCloudProfileCanProvideKey())) {
         alert(t("alert_fill_cloud"));
         return;
       }
@@ -1551,7 +1699,11 @@
         const res = await apiFetch("/api/cloud-models", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({base_url: baseUrl, api_key: apiKey})
+          body: JSON.stringify({
+            base_url: baseUrl,
+            api_key: apiKey,
+            active_cloud_profile_id: getActiveCloudProfileId()
+          })
         });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || t("error_cloud_read"));
@@ -1570,7 +1722,7 @@
       const baseUrl = document.getElementById("cloudBaseUrl").value.trim();
       const apiKey = document.getElementById("cloudApiKey").value.trim();
       const model = getCloudModelValue();
-      if (!baseUrl || !apiKey || !model) {
+      if (!baseUrl || (!apiKey && !currentCloudProfileCanProvideKey()) || !model) {
         setCloudTestStatus("failed", "api_test_failed", t("alert_fill_cloud_test"));
         return;
       }
@@ -1579,7 +1731,12 @@
         const res = await apiFetch("/api/cloud-test", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify({base_url: baseUrl, api_key: apiKey, model})
+          body: JSON.stringify({
+            base_url: baseUrl,
+            api_key: apiKey,
+            model,
+            active_cloud_profile_id: getActiveCloudProfileId()
+          })
         });
         const data = await res.json();
         if (data.status === "success") {
@@ -1597,10 +1754,15 @@
     }
 
     async function saveLocalConfig() {
+      const activeProfile = activeCloudProfile();
+      const baseUrl = document.getElementById("cloudBaseUrl").value.trim();
+      const activeBaseUrl = activeProfile ? String(activeProfile.base_url || "").replace(/\/+$/, "") : "";
+      const shouldUpdateActiveProfile = !!(activeProfile && activeBaseUrl === baseUrl.replace(/\/+$/, ""));
       const payload = {
-        llm_service_name: getCloudServiceName(),
+        active_cloud_profile_id: shouldUpdateActiveProfile ? getActiveCloudProfileId() : "",
+        cloud_service_name: shouldUpdateActiveProfile ? getCloudServiceName() : "",
         api_key: document.getElementById("cloudApiKey").value.trim(),
-        base_url: document.getElementById("cloudBaseUrl").value.trim(),
+        base_url: baseUrl,
         model: getCloudModelValue(),
         cloud_active: document.getElementById("cloudActive").checked,
         copy_failed_sources: document.getElementById("copyFailedSources").checked
@@ -1613,6 +1775,11 @@
         });
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || t("error_save_failed"));
+        setCloudProfilesFromConfig(data.config || {});
+        const profile = activeCloudProfile();
+        if (profile) {
+          applyCloudProfile(profile.id);
+        }
         alert(t("alert_config_saved"));
       } catch (err) {
         alert(t("alert_config_save_failed") + err.message);
@@ -1657,6 +1824,7 @@
         model: selectedModel,
         translate_to_chinese: true,
         cloud_service_name: getCloudServiceName(),
+        active_cloud_profile_id: getActiveCloudProfileId(),
         cloud_model: getCloudModelValue(),
         cloud_api_key: document.getElementById("cloudApiKey").value.trim(),
         cloud_base_url: document.getElementById("cloudBaseUrl").value.trim(),
@@ -1775,14 +1943,27 @@
       document.getElementById("llmProvider").value = defaults.llm_provider || "cloud";
       document.getElementById("ollamaBaseUrl").value = defaults.ollama_base_url;
       document.getElementById("cloudServiceName").value = defaults.cloud_service_name;
-      fillCloudModelSuggestions(defaults.cloud_model_suggestions || [], defaults.cloud_model);
+      setCloudProfilesFromConfig(defaults);
+      const initialProfile = activeCloudProfile();
+      if (initialProfile) {
+        applyCloudProfile(initialProfile.id);
+      } else {
+        fillCloudModelSuggestions(defaults.cloud_model_suggestions || [], defaults.cloud_model);
+        document.getElementById("cloudBaseUrl").value = defaults.cloud_base_url;
+      }
       document.getElementById("cloudApiKey").value = "";
       apiFetch("/api/init-config").then(r => r.json()).then(d => {
+        if (d.ok && d.config) {
+          setCloudProfilesFromConfig(d.config);
+          const profile = activeCloudProfile();
+          if (profile && !document.getElementById("cloudApiKey").value.trim()) {
+            applyCloudProfile(profile.id);
+          }
+        }
         if (d.ok && d.cloud_api_key_prefix) {
           document.getElementById("cloudApiKey").placeholder = d.cloud_api_key_prefix;
         }
       }).catch(() => {});
-      document.getElementById("cloudBaseUrl").value = defaults.cloud_base_url;
       document.getElementById("cloudActive").checked = defaults.cloud_active !== false;
       document.getElementById("recursive").checked = defaults.recursive !== false;
       document.getElementById("copyFailedSources").checked = defaults.copy_failed_sources === true;
