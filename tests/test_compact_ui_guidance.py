@@ -257,6 +257,15 @@ class CompactUiGuidanceTest(unittest.TestCase):
         log_pre = css_block(self.template, ".log-panel pre")
         self.assertIn("overflow: auto", log_pre)
 
+    def test_log_filter_buttons_are_vertically_centered(self):
+        block = css_block(self.template, "\n    .log-filters button {")
+
+        self.assertIn("display: inline-flex", block)
+        self.assertIn("align-items: center", block)
+        self.assertIn("justify-content: center", block)
+        self.assertIn("height: 26px", block)
+        self.assertIn("line-height: 1", block)
+
     def test_layout_contract_css_comment_points_to_docs(self):
         comment_index = self.template.index("UI layout contract")
         top_grid_index = self.template.index(".top-grid")
