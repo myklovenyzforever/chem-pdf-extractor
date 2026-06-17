@@ -816,6 +816,7 @@
             <div class="form-field full-span">
               <label>LLM API KEY</label>
               <input id="cloudApiKey" type="password" autocomplete="off" placeholder="YOUR_API_KEY_HERE" />
+              <p class="field-help" id="cloudApiKeyHelp"></p>
             </div>
             <div class="form-field full-span">
               <label data-i18n="model_name">Model Name</label>
@@ -982,6 +983,8 @@
         cloud_services: "云端服务",
         saved_services: "已保存服务",
         saved_locally: "本地已保存密钥",
+        cloud_key_saved_hint: "已保存本地密钥；留空会自动使用当前服务的密钥。输入新 key 后点击保存为服务会更新密钥。",
+        cloud_key_missing_hint: "请输入 API Key；保存为服务后下次可留空自动使用。",
         no_saved_services: "暂无保存服务",
         service_name: "LLM 服务名称",
         placeholder_service: "openai_compatible",
@@ -1116,6 +1119,8 @@
         cloud_services: "Cloud services",
         saved_services: "Saved services",
         saved_locally: "Saved locally",
+        cloud_key_saved_hint: "A saved local key will be used if this field is left blank. Enter a new key and click Save service to update it.",
+        cloud_key_missing_hint: "Enter an API key. After saving this service, you can leave it blank next time.",
         no_saved_services: "No saved services",
         service_name: "LLM Service Name",
         placeholder_service: "openai_compatible",
@@ -1298,6 +1303,7 @@
     function setCloudTestStatus(type, messageKey, detail = "") {
       cloudTestState = {type, messageKey, detail};
       renderCloudTestStatus();
+      setCloudApiKeyPlaceholder(activeCloudProfile());
     }
 
     function cloneFields(fields) {
@@ -1596,8 +1602,19 @@
 
     function setCloudApiKeyPlaceholder(profile) {
       const input = document.getElementById("cloudApiKey");
+      const help = document.getElementById("cloudApiKeyHelp");
       if (!input) return;
-      input.placeholder = cloudProfileKeyPlaceholder(profile) || t("saved_locally");
+
+      const canUseSavedKey = profile && profile.has_api_key && cloudProfileMatchesCurrentBaseUrl(profile);
+      if (canUseSavedKey) {
+        const masked = profile.cloud_api_key_prefix || "";
+        input.placeholder = masked ? `${t("saved_locally")} ${masked}` : t("saved_locally");
+        if (help) help.textContent = t("cloud_key_saved_hint");
+        return;
+      }
+
+      input.placeholder = "YOUR_API_KEY_HERE";
+      if (help) help.textContent = t("cloud_key_missing_hint");
     }
 
     function applyCloudProfile(profileId) {
