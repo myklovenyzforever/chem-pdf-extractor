@@ -53,6 +53,16 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertIn('<div class="form-field full-span">', template)
         self.assertIn('value="mineru" data-i18n="pdf_mode_mineru"', template)
 
+    def test_task_settings_defaults_to_mineru_pdf_mode(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        mineru_index = template.index('value="mineru" data-i18n="pdf_mode_mineru"')
+        pymupdf_index = template.index('value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm"')
+        self.assertLess(mineru_index, pymupdf_index)
+        self.assertIn('id="pdfModeHelp" data-i18n="pdf_mode_help_mineru"', template)
+        self.assertIn('defaults.pdf_mode || "mineru"', template)
+        self.assertIn('pdfModeHelpKeys[select.value] || "pdf_mode_help_mineru"', template)
+
     def test_workbench_layout_uses_aligned_desktop_height_without_left_middle_scroll(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
         top_grid = css_block(template, ".top-grid")

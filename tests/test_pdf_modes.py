@@ -10,12 +10,12 @@ from chem_pdf_extractor.pdf import mineru_command_candidates, read_pdf_as_markdo
 
 
 class PdfModeTest(unittest.TestCase):
-    def test_default_pdf_mode_is_pymupdf4llm(self):
+    def test_default_pdf_mode_is_mineru(self):
         with patch.object(sys, "argv", ["chem-pdf-extractor"]):
             args = parse_args()
 
-        self.assertEqual(DEFAULT_PDF_MODE, "pymupdf4llm")
-        self.assertEqual(args.pdf_mode, "pymupdf4llm")
+        self.assertEqual(DEFAULT_PDF_MODE, "mineru")
+        self.assertEqual(args.pdf_mode, "mineru")
 
     def test_accepted_pdf_modes_include_mineru(self):
         self.assertIn("pypdf_text", PDF_MODE_CHOICES)

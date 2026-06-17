@@ -20,7 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 DEFAULT_MODEL = "minicpm-v:latest"
 DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434"
-DEFAULT_MAX_CHARS = 80000
+DEFAULT_MAX_CHARS = 0
 DEFAULT_NUM_CTX = 8192
 DEFAULT_CLOUD_SERVICE_NAME = "openai_compatible"
 DEFAULT_CLOUD_MODEL = "provider/model-name"
@@ -29,7 +29,7 @@ DEFAULT_CLOUD_API_KEY = ""
 LOCAL_CONFIG_NAME = "config.local.json"
 USER_ROOT_ENV_VAR = "CHEM_PDF_EXTRACTOR_USER_ROOT"
 DEFAULT_OUTPUT_DIR_NAME = "提取结果"
-DEFAULT_PDF_MODE = "pymupdf4llm"
+DEFAULT_PDF_MODE = "mineru"
 PDF_MODE_CHOICES = ["auto", "pypdf_text", "pymupdf4llm", "pymupdf_text", "mineru"]
 PLACEHOLDER_CLOUD_BASE_URL_MARKERS = {"api.example.com"}
 PLACEHOLDER_CLOUD_MODELS = {"provider/model-name", "model-name", "your-model-name"}
