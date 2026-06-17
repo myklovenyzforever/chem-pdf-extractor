@@ -6,17 +6,18 @@
   <title>Chem-PDF-Extractor</title>
   <style>
     :root {
-      --bg: #eef2f6;
+      --bg: #f3f6fa;
       --panel: #ffffff;
-      --panel-soft: #f8fafc;
+      --panel-soft: #f7f9fc;
       --text: #172033;
-      --muted: #667085;
-      --line: #d7dde8;
-      --line-strong: #c5cfdd;
+      --muted: #5f6b7a;
+      --line: #d9e1ec;
+      --line-strong: #b9c6d8;
       --blue: #1f6feb;
       --green: #0f8a5f;
       --red: #c2410c;
-      --focus: rgba(31, 111, 235, .18);
+      --focus: rgba(31, 111, 235, .16);
+      --panel-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 10px 26px rgba(16, 24, 40, .045);
       --workbench-height: min(760px, calc(100vh - 24px));
     }
     * { box-sizing: border-box; }
@@ -115,7 +116,7 @@
       padding: 3px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: var(--panel);
+      background: rgba(255, 255, 255, .82);
       flex: 0 0 auto;
     }
     .lang-switch button {
@@ -131,6 +132,7 @@
       background: var(--blue);
       color: #fff;
       border-color: var(--blue);
+      box-shadow: 0 1px 2px rgba(31, 111, 235, .18);
     }
     .workflow-guide {
       display: flex;
@@ -142,13 +144,15 @@
     .workflow-guide span {
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: var(--panel-soft);
-      color: var(--muted);
+      background: #fff;
+      color: #526173;
       font-size: 11px;
+      font-weight: 650;
       line-height: 1;
       padding: 5px 7px;
       white-space: nowrap;
       min-width: 0;
+      box-shadow: 0 1px 1px rgba(16, 24, 40, .03);
     }
     section {
       background: var(--panel);
@@ -156,7 +160,7 @@
       border-radius: 10px;
       padding: 16px;
       margin-bottom: 12px;
-      box-shadow: none;
+      box-shadow: var(--panel-shadow);
       position: relative;
       overflow: hidden;
     }
@@ -167,7 +171,7 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: #dbe7f7;
+      background: #d7e6fa;
     }
     .top-grid section, .config-stack section, .left-stack section { margin-bottom: 0; }
     .log-panel {
@@ -211,9 +215,12 @@
     h2 {
       font-size: 15px;
       margin: 0 0 12px;
-      padding-left: 10px;
+      padding-left: 9px;
       border-left: 3px solid var(--blue);
-      line-height: 1.2;
+      color: #10213f;
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 1.18;
     }
     .top-grid h2 { font-size: 18px; }
     .top-grid label { font-size: 13px; }
@@ -237,14 +244,16 @@
       min-height: 34px;
       padding: 7px 10px;
       font-size: 14px;
-      background: #fbfdff;
+      background: #fff;
       color: var(--text);
-      transition: border-color .15s ease, box-shadow .15s ease;
+      box-shadow: inset 0 1px 1px rgba(16, 24, 40, .025);
+      transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
     }
     input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--blue);
-      box-shadow: none;
+      background: #fff;
+      box-shadow: 0 0 0 3px var(--focus), inset 0 1px 1px rgba(16, 24, 40, .025);
     }
     textarea { min-height: 54px; resize: vertical; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -309,10 +318,11 @@
       padding: 7px 12px;
       cursor: pointer;
       font-weight: 600;
+      box-shadow: 0 1px 1px rgba(16, 24, 40, .035);
       transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
     }
-    button:hover:not(:disabled) { border-color: var(--line-strong); background: #f8fafc; }
-    button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+    button:hover:not(:disabled) { border-color: var(--line-strong); background: #f7f9fc; box-shadow: 0 1px 3px rgba(16, 24, 40, .06); }
+    button.primary { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 1px 3px rgba(31, 111, 235, .22); }
     button.primary:hover:not(:disabled) { background: #195ec7; border-color: #195ec7; }
     button.danger { background: #fff; border-color: #fecaca; color: var(--red); }
     button.danger:hover:not(:disabled) { background: #fff7ed; border-color: #fdba74; }
@@ -414,6 +424,8 @@
       min-height: 26px;
       padding: 3px 7px;
       font-size: 12px;
+      border-radius: 999px;
+      font-weight: 650;
     }
     .log-filters button {
       display: inline-flex;
@@ -427,6 +439,7 @@
       color: #fff;
       background: var(--blue);
       border-color: var(--blue);
+      box-shadow: 0 1px 3px rgba(31, 111, 235, .22);
     }
     .cloud-test-status.status-success { color: var(--green); }
     .cloud-test-status.status-partial { color: #9a5b00; }
@@ -506,11 +519,11 @@
       margin: 7px 0;
     }
     .stat {
-      border: 1px solid var(--line);
+      border: 1px solid #d5dee9;
       border-radius: 8px;
       padding: 10px;
       background: var(--panel-soft);
-      box-shadow: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72);
       display: flex;
       align-items: center;
       gap: 12px;
@@ -576,7 +589,7 @@
     #leftStatsMount .task-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     #middleStatsMount .task-stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .task-stat {
-      border: 1px solid var(--line);
+      border: 1px solid #d5dee9;
       border-radius: 8px;
       background: var(--panel-soft);
       padding: 7px 8px;
@@ -586,6 +599,7 @@
       align-items: center;
       gap: 7px;
       min-height: 40px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72);
     }
     .task-stat span {
       color: var(--muted);
@@ -607,10 +621,10 @@
       overflow: auto;
       margin: 0;
       padding: 12px;
-      background: #0b1020;
-      color: #00ff66;
+      background: #101827;
+      color: #b7f7c8;
       border-radius: 8px;
-      border: 1px solid #0f8a5f;
+      border: 1px solid #24314a;
       font-size: 12px;
       line-height: 1.55;
       white-space: pre-wrap;
