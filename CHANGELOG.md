@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.4.0 - Cloud profiles, MinerU default, and Web UI polish
+
+- Added local Cloud API service profiles in the Web UI.
+- Saved Cloud Base URL, model, and API key can be reused from local `config.local.json`.
+- Added saved-service chips so users can switch between providers such as Xiaomi Mimo, DeepSeek, OpenAI-compatible services, and custom hosts.
+- Kept full API keys local-only; the browser UI shows saved-key hints without filling the full key back into the page.
+- Guarded saved API key reuse so a key is only reused when the current Base URL matches the active saved service.
+- Changed the default PDF mode to `mineru` and the default text budget to `max_chars = 0`.
+- Polished the first-screen Web UI layout, Cloud/Ollama-specific Statistics placement, Progress layout, log filter alignment, spacing, and saved-key guidance.
+- Kept Windows launcher behavior, package layout, extraction schema, release artifact policy, and local-only `config.local.json` safety boundaries.
+
 ## v0.3.1 - Windows launcher user-root quoting hotfix
 
 - Fixed Windows BAT launchers so the user-root path passed to PowerShell no longer ends with a raw trailing backslash inside quotes.

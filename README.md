@@ -103,6 +103,8 @@ Normal source users can continue using `requirements.txt` or `requirements-core.
 5. Apply a field template or edit fields below the first workbench.
 6. Start the task, watch progress/logs, then inspect exported Excel/CSV files and review-aid columns.
 
+Cloud API users can save local service profiles for Base URL, model, and API key. Saved keys remain in local `config.local.json` and are not filled back into the browser UI.
+
 The compact three-column workbench is documented in [UI Layout Contract](docs/ui_layout_contract.md). The field editing panel intentionally stays below the first workbench.
 
 ## CLI Workflow
