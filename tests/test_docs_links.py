@@ -26,6 +26,7 @@ class DocsLinksTest(unittest.TestCase):
             "docs/screenshot_guide.md",
             "docs/release_and_feedback.md",
             "docs/windows_package.md",
+            "CONTRIBUTING.md",
             "SECURITY.md",
             "ROADMAP.md",
         ]:
@@ -74,6 +75,71 @@ class DocsLinksTest(unittest.TestCase):
         ]:
             with self.subTest(overclaim=overclaim):
                 self.assertNotIn(overclaim, lower)
+
+    def test_readme_aligns_v040_defaults(self):
+        content = read(README)
+        lower = content.lower()
+
+        for phrase in [
+            "mineru` is the v0.4.0 web ui/default mode",
+            "`pymupdf4llm` is a lighter/balanced fallback",
+            "`pypdf_text` is the smallest compatibility fallback",
+            "default extraction text budget is `max_chars = 0`",
+            "no truncation can be slower, costlier for cloud usage",
+            "`--pdf-mode auto` is a heuristic mode",
+            "not a guarantee of accurate layout recovery",
+            "saved keys remain in local `config.local.json`",
+            "not filled back into the browser ui",
+        ]:
+            with self.subTest(phrase=phrase):
+                self.assertIn(phrase, lower)
+
+        for stale in [
+            "pymupdf4llm` for the recommended default",
+            "`pymupdf4llm`: recommended default",
+            "default extraction text budget is 80k",
+            "80k characters",
+            "mineru is optional and is not installed by default",
+        ]:
+            with self.subTest(stale=stale):
+                self.assertNotIn(stale, lower)
+
+    def test_agent_and_contributor_guides_exist_with_safety_rules(self):
+        agents = REPO_ROOT / "AGENTS.md"
+        contributing = REPO_ROOT / "CONTRIBUTING.md"
+        self.assertTrue(agents.exists())
+        self.assertTrue(contributing.exists())
+
+        agents_content = read(agents)
+        contributing_content = read(contributing)
+        agents_lower = agents_content.lower()
+        contributing_lower = contributing_content.lower()
+
+        for phrase in [
+            "python -m unittest discover -s tests -v",
+            "python -m chem_pdf_extractor --help",
+            "git diff --check",
+            "release_artifacts/",
+            "config.local.json",
+            "cloud api keys local-only",
+            "local-loopback safety model",
+        ]:
+            with self.subTest(agent_phrase=phrase):
+                self.assertIn(phrase, agents_lower)
+
+        for phrase in [
+            "synthetic or public-safe",
+            "api keys",
+            "private pdfs",
+            "small and focused",
+            "python -m unittest discover -s tests -v",
+            "python -m chem_pdf_extractor --help",
+            "git diff --check",
+            "release_artifacts/",
+            "security.md",
+        ]:
+            with self.subTest(contributing_phrase=phrase):
+                self.assertIn(phrase, contributing_lower)
 
     def test_screenshot_guide_exists_and_sets_safety_rules(self):
         path = REPO_ROOT / "docs" / "screenshot_guide.md"

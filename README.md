@@ -21,7 +21,7 @@ Experimental information in scientific papers is often scattered across paragrap
 ## Workflow Overview
 
 1. Install the project and start the local Web UI or CLI.
-2. Choose a PDF mode: `pymupdf4llm` for the recommended default, `pypdf_text` for the smallest fallback, `auto` for the current heuristic path, or optional `mineru` for harder layouts.
+2. Choose a PDF mode: `mineru` is the v0.4.0 Web UI/default mode for enhanced layout handling, `pymupdf4llm` is a lighter/balanced fallback, `pypdf_text` is the smallest compatibility fallback, and `auto` is the current heuristic path.
 3. Choose a field template from [Field Templates](examples/field_templates/README.md) or provide a custom `fields.json`.
 4. Run extraction with local Ollama or an OpenAI-compatible cloud provider.
 5. Review extracted rows, warnings, bad-row filtering, and evidence/hint columns against the source PDF.
@@ -167,13 +167,13 @@ The shared launcher script checks for Python 3.11, creates or reuses runtime fil
 
 Backend choices:
 
-- `pypdf_text`: smallest install, fastest installation, best fallback compatibility, weaker layout/table/multi-column handling.
-- `pymupdf4llm`: recommended default, balanced install size and extraction quality, suitable for most research PDFs.
-- `mineru`: optional enhanced backend, larger install size, slower first-time installation, suitable for complex layouts, tables, scanned PDFs, and high-performance PCs. It may require more disk space, memory, installation time, and external downloads.
+- `mineru`: v0.4.0 Web UI/default PDF mode for enhanced layout handling, suitable for complex layouts, tables, scanned PDFs, and high-performance PCs. It may require more disk space, memory, installation time, and external downloads.
+- `pymupdf4llm`: lighter/balanced fallback when users want a smaller or faster install than MinerU.
+- `pypdf_text`: smallest install and broadest compatibility fallback, but weaker for complex layouts, tables, figures, two-column PDFs, and scanned PDFs.
 
-The default extraction text budget is 80k characters. Enter `0` in the Web UI or pass `--max-chars 0` in CLI mode only when you intentionally want no truncation; that can be slower, costlier, and more likely to exceed model context limits.
+The default extraction text budget is `max_chars = 0`, which means no truncation. No truncation can be slower, costlier for cloud usage, and more likely to exceed model context limits. Set `40000`, `80000`, or `120000` when you want a smaller or capped context.
 
-`--pdf-mode auto` first tries `pymupdf4llm`. If the converted Markdown is very short, mentions tables without table-like rows, or appears image-heavy, auto mode may try optional MinerU. If MinerU is unavailable or fails, auto mode keeps usable `pymupdf4llm` text or falls back to `pypdf_text`. MinerU is optional and is not required in CI.
+`--pdf-mode auto` is a heuristic mode, not a guarantee of accurate layout recovery. It first tries `pymupdf4llm`; if the converted Markdown is very short, mentions tables without table-like rows, or appears image-heavy, auto mode may try optional MinerU. If MinerU is unavailable or fails, auto mode keeps usable `pymupdf4llm` text or falls back to `pypdf_text`. MinerU is optional for CI and should not be required in automated tests.
 
 GitHub Download ZIP is a source package. It does not include Python, `.venv/`, installed dependencies, MinerU models, or a bundled runtime, but users can still run the first-run launcher online. A fully offline package is not provided by default because it would need bundled Python, wheel caches, MinerU dependencies/models, and larger runtime assets.
 
@@ -217,6 +217,7 @@ The example data is synthetic and does not represent real published papers.
 - [Screenshot Guide](docs/screenshot_guide.md)
 - [Release and Feedback Path](docs/release_and_feedback.md)
 - [Windows One-click Package Guide](docs/windows_package.md)
+- [Contributing Guide](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
 - [Roadmap](ROADMAP.md)
 - [Windows 一键包说明](docs/windows_package.md)
@@ -235,12 +236,16 @@ The output preview uses synthetic data only and does not represent real publishe
 
 - LLM extraction results should be reviewed manually.
 - Complex scanned PDFs may require OCR or MinerU support.
-- MinerU is optional and is not installed by default. Use the Windows first-run launcher option `[3] mineru` only when the larger enhanced backend is needed. MinerU 3.x uses `mineru.exe` as the primary CLI; `magic-pdf` is only a legacy fallback.
+- MinerU is the v0.4.0 Web UI/default PDF mode for enhanced layout handling, but its dependencies may still require optional installation. MinerU 3.x uses `mineru.exe` as the primary CLI; `magic-pdf` is only a legacy fallback.
 - The project does not include any built-in commercial API key.
 - Example data is synthetic and does not represent real published papers.
 - Python 3.11 is recommended for the broadest PDF-backend compatibility.
 - On Windows + Python 3.12, `pymupdf4llm` / `pymupdf` may fail during import in some environments. These packages are treated as optional PDF backends; if that happens, use `python -m chem_pdf_extractor --cli --pdf-mode pypdf_text`.
 - `pypdf_text` is more stable as a fallback, but it is weaker for complex tables, two-column layouts, figures, and scanned PDFs.
+
+## Contributing
+
+Small, focused PRs are welcome. Use synthetic or public-safe examples, keep extraction results framed as first-pass outputs for human verification, and do not include API keys, private PDFs, copyrighted paper text, private paths, logs, generated outputs, or release artifacts. See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution workflow and [SECURITY.md](SECURITY.md) for privacy/security reporting guidance.
 
 ## Roadmap
 
