@@ -50,14 +50,15 @@ $Messages = @{
     PypdfDesc = "Lightweight mode | smallest install size | fastest install | best compatibility"
     PypdfSuitable = "Suitable for text-based PDFs."
     PypdfWeakness = "Weakness: weaker layout, table, and multi-column handling."
-    PymupdfDesc = "Standard mode | medium install size | good speed | suitable for most research PDFs."
-    PymupdfDefault = "This remains the default if the user presses Enter."
-    MineruDesc = "Enhanced mode | large install size | slow first-time installation."
+    PymupdfDesc = "Balanced fallback | medium install size | good speed | suitable for many research PDFs."
+    PymupdfFallback = "Use this if you want a lighter install than MinerU."
+    MineruDesc = "Enhanced default mode | large install size | slower first-time installation."
     MineruSuitable = "Suitable for complex layouts, tables, scanned PDFs, and high-performance PCs."
     MineruWarning = "Warning: requires more disk space, memory, installation time, and may download large dependencies or models."
+    MineruDefault = "This is the v0.4.0 default backend if the user presses Enter."
     PreviousBackend = "Previous backend choice:"
     EnterReuse = "Enter 1, 2, or 3. Press Enter to reuse previous choice"
-    EnterDefault = "Enter 1, 2, or 3. Press Enter for option 2"
+    EnterDefault = "Enter 1, 2, or 3. Press Enter for option 3"
     InvalidChoice = "Invalid input. Please enter 1, 2, 3, or press Enter."
     MineruFailed = "MinerU installation did not complete successfully."
     Reason = "Reason:"
@@ -80,14 +81,15 @@ $Messages = @{
     PypdfDesc = "轻量模式 | 安装体积最小 | 安装最快 | 兼容性最好"
     PypdfSuitable = "适合文本型 PDF。"
     PypdfWeakness = "弱点：版面、表格、多栏处理能力较弱。"
-    PymupdfDesc = "标准模式 | 中等安装体积 | 速度较好 | 适合大多数科研 PDF。"
-    PymupdfDefault = "如果直接按 Enter，将默认使用此选项。"
-    MineruDesc = "增强模式 | 安装体积大 | 首次安装较慢。"
+    PymupdfDesc = "均衡降级模式 | 中等安装体积 | 速度较好 | 适合多数科研 PDF。"
+    PymupdfFallback = "如果希望安装比 MinerU 更轻，可以选择此项。"
+    MineruDesc = "增强默认模式 | 安装体积大 | 首次安装较慢。"
     MineruSuitable = "适合复杂版面、表格、扫描类 PDF 和性能较好的电脑。"
     MineruWarning = "提示：需要更多磁盘空间、内存和安装时间，可能下载较大的依赖或模型。"
+    MineruDefault = "如果直接按 Enter，将默认使用此选项。"
     PreviousBackend = "上次选择的后端："
     EnterReuse = "请输入 1、2 或 3。直接按 Enter 复用上次选择"
-    EnterDefault = "请输入 1、2 或 3。直接按 Enter 使用选项 2"
+    EnterDefault = "请输入 1、2 或 3。直接按 Enter 使用选项 3"
     InvalidChoice = "输入无效。请输入 1、2、3，或直接按 Enter。"
     MineruFailed = "MinerU 安装未成功完成。"
     Reason = "原因："
@@ -380,14 +382,15 @@ function Select-PdfBackend {
     Write-Host (Get-LauncherText "PypdfSuitable")
     Write-Host (Get-LauncherText "PypdfWeakness")
     Write-Host ""
-    Write-Host "[2] pymupdf4llm (recommended)"
+    Write-Host "[2] pymupdf4llm"
     Write-Host (Get-LauncherText "PymupdfDesc")
-    Write-Host (Get-LauncherText "PymupdfDefault")
+    Write-Host (Get-LauncherText "PymupdfFallback")
     Write-Host ""
     Write-Host "[3] mineru"
     Write-Host (Get-LauncherText "MineruDesc")
     Write-Host (Get-LauncherText "MineruSuitable")
     Write-Host (Get-LauncherText "MineruWarning")
+    Write-Host (Get-LauncherText "MineruDefault")
     Write-Host ""
     if ($previous) {
       $previousLabel = Get-LauncherText "PreviousBackend"
@@ -400,8 +403,8 @@ function Select-PdfBackend {
     } else {
       $choice = Read-Host (Get-LauncherText "EnterDefault")
       if ([string]::IsNullOrWhiteSpace($choice)) {
-        Save-BackendChoice "pymupdf4llm"
-        return "pymupdf4llm"
+        Save-BackendChoice "mineru"
+        return "mineru"
       }
     }
 

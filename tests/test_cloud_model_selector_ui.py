@@ -72,6 +72,10 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertIn('id="pdfModeHelp" data-i18n="pdf_mode_help_mineru"', template)
         self.assertIn('defaults.pdf_mode || "mineru"', template)
         self.assertIn('pdfModeHelpKeys[select.value] || "pdf_mode_help_mineru"', template)
+        self.assertIn("pymupdf4llm (balanced fallback)", template)
+        self.assertIn("Lighter than MinerU; balanced fallback", template)
+        self.assertNotIn("pymupdf4llm (recommended)", template)
+        self.assertNotIn("Recommended for most papers.", template)
 
     def test_workbench_layout_uses_aligned_desktop_height_without_left_middle_scroll(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")

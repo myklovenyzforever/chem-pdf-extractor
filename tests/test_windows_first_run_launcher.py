@@ -1,3 +1,4 @@
+import re
 import unittest
 from pathlib import Path
 
@@ -101,8 +102,14 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         self.assertIn("Please choose a PDF parsing backend", content)
         self.assertIn("请选择 PDF 解析后端", content)
         self.assertIn("[1] pypdf_text", content)
-        self.assertIn("[2] pymupdf4llm (recommended)", content)
+        self.assertIn("[2] pymupdf4llm", content)
         self.assertIn("[3] mineru", content)
+        self.assertIn("Press Enter for option 3", content)
+        self.assertIn("v0.4.0 default backend", content)
+        self.assertIn("lighter install than MinerU", content)
+        self.assertNotIn("[2] pymupdf4llm (recommended)", content)
+        self.assertNotIn("Press Enter for option 2", content)
+        self.assertNotIn("This remains the default if the user presses Enter", content)
         self.assertIn(".runtime", content)
         self.assertIn("launcher_settings.json", content)
         self.assertIn(".venv\\Scripts\\python.exe", content)
@@ -111,6 +118,43 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         self.assertIn("--open-browser", content)
         self.assertIn("MINERU_COMMAND", content)
         self.assertIn("mineru.exe", content)
+
+    def test_first_time_blank_backend_choice_selects_mineru(self):
+        content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
+
+        first_time_blank_pattern = re.compile(
+            r'\$choice = Read-Host \(Get-LauncherText "EnterDefault"\)\s+'
+            r'if \(\[string\]::IsNullOrWhiteSpace\(\$choice\)\) \{\s+'
+            r'Save-BackendChoice "mineru"\s+'
+            r'return "mineru"\s+'
+            r'\}',
+            re.MULTILINE,
+        )
+        self.assertRegex(content, first_time_blank_pattern)
+
+        stale_first_time_blank_pattern = re.compile(
+            r'\$choice = Read-Host \(Get-LauncherText "EnterDefault"\)\s+'
+            r'if \(\[string\]::IsNullOrWhiteSpace\(\$choice\)\) \{\s+'
+            r'Save-BackendChoice "pymupdf4llm"\s+'
+            r'return "pymupdf4llm"\s+'
+            r'\}',
+            re.MULTILINE,
+        )
+        self.assertNotRegex(content, stale_first_time_blank_pattern)
+
+    def test_blank_choice_reuses_previous_backend_when_present(self):
+        content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
+
+        previous_blank_pattern = re.compile(
+            r'if \(\$previous\) \{.*?'
+            r'\$choice = Read-Host \(Get-LauncherText "EnterReuse"\).*?'
+            r'if \(\[string\]::IsNullOrWhiteSpace\(\$choice\)\) \{.*?'
+            r'Save-BackendChoice \$previous.*?'
+            r'return \$previous.*?'
+            r'\}',
+            re.DOTALL,
+        )
+        self.assertRegex(content, previous_blank_pattern)
 
     def test_powershell_launcher_runtime_candidates_are_not_mojibake(self):
         content = (REPO_ROOT / "install_and_start.ps1").read_text(encoding="utf-8")
@@ -160,6 +204,16 @@ class WindowsFirstRunLauncherTest(unittest.TestCase):
         self.assertIn("Fully offline package", content)
         self.assertIn("Manual Windows test plan", content)
         self.assertIn("requirements-mineru.txt", content)
+
+    def test_windows_package_docs_align_v040_backend_default(self):
+        content = (REPO_ROOT / "docs" / "windows_package.md").read_text(encoding="utf-8")
+
+        self.assertIn("the v0.4.0 default is MinerU", content)
+        self.assertIn("option `[2] pymupdf4llm` for a lighter/balanced fallback", content)
+        self.assertIn("option `[3] mineru` for the v0.4.0 default enhanced backend", content)
+        self.assertIn("Choose option `[3]` or press Enter when no previous backend is configured", content)
+        self.assertNotIn("option `[2] pymupdf4llm` for the recommended default", content)
+        self.assertNotIn("pymupdf4llm for the recommended default", content)
 
 
 if __name__ == "__main__":
