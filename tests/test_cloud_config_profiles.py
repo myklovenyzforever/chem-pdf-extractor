@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from chem_pdf_extractor.config import (
     apply_cloud_config_defaults,
+    delete_cloud_profile,
     infer_cloud_profile_names,
     load_local_config,
     normalize_local_config,
@@ -187,6 +188,111 @@ class CloudConfigProfilesTest(unittest.TestCase):
         self.assertTrue(public["has_cloud_api_key"])
         self.assertTrue(public["cloud_profiles"][0]["has_api_key"])
         self.assertIn("...", public["cloud_profiles"][0]["cloud_api_key_prefix"])
+
+    def test_delete_active_cloud_profile_clears_active_and_saved_key_mirrors(self):
+        xiaomi_secret = "xiaomi-secret-key"
+        deepseek_secret = "deepseek-secret-key"
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("chem_pdf_extractor.config.PROJECT_ROOT", Path(tmp)):
+                save_local_config(
+                    {
+                        "base_url": "https://token-plan-cn.xiaomimimo.com/v1",
+                        "api_key": xiaomi_secret,
+                        "model": "mimo/model",
+                        "cloud_active": True,
+                    }
+                )
+                save_local_config(
+                    {
+                        "active_cloud_profile_id": "",
+                        "base_url": "https://api.deepseek.com/v1",
+                        "api_key": deepseek_secret,
+                        "model": "deepseek-chat",
+                        "cloud_active": True,
+                    }
+                )
+                self.assertTrue(delete_cloud_profile("deepseek"))
+                private = load_local_config()
+                public = public_local_config()
+                raw = json.loads((Path(tmp) / "config.local.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(private["active_cloud_profile_id"], "")
+        self.assertEqual(private["cloud_api_key"], "")
+        self.assertEqual(raw["active_cloud_profile_id"], "")
+        self.assertEqual(raw["api_key"], "")
+        self.assertNotIn(deepseek_secret, str(raw))
+        self.assertNotIn(deepseek_secret, str(public))
+        self.assertNotIn(xiaomi_secret, str(public))
+        self.assertFalse(public["has_cloud_api_key"])
+        self.assertEqual([profile["id"] for profile in private["cloud_profiles"]], ["xiaomi_mimo"])
+        self.assertTrue(private["cloud_profiles"][0]["api_key"])
+
+    def test_delete_non_active_cloud_profile_preserves_active_profile_and_mirrors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("chem_pdf_extractor.config.PROJECT_ROOT", Path(tmp)):
+                save_local_config(
+                    {
+                        "base_url": "https://token-plan-cn.xiaomimimo.com/v1",
+                        "api_key": "xiaomi-secret-key",
+                        "model": "mimo/model",
+                        "cloud_active": True,
+                    }
+                )
+                save_local_config(
+                    {
+                        "active_cloud_profile_id": "",
+                        "base_url": "https://api.deepseek.com/v1",
+                        "api_key": "deepseek-secret-key",
+                        "model": "deepseek-chat",
+                        "cloud_active": True,
+                    }
+                )
+                self.assertTrue(delete_cloud_profile("xiaomi_mimo"))
+                private = load_local_config()
+                raw = json.loads((Path(tmp) / "config.local.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(private["active_cloud_profile_id"], "deepseek")
+        self.assertEqual(private["cloud_api_key"], "deepseek-secret-key")
+        self.assertEqual(raw["active_cloud_profile_id"], "deepseek")
+        self.assertEqual(raw["api_key"], "deepseek-secret-key")
+        self.assertEqual([profile["id"] for profile in private["cloud_profiles"]], ["deepseek"])
+
+    def test_delete_missing_cloud_profile_is_safe_noop(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("chem_pdf_extractor.config.PROJECT_ROOT", Path(tmp)):
+                save_local_config(
+                    {
+                        "base_url": "https://api.deepseek.com/v1",
+                        "api_key": "deepseek-secret-key",
+                        "model": "deepseek-chat",
+                        "cloud_active": True,
+                    }
+                )
+                self.assertFalse(delete_cloud_profile("missing-profile"))
+                private = load_local_config()
+                public = public_local_config()
+
+        self.assertEqual(private["active_cloud_profile_id"], "deepseek")
+        self.assertNotIn("deepseek-secret-key", str(public))
+
+    def test_explicit_empty_active_profile_is_preserved_when_profiles_exist(self):
+        payload = normalize_local_config(
+            {
+                "active_cloud_profile_id": "",
+                "cloud_profiles": [
+                    {
+                        "id": "deepseek",
+                        "service_name": "deepseek",
+                        "api_key": "deepseek-secret-key",
+                        "base_url": "https://api.deepseek.com/v1",
+                        "model": "deepseek-chat",
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(payload["active_cloud_profile_id"], "")
+        self.assertEqual(payload["cloud_api_key"], "")
 
     def test_old_flat_config_still_loads_as_active_profile(self):
         payload = normalize_local_config(

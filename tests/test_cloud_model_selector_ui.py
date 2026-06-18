@@ -53,6 +53,31 @@ class CloudModelSelectorUiTest(unittest.TestCase):
         self.assertNotIn('<details class="advanced-config">', template)
         self.assertNotIn('data-i18n="service_name">LLM Service Name</label>', template)
 
+    def test_cloud_profile_delete_button_uses_selected_saved_profile_only(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        self.assertEqual(template.count('id="deleteCloudProfileBtn"'), 1)
+        self.assertIn('onclick="deleteCloudProfile()"', template)
+        self.assertIn('data-i18n="delete_cloud_service"', template)
+        self.assertIn('function updateDeleteCloudProfileButton()', template)
+        self.assertIn("button.disabled = !activeCloudProfile()", template)
+        self.assertIn('async function deleteCloudProfile()', template)
+        self.assertIn('"/api/cloud-profiles/delete"', template)
+        self.assertIn("body: JSON.stringify({profile_id: profile.id})", template)
+        self.assertIn("cloudProfileLabel(profile)", template)
+        self.assertIn('delete_cloud_service_confirm', template)
+        self.assertIn("setCloudApiKeyPlaceholder(null)", template)
+        self.assertNotIn("JSON.stringify(profile)", template)
+        self.assertNotIn("profile.api_key", template)
+        self.assertNotIn("cloud_api_key: profile", template)
+
+    def test_cloud_profile_config_can_preserve_empty_active_selection(self):
+        template = TEMPLATE_PATH.read_text(encoding="utf-8")
+
+        self.assertIn('Object.prototype.hasOwnProperty.call(config, "active_cloud_profile_id")', template)
+        self.assertIn('activeCloudProfileId = String(config.active_cloud_profile_id || "")', template)
+        self.assertNotIn("config.active_cloud_profile_id || activeCloudProfileId || (cloudProfiles[0]", template)
+
     def test_task_settings_layout_uses_responsive_grid_and_short_pdf_labels(self):
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
 

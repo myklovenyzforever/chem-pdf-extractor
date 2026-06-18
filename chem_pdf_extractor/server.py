@@ -28,6 +28,7 @@ from .config import (
     apply_cloud_config_defaults,
     default_input_dir,
     default_output_path,
+    delete_cloud_profile,
     load_local_config,
     mask_api_key,
     public_local_config,
@@ -282,6 +283,26 @@ class RequestHandler(BaseHTTPRequestHandler):
                     config["api_key"] = ""
                     config["cloud_api_key"] = ""
                 save_local_config(config)
+                self.send_json({"ok": True, "config": public_local_config()})
+            except Exception as exc:
+                self.send_json({"ok": False, "error": redact_sensitive_text(str(exc))})
+            return
+
+        if parsed.path == "/api/cloud-profiles/delete":
+            try:
+                config = self.read_json()
+                profile_id = str(
+                    config.get("profile_id")
+                    or config.get("active_cloud_profile_id")
+                    or config.get("cloud_profile_id")
+                    or ""
+                ).strip()
+                if not profile_id:
+                    self.send_json({"ok": False, "error": "Missing cloud profile id."}, status=400)
+                    return
+                if not delete_cloud_profile(profile_id):
+                    self.send_json({"ok": False, "error": "Cloud profile not found."}, status=404)
+                    return
                 self.send_json({"ok": True, "config": public_local_config()})
             except Exception as exc:
                 self.send_json({"ok": False, "error": redact_sensitive_text(str(exc))})

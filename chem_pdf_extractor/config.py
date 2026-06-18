@@ -498,12 +498,13 @@ def normalize_local_config(raw: dict[str, Any] | None) -> dict[str, Any]:
         seen_ids.add(str(profile["id"]))
         profiles.append(profile)
 
-    active_profile_id = str(
-        raw.get("active_cloud_profile_id")
-        or raw.get("active_cloud_profile")
-        or raw.get("cloud_profile_id")
-        or ""
-    ).strip()
+    active_profile_id = ""
+    active_profile_id_was_provided = False
+    for key in ("active_cloud_profile_id", "active_cloud_profile", "cloud_profile_id"):
+        if key in raw:
+            active_profile_id = str(raw.get(key) or "").strip()
+            active_profile_id_was_provided = True
+            break
 
     has_flat_cloud_config = any(
         key in raw and str(raw.get(key) or "").strip()
@@ -528,12 +529,17 @@ def normalize_local_config(raw: dict[str, Any] | None) -> dict[str, Any]:
         active_profile_id = profile["id"]
 
     if profiles:
-        active_profile = _profile_by_id({"cloud_profiles": profiles}, active_profile_id) or profiles[0]
-        active_profile_id = str(active_profile.get("id") or "")
-        normalized["cloud_service_name"] = str(active_profile.get("service_name") or normalized["cloud_service_name"]).strip()
-        normalized["cloud_api_key"] = str(active_profile.get("api_key") or normalized["cloud_api_key"]).strip()
-        normalized["cloud_base_url"] = str(active_profile.get("base_url") or normalized["cloud_base_url"]).strip()
-        normalized["cloud_model"] = str(active_profile.get("model") or normalized["cloud_model"]).strip()
+        active_profile = _profile_by_id({"cloud_profiles": profiles}, active_profile_id)
+        if active_profile is None and (active_profile_id or not active_profile_id_was_provided):
+            active_profile = profiles[0]
+        if active_profile is not None:
+            active_profile_id = str(active_profile.get("id") or "")
+            normalized["cloud_service_name"] = str(active_profile.get("service_name") or normalized["cloud_service_name"]).strip()
+            normalized["cloud_api_key"] = str(active_profile.get("api_key") or normalized["cloud_api_key"]).strip()
+            normalized["cloud_base_url"] = str(active_profile.get("base_url") or normalized["cloud_base_url"]).strip()
+            normalized["cloud_model"] = str(active_profile.get("model") or normalized["cloud_model"]).strip()
+        else:
+            active_profile_id = ""
 
     normalized["cloud_profiles"] = profiles
     normalized["active_cloud_profile_id"] = active_profile_id
@@ -622,6 +628,63 @@ def save_local_config(config: dict[str, Any]) -> Path:
         json.dump(payload, handle, ensure_ascii=False, indent=2)
         handle.write("\n")
     return path
+
+
+def delete_cloud_profile(profile_id: str) -> bool:
+    target_id = str(profile_id or "").strip()
+    if not target_id:
+        return False
+
+    path = local_config_path()
+    if not path.exists():
+        return False
+
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            raw = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(raw, dict):
+        return False
+
+    normalized = normalize_local_config(raw)
+    profiles = [dict(profile) for profile in normalized.get("cloud_profiles", []) or []]
+    target_profile = _profile_by_id({"cloud_profiles": profiles}, target_id)
+    if target_profile is None:
+        return False
+
+    active_profile_id = str(normalized.get("active_cloud_profile_id") or "").strip()
+    remaining_profiles = [profile for profile in profiles if str(profile.get("id") or "") != target_id]
+    active_profile = _profile_by_id({"cloud_profiles": remaining_profiles}, active_profile_id)
+
+    if active_profile is not None:
+        next_active_profile_id = active_profile_id
+        cloud_service_name = str(active_profile.get("service_name") or DEFAULT_CLOUD_SERVICE_NAME).strip()
+        cloud_api_key = str(active_profile.get("api_key") or "").strip()
+        cloud_base_url = str(active_profile.get("base_url") or DEFAULT_CLOUD_BASE_URL).strip()
+        cloud_model = str(active_profile.get("model") or DEFAULT_CLOUD_MODEL).strip()
+    else:
+        next_active_profile_id = ""
+        cloud_service_name = DEFAULT_CLOUD_SERVICE_NAME
+        cloud_api_key = ""
+        cloud_base_url = DEFAULT_CLOUD_BASE_URL
+        cloud_model = DEFAULT_CLOUD_MODEL
+
+    payload = {
+        "llm_service_name": cloud_service_name,
+        "api_key": cloud_api_key,
+        "base_url": cloud_base_url,
+        "model": cloud_model,
+        "cloud_active": bool(normalized.get("cloud_active", False)),
+        "copy_failed_sources": bool(normalized.get("copy_failed_sources", False)),
+        "active_cloud_profile_id": next_active_profile_id,
+        "cloud_profiles": remaining_profiles,
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+    return True
 
 
 def public_local_config() -> dict[str, Any]:

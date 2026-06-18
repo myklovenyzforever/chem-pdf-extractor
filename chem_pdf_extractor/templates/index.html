@@ -834,6 +834,7 @@
               <label><input id="cloudActive" type="checkbox" /> <span data-i18n="cloud_active">Activate this config</span></label>
             </div>
             <button id="saveConfigBtn" type="button" onclick="saveLocalConfig()" data-i18n="save_local_config">Save Config</button>
+            <button id="deleteCloudProfileBtn" class="danger" type="button" onclick="deleteCloudProfile()" data-i18n="delete_cloud_service" disabled>Delete service</button>
             <button id="testCloudApiBtn" type="button" onclick="testCloudApi()" data-i18n="test_api">Test API</button>
           </div>
           <p id="cloudTestStatus" class="field-help cloud-test-status" aria-live="polite" data-i18n="api_test_idle">Test connection before a large batch.</p>
@@ -1003,6 +1004,11 @@
         service_name_help: "默认使用 openai_compatible；旧 config.local.json 仍兼容。",
         cloud_active: "激活此配置",
         save_local_config: "保存为服务",
+        delete_cloud_service: "删除服务",
+        delete_cloud_service_confirm: "删除已保存服务“{name}”？这会从本地 config.local.json 删除它保存的 Base URL、模型和 API Key。",
+        cloud_profile_deleted: "已删除已保存服务。",
+        cloud_profile_delete_failed: "删除已保存服务失败：",
+        no_cloud_profile_selected: "未选择已保存服务。",
         refresh_models: "刷新模型",
         api_help: "填写 Base URL 和 API Key 后，可获取模型列表或手动填写模型名。",
         progress: "进度",
@@ -1139,6 +1145,11 @@
         service_name_help: "Defaults to openai_compatible. Existing config.local.json files remain compatible.",
         cloud_active: "Active",
         save_local_config: "Save service",
+        delete_cloud_service: "Delete service",
+        delete_cloud_service_confirm: "Delete saved service \"{name}\"? This removes its saved Base URL, model, and API key from local config.local.json.",
+        cloud_profile_deleted: "Saved service deleted.",
+        cloud_profile_delete_failed: "Failed to delete saved service: ",
+        no_cloud_profile_selected: "No saved service selected.",
         refresh_models: "Refresh Models",
         api_help: "Enter Base URL and API key, then fetch models or type a model name.",
         progress: "Progress",
@@ -1555,6 +1566,12 @@
       return profile.display_name_en || profile.display_name || profile.display_name_zh || profile.id;
     }
 
+    function updateDeleteCloudProfileButton() {
+      const button = document.getElementById("deleteCloudProfileBtn");
+      if (!button) return;
+      button.disabled = !activeCloudProfile();
+    }
+
     function cloudProfileKeyPlaceholder(profile) {
       if (!profile || !profile.has_api_key) {
         return "YOUR_API_KEY_HERE";
@@ -1581,6 +1598,7 @@
         empty.className = "cloud-profile-empty";
         empty.textContent = t("no_saved_services");
         list.appendChild(empty);
+        updateDeleteCloudProfileButton();
         return;
       }
       cloudProfiles.forEach(profile => {
@@ -1591,12 +1609,22 @@
         button.onclick = () => applyCloudProfile(profile.id);
         list.appendChild(button);
       });
+      updateDeleteCloudProfileButton();
     }
 
     function setCloudProfilesFromConfig(config) {
       if (!config) return;
-      cloudProfiles = normalizeCloudProfiles(config.cloud_profiles || cloudProfiles);
-      activeCloudProfileId = config.active_cloud_profile_id || activeCloudProfileId || (cloudProfiles[0] && cloudProfiles[0].id) || "";
+      if (Object.prototype.hasOwnProperty.call(config, "cloud_profiles")) {
+        cloudProfiles = normalizeCloudProfiles(config.cloud_profiles);
+      }
+      if (Object.prototype.hasOwnProperty.call(config, "active_cloud_profile_id")) {
+        activeCloudProfileId = String(config.active_cloud_profile_id || "");
+      } else if (!activeCloudProfileId && cloudProfiles.length) {
+        activeCloudProfileId = cloudProfiles[0].id;
+      }
+      if (activeCloudProfileId && !activeCloudProfile()) {
+        activeCloudProfileId = "";
+      }
       renderCloudProfiles();
     }
 
@@ -1803,6 +1831,46 @@
       }
     }
 
+    async function deleteCloudProfile() {
+      const profile = activeCloudProfile();
+      if (!profile) {
+        setCloudTestStatus("failed", "cloud_profile_delete_failed", t("no_cloud_profile_selected"));
+        updateDeleteCloudProfileButton();
+        return;
+      }
+
+      const displayName = cloudProfileLabel(profile);
+      const message = t("delete_cloud_service_confirm").replace("{name}", displayName);
+      if (!confirm(message)) return;
+
+      try {
+        const res = await apiFetch("/api/cloud-profiles/delete", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({profile_id: profile.id})
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || t("cloud_profile_delete_failed"));
+        setCloudProfilesFromConfig(data.config || {
+          cloud_profiles: cloudProfiles.filter(item => item.id !== profile.id),
+          active_cloud_profile_id: ""
+        });
+
+        const nextProfile = activeCloudProfile();
+        if (nextProfile) {
+          applyCloudProfile(nextProfile.id);
+        } else {
+          activeCloudProfileId = "";
+          document.getElementById("cloudApiKey").value = "";
+          setCloudApiKeyPlaceholder(null);
+          renderCloudProfiles();
+        }
+        setCloudTestStatus("success", "cloud_profile_deleted");
+      } catch (err) {
+        setCloudTestStatus("failed", "cloud_profile_delete_failed", err.message || "");
+      }
+    }
+
     function onProviderChange() {
       const provider = document.getElementById("llmProvider").value;
       const cloudPanel = document.getElementById("cloudPanel");
@@ -1823,6 +1891,7 @@
         el.hidden = isCloud;
       });
       document.getElementById("autoFallback").disabled = isCloud;
+      updateDeleteCloudProfileButton();
     }
 
     async function startJob() {
