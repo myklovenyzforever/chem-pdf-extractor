@@ -1,11 +1,13 @@
 import json
+import tempfile
 import threading
 import unittest
 import urllib.error
 import urllib.request
+from pathlib import Path
 from unittest.mock import patch
 
-from chem_pdf_extractor.config import RuntimeDeps
+from chem_pdf_extractor.config import RuntimeDeps, save_local_config
 from chem_pdf_extractor import server as server_module
 
 
@@ -27,19 +29,20 @@ class CloudApiTestEndpointTest(unittest.TestCase):
         server_module.RequestHandler.app = self.app
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
-        self.url = f"http://127.0.0.1:{self.app.port}/api/cloud-test"
+        self.base_url = f"http://127.0.0.1:{self.app.port}"
+        self.url = f"{self.base_url}/api/cloud-test"
 
     def tearDown(self):
         self.server.shutdown()
         self.server.server_close()
         self.thread.join(timeout=3)
 
-    def post_cloud_test(self, payload, token="local-test-token"):
+    def post_api(self, path, payload, token="local-test-token"):
         headers = {"Content-Type": "application/json"}
         if token is not None:
             headers["X-Chem-PDF-Extractor-Token"] = token
         request = urllib.request.Request(
-            self.url,
+            self.base_url + path,
             data=json.dumps(payload).encode("utf-8"),
             headers=headers,
             method="POST",
@@ -51,6 +54,9 @@ class CloudApiTestEndpointTest(unittest.TestCase):
         except urllib.error.HTTPError as exc:
             body = exc.read().decode("utf-8")
             return exc.code, body, json.loads(body)
+
+    def post_cloud_test(self, payload, token="local-test-token"):
+        return self.post_api("/api/cloud-test", payload, token=token)
 
     def test_cloud_test_endpoint_requires_local_ui_token(self):
         status, _body, payload = self.post_cloud_test({}, token=None)
@@ -148,6 +154,56 @@ class CloudApiTestEndpointTest(unittest.TestCase):
 
         self.assertTrue(payload["ok"])
         self.assertEqual(payload["status"], "partial")
+        self.assertNotIn(secret, body)
+
+    def test_cloud_profile_delete_endpoint_clears_active_without_returning_full_key(self):
+        xiaomi_secret = "XIAOMI_SECRET_KEY_123"
+        deepseek_secret = "DEEPSEEK_SECRET_KEY_456"
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("chem_pdf_extractor.config.PROJECT_ROOT", Path(tmp)):
+                save_local_config(
+                    {
+                        "base_url": "https://token-plan-cn.xiaomimimo.com/v1",
+                        "api_key": xiaomi_secret,
+                        "model": "mimo/model",
+                        "cloud_active": True,
+                    }
+                )
+                save_local_config(
+                    {
+                        "active_cloud_profile_id": "",
+                        "base_url": "https://api.deepseek.com/v1",
+                        "api_key": deepseek_secret,
+                        "model": "deepseek-chat",
+                        "cloud_active": True,
+                    }
+                )
+                status, body, payload = self.post_api(
+                    "/api/cloud-profiles/delete",
+                    {"profile_id": "deepseek"},
+                )
+
+        self.assertEqual(status, 200)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["config"]["active_cloud_profile_id"], "")
+        self.assertFalse(payload["config"]["has_cloud_api_key"])
+        self.assertNotIn(xiaomi_secret, body)
+        self.assertNotIn(deepseek_secret, body)
+        self.assertNotIn("api_key", payload["config"])
+        self.assertNotIn("cloud_api_key", payload["config"])
+
+    def test_cloud_profile_delete_endpoint_missing_profile_is_safe(self):
+        secret = "REQUEST_SECRET_KEY_123"
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch("chem_pdf_extractor.config.PROJECT_ROOT", Path(tmp)):
+                status, body, payload = self.post_api(
+                    "/api/cloud-profiles/delete",
+                    {"profile_id": "missing", "api_key": secret},
+                )
+
+        self.assertEqual(status, 404)
+        self.assertFalse(payload["ok"])
+        self.assertIn("not found", payload["error"].lower())
         self.assertNotIn(secret, body)
 
 
