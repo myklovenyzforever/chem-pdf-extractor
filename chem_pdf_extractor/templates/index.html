@@ -741,7 +741,7 @@
               <label data-i18n="pdf_mode">PDF Mode</label>
               <select id="pdfMode" onchange="updatePdfModeHelp()">
                 <option value="mineru" data-i18n="pdf_mode_mineru">MinerU (complex/heavy)</option>
-                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm (recommended)</option>
+                <option value="pymupdf4llm" data-i18n="pdf_mode_pymupdf4llm">pymupdf4llm (balanced fallback)</option>
                 <option value="pypdf_text" data-i18n="pdf_mode_pypdf_text">pypdf_text (light fallback)</option>
                 <option value="auto" data-i18n="pdf_mode_auto">auto (verify results)</option>
                 <option value="pymupdf_text" data-i18n="pdf_mode_pymupdf_text">PyMuPDF text (fast text)</option>
@@ -954,11 +954,11 @@
         pdf_mode: "解析方式",
         pdf_mode_mineru: "MinerU（复杂/较重）",
         pdf_mode_auto: "auto（自动尝试）",
-        pdf_mode_pymupdf4llm: "pymupdf4llm（多数论文推荐）",
+        pdf_mode_pymupdf4llm: "pymupdf4llm（均衡后备）",
         pdf_mode_pymupdf_text: "PyMuPDF text（快速纯文本）",
         pdf_mode_pypdf_text: "pypdf_text（轻量后备）",
         pdf_mode_help: "默认使用 MinerU；复杂版面、表格或扫描件仍需人工核验。",
-        pdf_mode_help_pymupdf4llm: "多数论文推荐，兼顾结构和速度。",
+        pdf_mode_help_pymupdf4llm: "比 MinerU 更轻，适合希望更快/更小安装的许多论文。",
         pdf_mode_help_mineru: "复杂表格/版面/类扫描 PDF 更合适，但安装和首次运行可能较慢较重。",
         pdf_mode_help_pypdf_text: "轻量后备，安装简单，但表格和多栏效果较弱。",
         pdf_mode_help_auto: "自动尝试选择解析方式，但结果仍需人工核验。",
@@ -1090,11 +1090,11 @@
         pdf_mode: "PDF Mode",
         pdf_mode_mineru: "MinerU (complex/heavy)",
         pdf_mode_auto: "auto (verify results)",
-        pdf_mode_pymupdf4llm: "pymupdf4llm (recommended)",
+        pdf_mode_pymupdf4llm: "pymupdf4llm (balanced fallback)",
         pdf_mode_pymupdf_text: "PyMuPDF text (fast text)",
         pdf_mode_pypdf_text: "pypdf_text (light fallback)",
         pdf_mode_help: "MinerU is the default. Verify complex layouts, tables, and scanned-like PDFs.",
-        pdf_mode_help_pymupdf4llm: "Recommended for most papers.",
+        pdf_mode_help_pymupdf4llm: "Lighter than MinerU; balanced fallback for many text-based research PDFs.",
         pdf_mode_help_mineru: "Better for complex tables/layouts/scanned-like PDFs; setup may be slow or heavy.",
         pdf_mode_help_pypdf_text: "Lightweight fallback, weaker for tables and multi-column layouts.",
         pdf_mode_help_auto: "Tries to choose automatically, but verify results.",

@@ -188,7 +188,7 @@ Before creating a Windows package, check:
 2. Avoid paths with special characters if startup fails.
 3. Put source PDFs in `input_pdfs/`. The PDFs under `examples/demo_literature_batch/` are examples/tests, not default input.
 4. Double-click `Start-Chem-PDF-Extractor.bat` for English or `YiJianQiDong.bat` for Chinese.
-5. Choose a PDF backend in the PowerShell menu. Press Enter for the default option unless a previous backend choice is shown; choose `pymupdf4llm` if you want a lighter install than MinerU.
+5. Choose a PDF backend in the PowerShell menu. Press Enter for the default option unless a previous backend choice is shown; the v0.4.0 default is MinerU. Choose `pymupdf4llm` if you want a lighter install than MinerU.
 6. Let the launcher install dependencies and start the local Web UI.
 7. If the browser does not open automatically, copy the local URL printed in the terminal.
 8. Start with 3-5 PDFs before running a large batch.
@@ -207,7 +207,8 @@ Copy the local URL printed in the terminal and open it manually.
 
 ### PDF parsing fails
 
-Try a smaller batch first. If optional PDF backends fail, rerun `Start-Chem-PDF-Extractor.bat` and choose a different backend. Use option `[1] pypdf_text` for the smallest fallback install, option `[2] pymupdf4llm` for the recommended default, or option `[3] mineru` for the larger enhanced backend.
+Try a smaller batch first. If optional PDF backends fail, rerun `Start-Chem-PDF-Extractor.bat` and choose a different backend. Use option `[1] pypdf_text` for the smallest fallback install or option `[2] pymupdf4llm` for a lighter/balanced fallback.
+Use option `[3] mineru` for the v0.4.0 default enhanced backend.
 
 ### MinerU installation fails
 
@@ -281,11 +282,12 @@ Test B: Windows machine with Python 3.11 installed
 4. Confirm it installs `requirements-core.txt`.
 5. Confirm it starts with `--pdf-mode pypdf_text`.
 
-Test C: Recommended mode
+Test C: Default enhanced mode
 
-1. Choose option `[2]` or press Enter when no previous backend is configured.
+1. Choose option `[3]` or press Enter when no previous backend is configured.
 2. Confirm it installs `requirements.txt`.
-3. Confirm it starts with `--pdf-mode pymupdf4llm`.
+3. Confirm it installs MinerU dependencies or offers the MinerU failure fallback flow.
+4. Confirm it starts with `--pdf-mode mineru` when MinerU installation succeeds.
 
 Test D: MinerU mode
 
