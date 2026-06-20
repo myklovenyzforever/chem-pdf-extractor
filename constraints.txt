@@ -14,7 +14,7 @@ pymupdf4llm<1
 pymupdf<2
 langchain<1
 langchain-core<1
-langchain-ollama<1
+langchain-ollama<2
 pydantic<3
 pandas<3
 openpyxl<4
