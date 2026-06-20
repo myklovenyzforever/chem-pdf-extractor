@@ -10,7 +10,7 @@
 # Refresh these upper bounds after testing the project with newer major versions.
 
 pypdf<7
-pymupdf4llm<1
+pymupdf4llm<2
 pymupdf<2
 langchain<1
 langchain-core<1
